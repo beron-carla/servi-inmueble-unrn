@@ -1,0 +1,35 @@
+FLUJO DE EJECUCIÓN Y CONFLICTOS EN GITHUB
+==========================================
+
+1) FLUJO RECOMENDADO
+-------------------
+
+| Orden | HU | Asignación | Notas |
+|---|---|---|---|
+| 1. Fase Auth | HU-01, HU-02, HU-03 (Registro / Login / Logout) | 1 persona - Secuencial | Obligatorio primero. Todo lo demás cuelga de roles, sesiones y filtros. Van en el mismo AuthController. |
+| 2. Fase Catálogos/Admin | HU-04, HU-05, HU-06 (Usuarios Admin) + HU-07, HU-08, HU-09 (Tipos de Servicio) | 2 personas en paralelo | Tras tener la fase 1 mergeada. admin/usuarios y admin/tipos-servicio son módulos distintos, así que se pueden dividir entre 2 personas. Nunca dividir un CRUD entre varias personas. |
+| 3. Fase Inmuebles | HU-10, HU-11, HU-12 (Alta/Modificación/Listado de inmuebles) | 1 persona - Secuencial | Depende de Usuarios y Tipos de Servicio. Mismo módulo, mejor hacerlo todo junto. |
+| 4. Fase Vinculación | HU-13 (Vincular servicios a un inmueble) | 1 persona | Necesita Inmuebles y Tipos de Servicio already funcionando. |
+| 5. Fase Facturación | HU-14, HU-15 (Alta de factura + Listado with totales) | 1 persona - Secuencial | Comparten the same FacturasController. HU-15 reutiliza gran parte de HU-14. |
+
+
+2) ARCHIVOS CON RIESGO REAL DE CONFLICTO
+----------------------------------------
+
+| Archivo | Riesgo | Consejo |
+|---|---|---|
+| app/Config/Routes.php | Alto | Añadir las rutas SOLO cuando se termine todo el módulo completo. Evitar editarlo por trozos. |
+| app/Views/layout/sidebar.php | Alto | Añadir la entrada al menú SOLO al finalizar el CRUD. Es el que más choca aunque los módulos sean distintos. |
+| app/Controllers/Auth/AuthController.php | Alto | Siempre secuencial. HU-01→HU-02→HU-03 en el mismo archivo. |
+| Mismo Controller.php + sus Views/ | Alto | Nunca dividir. If they share controller, do it all together (Usuarios, Tipos de Servicio, Inmuebles o Facturas). |
+| app/Filters/AuthFilter.php / RoleFilter.php | Medio | Poca thing, but better not to touch in parallel. |
+
+
+3) REGLAS PRÁCTICAS PARA EL EQUIPO
+---------------------------------
+
+- Mismo controlador = ir juntos. Esa es la regla que te va a ahorrar más conflictos.
+- Carpetas distintas = sí se puede paralelizar. El caso más viable es Usuarios vs Tipos de Servicio tras tener Auth listo.
+- Fusiona por módulo completo. Un solo PR con Controller + Service + Repository + Model + Views + Rutas for ese módulo. Evita PRs parciales.
+- Cuidado con Routes.php y sidebar.php. Aunque paralelices módulos distintos, estos dos archivos van a ser el único punto de fricción real.
+- Hacer git pull --rebase origin/develop a diario si hay trabajo en paralelo, sobre todo antes de subir cambios.
