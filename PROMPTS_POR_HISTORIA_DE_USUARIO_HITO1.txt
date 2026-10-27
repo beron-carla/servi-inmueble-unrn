@@ -20,7 +20,7 @@ ANTES DE HACER CUALQUIER COSA DEBES CUMPLIR LO SIGUIENTE:
 
 1. LECTURA OBLIGATORIA
    - Lee SIEMPRE primero: agents/servi-inmueble-ci4/SKILL.md
-   - Ten en cuenta el resto de skills ubicados en agents/: ci4-module-scaffold, ci4-routes-guard, ci4-migration-builder, adminlte-view-craft, ci4-security-audit, ci4-hu-validator, ci4-test-suite
+   - Ten en cuenta el resto de skills ubicados en agents/: ci4-module-scaffold, ci4-routes-guard, ci4-migration-builder, adminlte-view-craft, ci4-frontend-ui, ci4-security-audit, ci4-hu-validator, ci4-test-suite
 
 2. ARQUITECTURA OBLIGATORIA
    - Seguir estrictamente: Controller -> Service -> Repository -> Model/Entity

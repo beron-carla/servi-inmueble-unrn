@@ -1,0 +1,31 @@
+SERVIINMUEBLE 2026 - TABLA DE HISTORIAS DE USUARIO (HITO 1)
+============================================================
+
+FECHA: 27/10/2026
+PROYECTO: ServiInmueble 2026
+ALCANCE: Hito 1 - Aprobación de Cursada
+
+| N° | CÓDIGO | TÍTULO | ROL | MÓDULO | PRIORIDAD | ESTADO |
+|---|--------|--------|-----|--------|-----------|--------|
+| 1 | HU-01 | Registro de nuevos usuarios | Visitante | Autenticación | P0 | Pendiente |
+| 2 | HU-02 | Inicio de sesión | Usuario registrado | Autenticación | P0 | Pendiente |
+| 3 | HU-03 | Cierre de sesión | Usuario autenticado | Autenticación | P0 | Pendiente |
+| 4 | HU-04 | Alta de usuarios (solo Administrador) | Administrador | Administración / Usuarios | P0 | Pendiente |
+| 5 | HU-05 | Modificación y baja de usuarios (solo Administrador) | Administrador | Administración / Usuarios | P0 | Pendiente |
+| 6 | HU-06 | Consulta y listado de usuarios (solo Administrador) | Administrador | Administración / Usuarios | P0 | Pendiente |
+| 7 | HU-07 | Alta de tipos de servicio (solo Administrador) | Administrador | Catálogo / Tipos de Servicio | P0 | Pendiente |
+| 8 | HU-08 | Modificación y baja de tipos de servicio (solo Administrador) | Administrador | Catálogo / Tipos de Servicio | P0 | Pendiente |
+| 9 | HU-09 | Consulta y listado de tipos de servicio | Administrador / Propietario | Catálogo / Tipos de Servicio | P0 | Pendiente |
+| 10 | HU-10 | Alta de inmuebles | Propietario / Administrador | Inmuebles | P0 | Pendiente |
+| 11 | HU-11 | Modificación y baja lógica de inmuebles | Propietario / Administrador | Inmuebles | P0 | Pendiente |
+| 12 | HU-12 | Consulta y listado de inmuebles | Propietario / Administrador | Inmuebles | P0 | Pendiente |
+| 13 | HU-13 | Vinculación de servicios a un inmueble | Propietario / Administrador | Servicios del Inmueble | P0 | Pendiente |
+| 14 | HU-14 | Alta de factura | Propietario / Administrador | Facturación | P0 | Pendiente |
+| 15 | HU-15 | Listado de facturas con totales | Propietario / Administrador | Facturación / Informes | P0 | Pendiente |
+
+TOTAL: 15 Historias de Usuario - Hito 1
+ARCHIVOS RELACIONADOS:
+- docs/features-hito1.txt
+- docs/historias_de_usuario/HU-XX.md
+- PROMPTS_POR_HISTORIA_DE_USUARIO_HITO1.txt
+- COMUNICADO_EQUIPO_SKILLS_CI4.txt
