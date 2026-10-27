@@ -1,0 +1,151 @@
+SERVIINMUEBLE 2026 - COMUNICADO AL EQUIPO DE DESARROLLO
+==========================================================
+
+FECHA: 27/10/2026
+ASUNTO: Reestructuración de la carpeta "agents/" con skills modulares para desarrollo en CodeIgniter 4
+DESTINATARIOS: Equipo de Desarrollo - ServiInmueble 2026
+
+
+1. OBJETIVO
+-----------
+
+Se reorganizó la carpeta `agents/` con el fin de estandarizar el desarrollo del Hito 1,
+pasando de una estructura pensada para PHP puro a una estructura adaptada a 
+CodeIgniter 4 (CI4).
+
+El objetivo es tener reglas claras, reutilizables y directamente aplicables a cada 
+Historia de Usuario (HU-01 a HU-15), garantizando orden, seguridad, trazabilidad 
+y coherencia entre todo el equipo.
+
+
+2. ¿QUÉ SE HIZO?
+-----------------
+
+- Se migró el enfoque del proyecto hacia CodeIgniter 4.x, PHP 8.2+, MySQL/MariaDB y AdminLTE para la interfaz gráfica.
+- Se adaptó la arquitectura a CodeIgniter 4 manteniendo el criterio de capas: Controller -> Service -> Repository -> Model/Entity.
+- Se aprovecharon las herramientas nativas de CI4: Routes, Filters, Validation, Migrations, Seeds, Sessions y Helpers.
+- Se crearon skills modulares con guías, checklists, ejemplos prácticos y reglas a seguir.
+- Se eliminaron archivos duplicados, dejando una única fuente de verdad para todo el desarrollo.
+- Se agregaron validaciones pensadas específicamente para cubrir los criterios de aceptación del Hito 1.
+
+
+3. NUEVA ESTRUCTURA DE LA CARPETA "agents/"
+-------------------------------------------
+
+agents/
+├── servi-inmueble-ci4/      # SKILL MAYOR - Reglas globales del proyecto
+│   └── SKILL.md
+├── adminlte-view-craft/     # Maquetado de vistas con AdminLTE
+│   └── SKILL.md
+├── ci4-hu-validator/        # Trazabilidad entre HU y código
+│   └── SKILL.md
+├── ci4-migration-builder/   # Creación de migraciones y seeds
+│   └── SKILL.md
+├── ci4-module-scaffold/     # Generación completa de módulos
+│   └── SKILL.md
+├── ci4-routes-guard/        # Agrupación y protección de rutas
+│   └── SKILL.md
+├── ci4-security-audit/      # Auditoría de seguridad
+│   └── SKILL.md
+├── ci4-test-suite/          # Tests unitarios y funcionales
+│   └── SKILL.md
+├── roles/                   # Reservado para agentes especializados (vacío por ahora)
+├── workflows/               # Reservado para flujos de trabajo (vacío por ahora)
+├── specs/                   # Reservado para especificaciones generadas (vacío por ahora)
+└── templates/               # Reservado para plantillas reutilizables (vacío por ahora)
+
+
+4. DESCRIPCIÓN DE CADA SKILL
+-----------------------------
+
+4.1. SKILL MAYOR
+---------------
+- servi-inmueble-ci4/SKILL.md
+  Es la fuente de verdad del proyecto. Define la arquitectura, estructura de carpetas,
+  stack tecnológico, esquema de base de datos, estados, soft-delete, reglas de 
+  seguridad, convenciones de código y el alcance completo del Hito 1. 
+  Debe leerse obligatoriamente antes de comenzar cualquier desarrollo.
+
+
+4.2. SKILLS MENORES
+-------------------
+
+- adminlte-view-craft/SKILL.md
+  Guía para crear vistas con AdminLTE 3/4. Indica cómo usar el layout compartido,
+  formularios, tablas con filtros, badges, estados vacíos y el bloque de totales
+  para el listado de facturas (Total Pendiente / Total Pagado / Total General).
+
+- ci4-hu-validator/SKILL.md
+  Permite verificar la trazabilidad entre cada HU (HU-01 a HU-15) y sus criterios
+  de aceptación con las rutas, controladores, servicios, repositorios y vistas
+  implementados. Genera una matriz clara para saber qué falta antes de la demo.
+
+- ci4-migration-builder/SKILL.md
+  Genera las migraciones de CodeIgniter 4 en el orden correcto respetando claves
+  foráneas, índices, únicos, soft-delete y auditoría. Fuerza el uso de los valores
+  exactos para estados, categorías, unidades de medida y el formato de periodo
+  (MM/YYYY o YYYYMM).
+
+- ci4-module-scaffold/SKILL.md
+  Genera un módulo completo siguiendo el patrón estandarizado: Controller, Service,
+  Repository, Model, Entity, vistas y rutas. Obliga a que el control de propiedad
+  ("¿Es dueño de este inmueble/servicio/factura?") se implemente SIEMPRE en
+  la capa Service, nunca únicamente en el Controller.
+
+- ci4-routes-guard/SKILL.md
+  Arma grupos de rutas explícitos, aplica los filtros auth y role:administrador
+  donde corresponda, protege el área /admin y asegura el correcto alcance por
+  propietario para /inmuebles, /servicios-inmueble y /facturas.
+
+- ci4-security-audit/SKILL.md
+  Checklist completo para auditar seguridad: sesiones seguras, regeneración de ID
+  al iniciar sesión, password_hash()/password_verify(), RBAC, protección CSRF,
+  bloqueo por intentos fallidos, auto-protección del administrador, control de
+  propiedad y validaciones específicas para la vinculación y facturación de servicios.
+
+- ci4-test-suite/SKILL.md
+  Guía para crear tests livianos con PHPUnit enfocados a reglas críticas: política
+  de contraseñas, unicidad de email y periodo, validación de lecturas 
+  (lectura_actual >= lectura_anterior), coherencia entre vencimientos,
+  transiciones de estado y restricción para facturar servicios no activos.
+
+
+5. ¿CÓMO USARLOS PARA DESARROLLAR CADA HISTORIA DE USUARIO?
+------------------------------------------------------------
+
+Para garantizar que se cubran todos los criterios de aceptación, se debe seguir
+este orden por cada módulo que se desarrolle:
+
+| ORDEN | ACCIÓN | SKILL A UTILIZAR |
+|-------|--------|-------------------|
+| 1     | Revisar el esquema y generar las migraciones necesarias | ci4-migration-builder |
+| 2     | Definir rutas agrupadas, con nombres claros y protegidas con filtros | ci4-routes-guard |
+| 3     | Generar las capas completas (Controller, Service, Repository, Model, Entity) y vistas base | ci4-module-scaffold |
+| 4     | Maquetar con AdminLTE: formularios, tablas, filtros, badges, estados vacíos y totales | adminlte-view-craft |
+| 5     | Realizar auditoría de seguridad: roles, propiedad, CSRF, estados y auto-protección | ci4-security-audit |
+| 6     | Validar contra la HU y sus criterios de aceptación | ci4-hu-validator |
+| 7     | Agregar tests mínimos para las reglas críticas del módulo | ci4-test-suite
+
+
+6. REGLAS FUNDAMENTALES A SEGUIR
+-------------------------------
+
+- Leer primero: Siempre comenzar leyendo agents/servi-inmueble-ci4/SKILL.md
+- Sin borrado físico: usuarios, inmuebles, servicios_inmueble y facturas NUNCA se eliminan físicamente. Usar baja lógica con estados (Baja/Inactivo) o soft-delete.
+- Control de propiedad obligatorio: Un usuario con rol Propietario solo podrá ver, crear, editar o gestionar sus propios inmuebles, servicios y facturas. Esta validación debe ir obligatoriamente en la capa Service.
+- Acceso restringido a Administrador: El ABMC de Usuarios y el ABMC de Tipos de Servicio deben estar únicamente bajo /admin, protegidos con auth + role:administrador.
+- Facturación con mucho cuidado: Respetar la unicidad (id_servicio_inmueble, periodo). Validar que lectura_actual >= lectura_anterior. Verificar coherencia entre fecha_vto1 y fecha_vto2. Solo se podrán cargar facturas sobre servicios con estado Activo. Queda prohibido facturar sobre Pausado, En Revisión o Inactivo.
+- Totales correctos: En el listado de facturas, los valores Total Pendiente, Total Pagado y Total General deben recalcularse únicamente con los registros resultantes de los filtros aplicados.
+- Seguridad obligatoria: Usar password_hash() y password_verify(). Regenerar el ID de sesión al iniciar sesión. Destruir sesión y cookie al cerrar sesión. Incluir <?= csrf_field() ?> en todos los formularios POST. Mostrar mensajes genéricos en el login. Impedir que un Administrador se dé de baja o bloquee a sí mismo.
+- Sin SPA: Se mantienen formularios clásicos con HTML, CSS y JavaScript. Se permite el uso de AdminLTE, Bootstrap y FontAwesome. No utilizar React, Vue, Angular ni ningún framework SPA.
+
+
+7. RECOMENDACIONES FINALES
+---------------------------
+
+- Doble clave para avanzar rápido: La combinación ci4-module-scaffold + ci4-hu-validator es la más efectiva para este TP.
+- Carpetas vacías: Las carpetas roles/, workflows/, specs/ y templates/ se dejan vacías intencionalmente.
+- Sin duplicados: Cada skill tiene su propia carpeta con su archivo SKILL.md.
+- Ante dudas: Siempre remitirse al skill mayor agents/servi-inmueble-ci4/SKILL.md.
+
+UBICACIÓN DE LOS SKILLS: /mnt/c/xampp/htdocs/servi-inmueble/agents/

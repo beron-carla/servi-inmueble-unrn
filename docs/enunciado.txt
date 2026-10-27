@@ -1,0 +1,148 @@
+“ServiInmueble” — Plataforma de Gestión y Control de Servicios de
+Inmuebles
+Descripción del Sistema
+En la administración de propiedades inmuebles (tanto de uso residencial como
+comercial o corporativo), uno de los principales desafíos operativos radica en la falta de
+centralización y trazabilidad en el control de los servicios públicos y privados (energía
+eléctrica, agua potable, gas natural, internet/fibra óptica, tasas municipales, expensas,
+etc). La dispersión de fechas de vencimiento, la ausencia de registros de consumo
+histórico y la omisión ocasional de pagos derivan en recargos por mora, cortes no
+planificados del suministro y severas fricciones entre propietarios, inquilinos y
+administradores.
+Para resolver esta problemática, la cátedra propone el desarrollo de la plataforma
+“ServiInmueble 2026”, una solución web integral diseñada para centralizar la gestión de
+inmuebles, configurar sus servicios asociados con sus respectivos identificadores de
+cuenta/medidor, registrar el ingreso de facturas con métricas de consumo y fecha de
+vencimiento, procesar la rendición de pagos y generar reportes analíticos de evolución
+de consumos a lo largo del tiempo
+
+Funcionalidades Principales
+Gestión de Inmuebles
+● Alta de Inmueble: Permite registrar una nueva propiedad especificando:
+Alias/Nombre descriptivo, Dirección completa (Calle, Número, Piso/Depto,
+Ciudad), Tipo de Inmueble (Casa, Departamento, Local Comercial, Oficina,
+Galpón), Superficie (m²), y Estado (Ocupado, Disponible, En Mantenimiento).
+● Modificación y Baja de Inmueble: Permite actualizar datos descriptivos o
+aplicar baja lógica (desactivación preservando el historial de facturación).
+● Consulta y Listado: Visualización de inmuebles en formato grilla/tarjetas con
+filtros por ciudad, tipo y estado de deudas pendientes.
+
+
+Gestión de Tipos de Servicios
+● Gestión de Catálogo de Servicios: Registro de los servicios disponibles en la
+plataforma (ej. Energía Eléctrica, Agua Potable, Gas Natural, Internet/Cable,
+Expensas, Tasa Municipal/ABL).
+● Atributos del Servicio: Cada tipo de servicio define Nombre, Categoría (Público
+/ Privado), Unidad de Medida estándar (kWh, m³, Gigas, Moneda fija) y
+Proveedor predeterminado.
+Gestión de Servicios de un Inmueble
+● Alta de Servicio de un Inmueble: Permite asociar un Tipo de Servicio
+específico (ej. Energía Eléctrica, Gas Natural) a un Inmueble determinado,
+registrando minuciosamente la información de la suscripción: Código de Pago
+Electrónico (CPE / Pagar), Número de Cuenta / Contrato, Número de Medidor,
+Domicilio de Facturación y Titular registrado en la entidad prestataria.
+● Estado de Servicio de Inmueble: Control y visualización clara del estado
+operativo actual de la vinculación (Activo, Pausado, En Revisión), permitiendo
+gestionar las transiciones según el estado de la propiedad o la prestación.
+● Baja de Servicio del Inmueble: Procedimiento formal y condiciones para la
+desvinculación lógica de un servicio de una propiedad, garantizando la
+preservación integra del historial de lecturas, facturación y pagos asociados para
+auditorías futuras.
+Gestión de Facturas (Consumo y Vencimiento)
+● Carga de Comprobante/Factura: Ingreso de nuevos comprobantes asociados
+a un servicio de un inmueble.
+Atributos de Factura: Período de facturación (Mes/Año), Fecha de Emisión,
+Fecha de Primer Vencimiento, Fecha de Segundo Vencimiento (opcional con
+recargo), Monto Total ($), Consumo del Período (valor numérico en la unidad de
+medida correspondiente, ej. 340 kWh), Lectura Anterior y Lectura Actual.
+● Subida de Archivo: Adjuntar la factura en formato digital (PDF o imagen).
+Módulo de Pago de Facturas
+● Registro de Pago: Permite cambiar el estado de una factura de Pendiente a
+Pagada.
+● Datos de Transacción: Fecha de Pago realizada, Monto Abonado, Medio de
+Pago (Transferencia, Débito Automático, Efectivo, Billetera Virtual),
+Código/Número de Comprobante de transacción y Carga del Comprobante
+digital (PDF/JPG).
+
+● Control de Mora: Identificación automática si el pago fue realizado a tiempo o
+con posterioridad a la fecha de vencimiento.
+Módulo de Informe de Consumo y Analítica
+● Gráficos Comparativos de Consumo: Muestra la evolución mensual/bimestral
+del consumo físico (kWh, m³, etc.) para un inmueble y servicio específico
+durante los últimos 12 meses.
+● Cálculo de Promedios y Variaciones: Muestra el consumo promedio histórico,
+variación porcentual respecto al mismo período del año anterior y costo
+promedio por unidad de consumo.
+● Consolidado por Inmueble: Permite comparar el gasto total de servicios entre
+diferentes propiedades de un mismo propietario.
+Roles del Sistema
+El sistema implementará un esquema estricto de Control de Acceso Basado en Roles,
+definiendo las siguientes jerarquías de usuarios:
+Usuario Administrador (Gestor General)
+Corresponde al perfil técnico o administrativo global. Sus responsabilidades incluyen:
+● Administrar los usuarios del sistema (altas, bajas, modificaciones, bloqueos y
+restablecimiento de contraseñas).
+● Gestionar el catálogo maestro de Tipos de Servicios (unidades de medida,
+proveedores sugeridos y categorías).
+● Auditar el mapa general de inmuebles, contratos de servicios activos y estado de
+facturación.
+● Consultar reportes consolidados de morosidad y métricas globales de consumo
+por zona geográfica o categoría.
+Usuario Propietario / Gestor de Inmuebles
+Corresponde al usuario registrado responsable de una o más propiedades:
+● Administrar el perfil personal e Inmuebles de su propiedad (dirección, tipo,
+unidad funcional, superficie).
+● Vincular servicios del catálogo maestro a sus inmuebles especificando el número
+de cuenta, medidor o contrato.
+● Dar de alta facturas de servicios ingresando el período, lecturas/consumo, monto
+total y fecha límite de pago.
+● Registrar el pago de facturas adjuntando comprobantes de transacción y método
+de pago utilizado.
+
+Visualizar el tablero de control (dashboard) con alertas de vencimientos
+próximos y el Informe de Consumo comparativo.
+Régimen de Aprobación
+Para garantizar el cumplimiento de los objetivos pedagógicos de la asignatura, el
+desarrollo se divide en dos hitos de evaluación obligatorios:
+Para la aprobación de la cursada se deberán implementar las siguientes
+funcionalidades:
+● Seguridad y Acceso: Login de usuarios, logout, sesión segura y registro de
+nuevos usuarios.
+● Administración General: ABMC de Usuarios
+● Gestión de Tipos de Servicios: ABMC de tipos de servicios con sus
+características particulares, por ejemplo unidad de medida.
+● Gestión de Inmuebles: ABMC de Inmuebles
+● Gestión de servicios de un Inmueble: Se debe poder agregar un servicio a un
+inmueble, con todas sus características particulares como nro de medidor,
+número de cuenta, proveedor, codigo de cobro, etc.
+● Facturación: Alta de Factura (con consumo y vencimiento).
+● Informes y Métricas: Listado tabular de facturas pendientes y pagadas con
+totales sumarios.
+Para la aprobación final de la materia deberá implementarse las siguientes
+funcionalidades:
+● Administración General: Panel Dashboard con métricas globales.
+● Facturación y Pagos: Carga de comprobantes digitales (PDF/JPG), control de
+mora y avisos de vencimiento.
+● Informes y Métricas: Informe de Consumo: Gráficos dinámicos de consumo
+interanual y promedio por unidad
+
+Sobre la implementación
+El sistema se desarrollará usando HTML5, Javascript, PHP y base de datos MySQL y
+deberá cumplir con las especificaciones de la W3C HTML 5 y CSS3. Se debe
+desarrollar respetando el código según los lineamientos planteados en codeigniter.
+Todo formulario debe respetar un nivel estándar de usabilidad, proporcionando las
+indicaciones correspondientes para cada caso, también se deberán realizar las
+validaciones correspondientes para los campos requeridos y con formatos especiales.
+Para mejorar la usabilidad del sistema se pueden utilizar complementos como JQuery,
+Bootstrap, AJAX, etc.
+Entrega
+La entrega consiste en:
+● Una Presentación grupal del desarrollo del proyecto, deben contar y mostrar
+todo el proceso de desarrollo del Proyecto de Software.
+● Una demo del proyecto funcionando, con las funcionalidades especificadas para
+la etapa correspondiente.
+● La entrega del código fuente con scripts de bd en un archivo comprimido.
+La entrega final del trabajo será la segunda semana (17 al 24) de Noviembre de 2026,
+en esta etapa se debe cumplir con todas las funcionalidades para aprobar la cursada.
+En caso de no cumplir con la entrega en la fecha estipulada, el grupo deberá rendir un
+coloquio sobre un tema a asignar por la cátedra.

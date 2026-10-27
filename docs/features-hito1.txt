@@ -1,0 +1,862 @@
+================================================================================
+"ServiInmueble 2026" - Hito 1 (Aprobación de Cursada)
+Historias de Usuario - Escenarios Gherkin - Criterios de Aceptación
+================================================================================
+
+Alcance Hito 1: seguridad y acceso, ABMC de usuarios, ABMC de tipos de
+servicio, ABMC de inmuebles, servicios de un inmueble, alta de facturas y
+listado tabular de facturas con totales sumarios.
+
+Las HU de ABMC están divididas por operación: Alta / Modificación y Baja /
+Consulta.
+
+Roles del sistema: Administrador, Propietario/Gestor de Inmuebles.
+
+Índice de HU:
+  HU-01  Registro de nuevos usuarios
+  HU-02  Inicio de sesión
+  HU-03  Cierre de sesión
+  HU-04  Alta de usuarios
+  HU-05  Modificación y baja de usuarios
+  HU-06  Consulta y listado de usuarios
+  HU-07  Alta de tipos de servicio
+  HU-08  Modificación y baja de tipos de servicio
+  HU-09  Consulta y listado de tipos de servicio
+  HU-10  Alta de inmuebles
+  HU-11  Modificación y baja lógica de inmuebles
+  HU-12  Consulta y listado de inmuebles
+  HU-13  Vinculación de servicios a un inmueble
+  HU-14  Alta de factura
+  HU-15  Listado de facturas con totales
+
+
+================================================================================
+HU-01 · Registro de nuevos usuarios
+================================================================================
+
+Como visitante del sitio, quiero crear una cuenta, para acceder a las
+funcionalidades autenticadas.
+
+--------------------------------------------------------------------------------
+Feature: Registro de usuarios
+  Como visitante quiero crear una cuenta para acceder al sistema
+
+  Background:
+    Dado que no hay una cuenta registrada con email "juan@mail.com"
+
+  Scenario: Registro exitoso
+    When visits "/auth/registro"
+    And completa el formulario con nombre "Juan Pérez", email "juan@mail.com",
+        password "Secreta123" y rol "Propietario"
+    And acepta los términos
+    And presiona "Registrarse"
+    Then ve el mensaje "Registro exitoso"
+    And el usuario "juan@mail.com" existe en el sistema con estado "Activo"
+    And recibe un email de bienvenida
+
+  Scenario: Registro con email duplicado
+    Given existe un usuario con email "juan@mail.com"
+    When registers with email "juan@mail.com"
+    Then ve el error "El email ya se encuentra registrado"
+    And no se crea un nuevo usuario
+
+  Scenario Outline: Validaciones de registro
+    When completes the register form with password "<password>" and name "<nombre>"
+    Then sees the error "<error>"
+
+    Examples:
+      | nombre     | password   | error                              |
+      |            | Secreta123 | El nombre es obligatorio           |
+      | Juan Pérez |            | La contraseña es obligatoria       |
+      | Juan Pérez | corta      | Mínimo 8 caracteres                |
+      | Juan Pérez | Secreta123 | El email debe tener formato válido |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-01.1: El password se guarda hasheado (bcrypt/argon2), nunca en texto plano.
+  CA-01.2: El email se valida por formato y unicidad (case-insensitive).
+  CA-01.3: Password mínimo 8 caracteres, con al menos una letra y un número.
+  CA-01.4: El rol por defecto es Propietario; solo un admin puede crear
+           usuarios con rol Administrador.
+  CA-01.5: Cuentas nuevas nacen Activas.
+
+
+================================================================================
+HU-02 · Inicio de sesión
+================================================================================
+
+Como usuario registrado, quiero iniciar sesión, para acceder a mi panel.
+
+--------------------------------------------------------------------------------
+Feature: Login
+  Como usuario registrado quiero iniciar sesión para acceder al sistema
+
+  Scenario: Login exitoso
+    Given el usuario "juan@mail.com" existe con password "Secreta123" y estado "Activo"
+    When visits "/auth/login"
+    And ingresa email "juan@mail.com" y password "Secreta123"
+    Then es redirigido a "/dashboard"
+    And ve su nombre en la barra de navegación
+
+  Scenario: Login con credenciales inválidas
+    Given el usuario "juan@mail.com" existe con password "Secreta123"
+    When ingresa email "juan@mail.com" y password "Otra12345"
+    Then ve el error "Email o contraseña incorrectos"
+    And permanece en "/auth/login"
+
+  Scenario: Login de usuario bloqueado
+    Given el usuario "bloqueado@mail.com" tiene estado "Bloqueado"
+    When ingresa credenciales correctas
+    Then ve el error "Usuario bloqueado, contacte al administrador"
+    And no se crea sesión
+
+  Scenario: Protección contra fuerza bruta
+    Given el usuario "juan@mail.com" intentó login fallido 5 veces
+    When intenta login nuevamente con credenciales correctas
+    Then ve el error "Demasiados intentos, intente en 15 minutos"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-02.1: La sesión usa identificador aleatorio de alta entropía regenerado
+           tras el login (prevención de fixation).
+  CA-02.2: La sesión expira por inactividad (30 min) y al hacer logout.
+  CA-02.3: El mensaje de error es genérico (no revela si el email existe).
+  CA-02.4: Todo acceso a rutas protegidas sin sesión redirige a "/auth/login".
+
+
+================================================================================
+HU-03 · Cierre de sesión
+================================================================================
+
+Como usuario autenticado, quiero cerrar mi sesión, para proteger mi cuenta en
+equipos compartidos.
+
+--------------------------------------------------------------------------------
+Feature: Logout
+
+  Scenario: Logout exitoso
+    Given que "juan@mail.com" está logueado
+    When presiona "Cerrar sesión"
+    Then la sesión es destruida
+    And es redirigido a "/auth/login"
+    And al intentar acceder a "/inmuebles" ve el login
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-03.1: La cookie de sesión se elimina del cliente y el registro se
+           invalida en el servidor.
+
+
+================================================================================
+HU-04 · Alta de usuarios (solo Administrador)
+================================================================================
+
+Como Administrador, quiero dar de alta usuarios, para autorizarles el acceso
+al sistema.
+
+--------------------------------------------------------------------------------
+Feature: Alta de usuarios
+
+  Rule: Solo el rol Administrador accede a este módulo
+
+  Scenario: Acceso denegado a no administradores
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When visits "/admin/usuarios/nuevo"
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+  Scenario: Alta de usuario exitosa
+    Given que un "Administrador" está logueado
+    When crea un usuario con nombre "María López", email "maria@mail.com",
+        rol "Propietario", estado "Activo"
+    Then el usuario aparece en el listado
+    And su password está hasheado
+    And puede iniciar sesión con sus credenciales
+
+  Scenario: Alta de usuario con rol Administrador
+    Given que un "Administrador" está logueado
+    When crea un usuario con rol "Administrador"
+    Then el usuario queda con rol "Administrador"
+    And el mismo puede administrar usuarios
+
+  Scenario: No permite email duplicado
+    Given existe el usuario "maria@mail.com"
+    When intenta crear otro usuario con email "maria@mail.com"
+    Then ve el error "El email ya se encuentra registrado"
+    And no se crea un nuevo usuario
+
+  Scenario Outline: Validaciones de alta de usuario
+    When crea un usuario con nombre "<nombre>", email "<email>",
+        password "<password>" y rol "<rol>"
+    Then ve el error "<error>"
+
+    Examples:
+      | nombre     | email          | password   | rol         | error                            |
+      |            | maria@mail.com | Secreta123 | Propietario | El nombre es obligatorio         |
+      | María López|                | Secreta123 | Propietario | El email es obligatorio          |
+      | María López| no-es-email    | Secreta123 | Propietario | El email debe tener formato válido |
+      | María López| maria@mail.com | corta      | Propietario | Mínimo 8 caracteres de contraseña |
+      | María López| maria@mail.com | Secreta123 |             | El rol es obligatorio            |
+      | María López| maria@mail.com | Secreta123 | Superusuario | Rol inválido                     |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-04.1: Campos obligatorios: nombre, email, password, rol.
+  CA-04.2: Email único en el sistema (case-insensitive).
+  CA-04.3: Password hasheado con bcrypt/argon2; mínimo 8 caracteres.
+  CA-04.4: Rol ∈ {Administrador, Propietario}.
+  CA-04.5: Solo un Administrador puede crear usuarios y asignar roles.
+  CA-04.6: El usuario nuevo nace con estado "Activo".
+
+
+================================================================================
+HU-05 · Modificación y baja de usuarios
+================================================================================
+
+Como Administrador, quiero modificar y dar de baja usuarios, para mantener el
+control de accesos del sistema.
+
+--------------------------------------------------------------------------------
+Feature: Modificación y baja de usuarios
+
+  Rule: Solo el rol Administrador accede a este módulo
+
+  Scenario: Modificar datos de usuario
+    Given existe el usuario "maria@mail.com" con rol "Propietario"
+    And que un "Administrador" está logueado
+    When cambia su nombre a "María L. López" y su rol a "Administrador"
+    Then el listado refleja el nuevo nombre y rol "Administrador"
+
+  Scenario: Cambiar estado a Bloqueado
+    When cambia el estado de "maria@mail.com" a "Bloqueado"
+    Then la usuaria no puede iniciar sesión
+    And ve el error "Usuario bloqueado, contacte al administrador"
+
+  Scenario: Restablecer contraseña
+    When genera un password temporal para "maria@mail.com"
+    Then el password temporal queda marcado para cambio en el próximo login
+    And el password anterior deja de servir
+
+  Scenario: Baja lógica de usuario
+    When da de baja a "maria@mail.com"
+    Then su estado pasa a "Baja"
+    And no puede iniciar sesión
+    And su historial de facturas se conserva
+    And sigue apareciendo en listados históricos con estado "Baja"
+
+  Scenario: Baja como operación reversible
+    Given el usuario "maria@mail.com" tiene estado "Baja"
+    When reactiva su estado a "Activo"
+    Then puede volver a iniciar sesión
+
+  Scenario: No eliminarse a sí mismo
+    When el administrador intenta darse de baja
+    Then ve el error "No puede eliminar su propia cuenta"
+
+  Scenario: Acceso denegado a no administradores
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When intenta modificar a "maria@mail.com" por URL directa
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-05.1: Los campos editables son nombre, email, rol y estado.
+  CA-05.2: Estado ∈ {Activo, Bloqueado, Baja}.
+  CA-05.3: La baja es lógica (soft delete), nunca borrado físico.
+  CA-05.4: Nunca se pierde el historial de facturas/pagos del usuario.
+  CA-05.5: Un administrador no puede darse de baja a sí mismo.
+  CA-05.6: Auditoría básica: quién modificó y cuándo.
+
+
+================================================================================
+HU-06 · Consulta y listado de usuarios
+================================================================================
+
+Como Administrador, quiero consultar el listado de usuarios, para auditar quién
+tiene acceso al sistema.
+
+--------------------------------------------------------------------------------
+Feature: Consulta y listado de usuarios
+
+  Scenario: Listado completo
+    Given existen los usuarios "juan@mail.com" (Activo) y "maria@mail.com" (Baja)
+    And que un "Administrador" está logueado
+    When visits "/admin/usuarios"
+    Then ve ambos usuarios con nombre, email, rol y estado
+
+  Scenario: Búsqueda por nombre o email
+    When busca "maria"
+    Then solo ve los usuarios que coinciden con "maria"
+
+  Scenario: Filtro por rol y estado
+    When filtra por rol "Propietario" y estado "Activo"
+    Then solo ve usuarios con ambos criterios
+
+  Scenario: Detalle de usuario
+    When selecciona "maria@mail.com"
+    Then ve su perfil y el resumen de inmuebles y facturas asociados
+
+  Scenario: Acceso denegado a no administradores
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When visits "/admin/usuarios"
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+  Scenario: Listado sin resultados
+    When busca "usuarioinexistente"
+    Then ve el estado vacío "No se encontraron usuarios"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-06.1: Listado con columnas: nombre, email, rol, estado y fecha de alta.
+  CA-06.2: Búsqueda por nombre o email (parcial, case-insensitive).
+  CA-06.3: Filtros por rol y estado.
+  CA-06.4: Solo accesible con rol Administrador.
+  CA-06.5: Estados vacíos y mensajes claros cuando no hay resultados.
+
+
+================================================================================
+HU-07 · Alta de tipos de servicio
+================================================================================
+
+Como Administrador, quiero dar de alta tipos de servicio en el catálogo, para
+que los propietarios puedan vincularlos a sus inmuebles.
+
+--------------------------------------------------------------------------------
+Feature: Alta de tipos de servicio
+
+  Rule: Solo el rol Administrador gestiona el catálogo maestro
+
+  Scenario: Alta de tipo de servicio exitosa
+    Given que un "Administrador" está logueado
+    When crea un tipo de servicio con nombre "Energía Eléctrica",
+        categoría "Público", unidad "kWh" y proveedor "Edenor"
+    Then el tipo de servicio aparece en el catálogo
+    And los propietarios pueden verlo al vincular un servicio
+
+  Scenario: No permite nombre duplicado
+    Given existe el tipo "Agua Potable"
+    When intenta crear otro tipo con nombre "Agua Potable"
+    Then ve el error "Ya existe un tipo de servicio con ese nombre"
+
+  Scenario: Acceso denegado a propietarios
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When visits "/admin/tipos-servicio/nuevo"
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+  Scenario Outline: Validaciones de alta
+    When crea un tipo con nombre "<nombre>", unidad "<unidad>",
+        categoría "<categoria>" y proveedor "<proveedor>"
+    Then ve el error "<error>"
+
+    Examples:
+      | nombre | unidad | categoria | proveedor | error                              |
+      |        | kWh    | Público   | Edenor    | El nombre es obligatorio           |
+      | Agua   |        | Público   | AySA      | La unidad de medida es obligatoria |
+      | Agua   | m³     |           | AySA      | La categoría es obligatoria        |
+      | Agua   | m³     | Mixto     | AySA      | Categoría inválida                 |
+      | Agua   | m³     | Público   |           | El proveedor es obligatorio        |
+      | Agua   | Pesos  | Público   | AySA      | Unidad de medida inválida          |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-07.1: Campos obligatorios: nombre, categoría, unidad de medida y
+           proveedor predeterminado.
+  CA-07.2: Categoría ∈ {Público, Privado}.
+  CA-07.3: Unidad de medida ∈ {kWh, m³, Gigas, Moneda fija} (catálogo
+           configurable).
+  CA-07.4: Nombre de tipo de servicio único.
+  CA-07.5: Solo el Administrador puede dar de alta tipos de servicio.
+
+
+================================================================================
+HU-08 · Modificación y baja de tipos de servicio
+================================================================================
+
+Como Administrador, quiero modificar o dar de baja tipos de servicio, para
+mantener actualizado el catálogo maestro.
+
+--------------------------------------------------------------------------------
+Feature: Modificación y baja de tipos de servicio
+
+  Scenario: Modificar unidad de medida
+    Given existe el tipo de servicio "Internet" con unidad "Gigas"
+    And que un "Administrador" está logueado
+    When cambia su unidad a "GB"
+    Then las facturas futuras usan "GB"
+    And las facturas existentes conservan su unidad original
+
+  Scenario: Modificar proveedor y categoría
+    When cambia el proveedor de "Energía Eléctrica" a "Edesur"
+        y su categoría a "Privado"
+    Then el catálogo refleja los nuevos valores
+
+  Scenario: Baja de tipo con servicios asociados
+    Given el tipo "Gas Natural" tiene servicios vinculados con facturas
+    When intenta eliminarlo
+    Then ve el aviso "No se puede eliminar: tiene servicios asociados"
+    And se ofrece desactivarlo en lugar de eliminarlo
+
+  Scenario: Desactivar tipo con uso
+    When desactiva el tipo "Gas Natural"
+    Then ya no aparece para vincular nuevos servicios
+    And los servicios y facturas existentes se conservan intactos
+
+  Scenario: Baja de tipo sin uso
+    Given el tipo "Tasa Municipal" no tiene servicios vinculados
+    When lo elimina
+    Then desaparece del catálogo
+
+  Scenario: Acceso denegado a propietarios
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When intenta modificar un tipo de servicio
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-08.1: Los campos editables son nombre, categoría, unidad de medida y
+           proveedor.
+  CA-08.2: Cambiar la unidad no altera facturas ya registradas.
+  CA-08.3: No se elimina un tipo con servicios vinculados: se desactiva
+           (baja lógica).
+  CA-08.4: El historial de facturas y lecturas siempre se preserva.
+  CA-08.5: Solo el Administrador puede modificar o dar de baja tipos.
+
+
+================================================================================
+HU-09 · Consulta y listado de tipos de servicio
+================================================================================
+
+Como usuario del sistema, quiero consultar el catálogo de tipos de servicio,
+para conocer los servicios disponibles y sus características.
+
+--------------------------------------------------------------------------------
+Feature: Consulta y listado de tipos de servicio
+
+  Scenario: Listado para Administrador
+    Given que un "Administrador" está logueado
+    When visits "/admin/tipos-servicio"
+    Then ve todos los tipos con nombre, categoría, unidad y proveedor
+
+  Scenario: Catálogo para Propietario
+    Given que "juan@mail.com" está logueado con rol "Propietario"
+    When selecciona un inmueble para vincular un servicio
+    Then solo ve los tipos activos del catálogo
+    And no puede crear, editar ni eliminar tipos
+
+  Scenario: Filtro por categoría
+    When filtra por categoría "Público"
+    Then solo ve los tipos de categoría pública
+
+  Scenario: Detalle de tipo de servicio
+    When selecciona "Energía Eléctrica"
+    Then ve su categoría, unidad de medida "kWh", proveedor "Edenor"
+        y la cantidad de inmuebles que lo tienen vinculado
+
+  Scenario: Listado sin resultados
+    Given el catálogo está vacío
+    Then ve el estado vacío "No hay tipos de servicio registrados"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-09.1: Listado con: nombre, categoría, unidad de medida y proveedor.
+  CA-09.2: Filtro por categoría (Público/Privado) y por estado activo.
+  CA-09.3: El Administrador ve el catálogo completo con acciones de edición.
+  CA-09.4: El Propietario solo consulta tipos activos (solo lectura).
+
+
+================================================================================
+HU-10 · Alta de inmuebles
+================================================================================
+
+Como Propietario/Gestor, quiero registrar un inmueble, para administrar mis
+propiedades.
+
+--------------------------------------------------------------------------------
+Feature: Alta de inmuebles
+
+  Background:
+    Dado que "juan@mail.com" está logueado con rol "Propietario"
+
+  Scenario: Alta de inmueble exitosa
+    When registra un inmueble con alias "Depto Centro", calle "San Martín",
+        número 125, piso "4", depto "B", ciudad "Rosario", tipo "Departamento",
+        superficie 65.5 y estado "Disponible"
+    Then el inmueble aparece en su listado
+    And queda asignado a su usuario como propietario
+
+  Scenario: Alta de inmueble por Administrador
+    Given que un "Administrador" está logueado
+    When registra un inmueble para el propietario "juan@mail.com"
+    Then el inmueble queda vinculado a "juan@mail.com"
+
+  Scenario: Solo ve sus propios inmuebles
+    Given el inmueble "Local Norte" pertenece a "otro@mail.com"
+    Then "juan@mail.com" no lo ve en su listado
+
+  Scenario Outline: Validaciones de alta
+    When registra un inmueble con alias "<alias>", ciudad "<ciudad>",
+        tipo "<tipo>" y superficie "<superficie>"
+    Then ve el error "<error>"
+
+    Examples:
+      | alias      | ciudad  | tipo            | superficie | error                       |
+      |            | Rosario | Departamento    | 65         | El alias es obligatorio     |
+      | Depto Sur  |         | Departamento    | 65         | La ciudad es obligatoria    |
+      | Depto Sur  | Rosario |                 | 65         | El tipo es obligatorio      |
+      | Depto Sur  | Rosario | Departamento    | -10        | La superficie debe ser > 0  |
+      | Depto Sur  | Rosario | Departamento    | abc        | La superficie debe ser numérica |
+      | Depto Sur  | Rosario | Estacionamiento | 65         | Tipo de inmueble inválido   |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-10.1: Campos obligatorios: alias, calle, número, ciudad, tipo,
+           superficie y estado; piso/depto opcional.
+  CA-10.2: Tipo ∈ {Casa, Departamento, Local Comercial, Oficina, Galpón}.
+  CA-10.3: Estado ∈ {Ocupado, Disponible, En Mantenimiento}.
+  CA-10.4: Superficie numérica positiva (máx. 2 decimales).
+  CA-10.5: El inmueble queda asociado al usuario propietario que lo crea
+           (o al indicado si el admin lo crea por otro).
+  CA-10.6: Un propietario solo puede dar de alta inmuebles para sí mismo.
+
+
+================================================================================
+HU-11 · Modificación y baja lógica de inmuebles
+================================================================================
+
+Como Propietario/Gestor, quiero modificar o dar de baja un inmueble, para
+mantener actualizada la información de mis propiedades.
+
+--------------------------------------------------------------------------------
+Feature: Modificación y baja lógica de inmuebles
+
+  Background:
+    Dado que "juan@mail.com" está logueado con rol "Propietario"
+    Y existe el inmueble "Depto Centro" de su propiedad
+
+  Scenario: Modificar datos descriptivos
+    When cambia el alias a "Depto Centro Renovado", la superficie a 70
+        y el estado a "Ocupado"
+    Then el listado refleja los cambios
+
+  Scenario: Cambiar estado a En Mantenimiento
+    When cambia el estado a "En Mantenimiento"
+    Then el inmueble queda marcado como "En Mantenimiento"
+    And los servicios y facturas existentes no se afectan
+
+  Scenario: Baja lógica preserva facturación
+    Given el inmueble "Depto Centro" tiene facturas registradas
+    When lo da de baja
+    Then su estado pasa a "Inactivo"
+    And sus facturas e historial siguen siendo consultables
+    And no aparece por defecto en el listado activo
+
+  Scenario: Tras la baja no se cargan servicios nuevos
+    Given el inmueble está "Inactivo"
+    When intenta vincular un nuevo servicio
+    Then ve el error "No se pueden agregar servicios a un inmueble inactivo"
+
+  Scenario: Reactivar inmueble
+    Given el inmueble está "Inactivo"
+    When lo reactiva a estado "Disponible"
+    Then vuelve a aparecer en el listado activo
+
+  Scenario: No puede modificar inmuebles ajenos
+    Given el inmueble "Local Norte" pertenece a "otro@mail.com"
+    When intenta modificarlo por URL directa
+    Then ve el error 403 "No tiene permisos para esta acción"
+
+  Scenario Outline: Validaciones de modificación
+    When cambia el inmueble con alias "<alias>", superficie "<superficie>"
+        y estado "<estado>"
+    Then ve el error "<error>"
+
+    Examples:
+      | alias     | superficie | estado          | error                        |
+      |           | 70         | Ocupado         | El alias es obligatorio      |
+      | Depto Sur | -5         | Ocupado         | La superficie debe ser > 0   |
+      | Depto Sur | 70         | Alquilado       | Estado inválido              |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-11.1: Editables: alias, dirección, ciudad, tipo, superficie y estado.
+  CA-11.2: Estado ∈ {Ocupado, Disponible, En Mantenimiento, Inactivo}.
+  CA-11.3: La baja es lógica (soft delete); jamás se borran facturas,
+           servicios ni lecturas asociadas.
+  CA-11.4: Un inmueble inactivo no admite nuevos servicios ni facturas.
+  CA-11.5: La reactivación restaura el acceso normal del inmueble.
+  CA-11.6: Solo el propietario del inmueble (o un Administrador) puede
+           modificarlo.
+
+
+================================================================================
+HU-12 · Consulta y listado de inmuebles
+================================================================================
+
+Como Propietario/Gestor (y Administrador), quiero consultar los inmuebles en
+formato grilla con filtros, para encontrar rápidamente una propiedad.
+
+--------------------------------------------------------------------------------
+Feature: Consulta y listado de inmuebles
+
+  Background:
+    Dado que "juan@mail.com" está logueado con rol "Propietario"
+    Y existen inmuebles en ciudades "Rosario" y "Funes"
+        con estados "Ocupado" y "Disponible"
+
+  Scenario: Listado en grilla
+    When visits "/inmuebles"
+    Then ve sus inmuebles en formato grilla/tarjetas
+        con alias, dirección, ciudad, tipo, superficie y estado
+
+  Scenario: Filtro por ciudad y tipo
+    When filtra por ciudad "Rosario" y tipo "Departamento"
+    Then solo ve los inmuebles que cumplen ambos criterios
+
+  Scenario: Filtro por estado
+    When filtra por estado "Disponible"
+    Then solo ve los inmuebles disponibles
+
+  Scenario: Detalle de inmueble
+    When selecciona "Depto Centro"
+    Then ve todos sus datos
+    And ve los servicios vinculados y el estado de su facturación
+
+  Scenario: Listado como Administrador
+    Given que un "Administrador" está logueado
+    When visits "/admin/inmuebles"
+    Then ve todos los inmuebles de todos los propietarios
+    And puede filtrar por propietario
+
+  Scenario: Listado sin resultados
+    When filtra por ciudad "Inexistente"
+    Then ve el estado vacío "No se encontraron inmuebles"
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-12.1: Presentación en grilla/tarjetas con datos resumidos del inmueble.
+  CA-12.2: Filtros por ciudad, tipo, estado y (para admin) propietario.
+  CA-12.3: Un propietario solo lista sus propios inmuebles.
+  CA-12.4: El Administrador audita el mapa general de inmuebles.
+  CA-12.5: El detalle muestra servicios vinculados y resumen de facturación.
+
+
+================================================================================
+HU-13 · Vinculación de servicios a un inmueble
+================================================================================
+
+Como Propietario, quiero asociar un tipo de servicio a mi inmueble con sus
+datos de contrato, para poder cargar facturas.
+
+--------------------------------------------------------------------------------
+Feature: Servicios de un Inmueble
+
+  Background:
+    Dado que "juan@mail.com" está logueado
+    Y existe el inmueble "Depto Centro" de su propiedad
+    Y el catálogo contiene "Energía Eléctrica" (kWh, Edenor)
+
+  Scenario: Alta de servicio
+    When vincula "Energía Eléctrica" a "Depto Centro" con CPE "017-20394856-0",
+        cuenta "44556677", medidor "998877", domicilio de facturación
+        "San Martín 125, 4°B" y titular "Juan Pérez"
+    Then el servicio queda en estado "Activo"
+    And puede dar de alta facturas para ese servicio
+
+  Scenario: Transiciones de estado del servicio
+    Given el servicio está "Activo"
+    When lo cambia a "Pausado"
+    Then no puede cargar facturas nuevas mientras esté "Pausado"
+    When lo cambia a "En Revisión"
+    Then el estado visible es "En Revisión"
+    When lo vuelve a "Activo"
+    Then puede cargar facturas nuevamente
+
+  Scenario: Baja de servicio preserva el historial
+    Given el servicio tiene facturas pagadas y pendientes
+    When da de baja el servicio
+    Then su estado pasa a "Inactivo"
+    And las facturas, lecturas y pagos siguen consultables
+    And no puede crear facturas nuevas
+
+  Scenario: Un tipo de servicio solo se vincula una vez por inmueble
+    Given "Depto Centro" ya tiene "Energía Eléctrica" activo
+    When intenta vincularlo otra vez
+    Then ve el error "El inmueble ya tiene este servicio vinculado"
+
+  Scenario: Sin tipos de servicio disponibles
+    Given el catálogo de servicios está vacío
+    When ingresa al formulario de alta de servicio
+    Then ve el aviso "No hay tipos de servicio disponibles.
+        Contacte al administrador."
+
+  Scenario Outline: Validaciones del alta de servicio
+    When vincula un servicio con CPE "<cpe>", cuenta "<cuenta>",
+        domicilio "<domicilio>" y titular "<titular>"
+    Then ve el error "<error>"
+
+    Examples:
+      | cpe              | cuenta   | domicilio          | titular    | error                           |
+      |                  | 44556677 | San Martín 125     | Juan Pérez | El CPE/Pagar es obligatorio     |
+      | 017-20394856-0   |          | San Martín 125     | Juan Pérez | El número de cuenta es obligatorio |
+      | 017-20394856-0   | 44556677 |                    | Juan Pérez | El domicilio de facturación es obligatorio |
+      | 017-20394856-0   | 44556677 | San Martín 125     |            | El titular es obligatorio       |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-13.1: Estados ∈ {Activo, Pausado, En Revisión, Inactivo (baja)}.
+  CA-13.2: Campos obligatorios: tipo de servicio, CPE/pagar, número de cuenta,
+           domicilio de facturación y titular; medidor opcional (no todos los
+           servicios lo tienen).
+  CA-13.3: Solo el propietario del inmueble (o un Administrador) puede
+           gestionar sus servicios.
+  CA-13.4: Un mismo tipo de servicio solo puede vincularse una vez activo por
+           inmueble.
+  CA-13.5: La baja es lógica e irreversiblemente preserva el historial de
+           lecturas, facturación y pagos.
+  CA-13.6: Solo los servicios "Activo" admiten carga de facturas.
+
+
+================================================================================
+HU-14 · Alta de factura
+================================================================================
+
+Como Propietario, quiero registrar una factura con su consumo y vencimiento,
+para controlar la facturación del servicio.
+
+--------------------------------------------------------------------------------
+Feature: Facturación - Alta de factura
+
+  Background:
+    Dado que "juan@mail.com" está logueado
+    Y el inmueble "Depto Centro" tiene el servicio "Energía Eléctrica"
+        en estado "Activo"
+
+  Scenario: Alta de factura exitosa
+    When registra una factura del período 10/2026 con emisión "05/10/2026",
+        primer vencimiento "20/10/2026", segundo vencimiento "30/10/2026",
+        monto 15430.50, consumo 340 kWh, lectura anterior 12000 y
+        lectura actual 12340
+    Then la factura queda en estado "Pendiente"
+    And el consumo calculado coincide con lectura actual menos lectura anterior
+    And aparece en el listado de facturas pendientes
+
+  Scenario: Validación de lecturas
+    When registra una factura con lectura anterior 12340 y lectura actual 12000
+    Then ve el error "La lectura actual debe ser mayor o igual a la anterior"
+
+  Scenario: Período duplicado
+    Given ya existe una factura del período 10/2026 para ese servicio
+    When intenta registrar otra del período 10/2026
+    Then ve el error "Ya existe una factura para ese período"
+
+  Scenario: Vencimiento coherente
+    When registra una factura con primer vencimiento "30/10/2026" y
+        segundo vencimiento "20/10/2026"
+    Then ve el error "El segundo vencimiento debe ser posterior al primero"
+
+  Scenario: Factura en servicio pausado
+    Given el servicio está "Pausado"
+    When intenta registrar una factura
+    Then ve el error "No se pueden cargar facturas sobre un servicio pausado"
+
+  Scenario Outline: Validaciones de factura
+    When registra una factura con período "<periodo>", vencimiento "<vto1>",
+        monto "<monto>" y consumo "<consumo>"
+    Then ve el error "<error>"
+
+    Examples:
+      | periodo | vto1       | monto  | consumo | error                               |
+      |         | 20/10/2026 | 1000   | 340     | El período es obligatorio           |
+      | 10/2026 |            | 1000   | 340     | La fecha de vencimiento es obligatoria |
+      | 10/2026 | 20/10/2026 |        | 340     | El monto es obligatorio             |
+      | 10/2026 | 20/10/2026 | -500   | 340     | El monto debe ser mayor a 0         |
+      | 13/2026 | 20/10/2026 | 1000   | 340     | Período inválido                    |
+      | 10/2026 | 20/10/2026 | 1000   | -5      | El consumo no puede ser negativo    |
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-14.1: Estados de factura ∈ {Pendiente, Pagada, Vencida (calculado)}.
+  CA-14.2: Campos: período (mes/año), fecha de emisión, 1er vencimiento,
+           2do vencimiento (opcional), monto total, consumo en la unidad del
+           tipo de servicio, lectura anterior y actual.
+  CA-14.3: Unicidad de factura por (servicio, período).
+  CA-14.4: El consumo del período puede derivarse de las lecturas si el
+           servicio usa medidor.
+  CA-14.5: La fecha de emisión no puede ser futura.
+  CA-14.6: Alta solo para servicios Activos y de inmuebles propios.
+
+
+================================================================================
+HU-15 · Listado de facturas con totales
+================================================================================
+
+Como Propietario/Administrador, quiero ver un listado tabular de facturas
+pendientes y pagadas con totales, para tener una vista rápida de mi situación.
+
+--------------------------------------------------------------------------------
+Feature: Informes - Listado tabular de facturas con totales
+
+  Scenario: Listado con totales sumarios
+    Given existen estas facturas del inmueble "Depto Centro":
+      | servicio          | período | monto    | estado    |
+      | Energía Eléctrica | 08/2026 | 12000.00 | Pagada    |
+      | Energía Eléctrica | 09/2026 | 13500.00 | Pendiente |
+      | Agua Potable      | 09/2026 |  4300.00 | Pendiente |
+    When visits el listado de facturas
+    Then ve las 3 filas ordenadas por vencimiento descendente
+    And ve el total pendiente "17800.00"
+    And ve el total pagado "12000.00"
+    And ve el total general "29800.00"
+
+  Scenario: Filtro por estado
+    When filtra por estado "Pendiente"
+    Then solo ve las 2 facturas pendientes
+    And el total sumario corresponde solo a las filtradas
+
+  Scenario: Filtro por inmueble y servicio
+    When filtra por inmueble "Depto Centro" y servicio "Energía Eléctrica"
+    Then solo ve las facturas de ese servicio
+
+  Scenario: Listado sin facturas
+    Given el inmueble no tiene facturas
+    Then ve el estado vacío "No hay facturas registradas"
+
+  Scenario: Permisos por rol
+    Given que un "Propietario" está logueado
+    Then solo ve facturas de sus inmuebles
+    Given que un "Administrador" está logueado
+    Then puede ver facturas de todos los inmuebles
+
+--------------------------------------------------------------------------------
+Criterios de aceptación:
+  CA-15.1: Tabla con: inmueble, servicio, período, vencimiento, monto, estado.
+  CA-15.2: Tres sumarios: total pendiente, total pagado, total general.
+  CA-15.3: Filtros por inmueble, servicio, estado y rango de fechas.
+  CA-15.4: Los totales se recalculan según los filtros aplicados.
+  CA-15.5: Orden por fecha de vencimiento descendente por defecto.
+
+
+================================================================================
+Mapa de trazabilidad - Hito 1
+================================================================================
+
+  Requisito del enunciado                                    HU
+  -------------------------------------------------------- --------------
+  Login, logout, sesión segura, registro                     HU-01 a HU-03
+  ABMC de Usuarios - Alta                                    HU-04
+  ABMC de Usuarios - Modificación y Baja                     HU-05
+  ABMC de Usuarios - Consulta                                HU-06
+  ABMC de Tipos de Servicios - Alta                          HU-07
+  ABMC de Tipos de Servicios - Modificación y Baja           HU-08
+  ABMC de Tipos de Servicios - Consulta                      HU-09
+  ABMC de Inmuebles - Alta                                   HU-10
+  ABMC de Inmuebles - Modificación y Baja                    HU-11
+  ABMC de Inmuebles - Consulta                               HU-12
+  Servicios de un Inmueble (medidor, cuenta, CPE)            HU-13
+  Alta de Factura (consumo y vencimiento)                     HU-14
+  Listado tabular pendientes/pagadas con totales             HU-15
+
+Total: 15 features, ~70 escenarios (incluyendo Scenario Outline y Examples).
+
+================================================================================
+Fin del documento
+================================================================================

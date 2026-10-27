@@ -1,0 +1,397 @@
+SERVIINMUEBLE 2026 - PROMPTS POR HISTORIA DE USUARIO (HITO 1)
+==============================================================
+
+FECHA: 27/10/2026
+OBJETIVO: Prompts listos para implementar las HU-01 a HU-15 utilizando los skills de la carpeta /agents/
+DESTINATARIOS: Equipo de Desarrollo
+
+
+1. PROMPT GENERAL (USAR SIEMPRE ANTES DE CUALQUIER HU)
+------------------------------------------------------
+
+COPIAR Y PEGAR ESTE PROMPT AL INICIO DE CADA DESARROLLO:
+
+----------------------------------------------------------------------
+PROMPT GENERAL
+
+Actúa como un desarrollador experto en CodeIgniter 4 para el proyecto "ServiInmueble 2026".
+
+ANTES DE HACER CUALQUIER COSA DEBES CUMPLIR LO SIGUIENTE:
+
+1. LECTURA OBLIGATORIA
+   - Lee SIEMPRE primero: agents/servi-inmueble-ci4/SKILL.md
+   - Ten en cuenta el resto de skills ubicados en agents/: ci4-module-scaffold, ci4-routes-guard, ci4-migration-builder, adminlte-view-craft, ci4-security-audit, ci4-hu-validator, ci4-test-suite
+
+2. ARQUITECTURA OBLIGATORIA
+   - Seguir estrictamente: Controller -> Service -> Repository -> Model/Entity
+   - La lógica de negocio, validaciones complejas, transiciones de estado y CONTROL DE PROPIEDAD deben ir SIEMPRE en la capa Service.
+   - El Controller ÚNICAMENTE debe manejar HTTP (GET/POST), llamar al Service, mostrar mensajes flash y redirigir con patrón PRG.
+   - El Repository ÚNICAMENTE debe acceder a datos con Query Builder/Model de CI4.
+   - NO uses lógica de negocio en Controllers ni en Models/Entities.
+
+3. REGLAS DEL PROYECTO
+   - Usar CodeIgniter 4.x, PHP 8.2+, MySQL/MariaDB, AdminLTE 3/4.
+   - Sin SPAs (NO React, Vue, Angular). Formularios clásicos.
+   - Sin borrado físico. Usar baja lógica con estados o soft-delete.
+   - Control de propiedad obligatorio: Un Propietario SOLO accede a sus propios inmuebles, servicios_inmueble y facturas.
+   - Todo acceso a rutas protegidas debe pasar por filtros auth/role.
+   - Usar password_hash() / password_verify(). Regenerar sesión al loguearse. Destruir sesión al cerrar.
+   - Usar CSRF en todos los formularios POST con <?= csrf_field() ?>.
+   - Mensajes de usuario en ESPAÑOL.
+   - Seguir las convenciones del skill mayor en todo momento.
+
+4. FLUJO A SEGUIR POR MÓDULO
+   1) ci4-migration-builder
+   2) ci4-routes-guard
+   3) ci4-module-scaffold
+   4) adminlte-view-craft
+   5) ci4-security-audit
+   6) ci4-hu-validator
+   7) ci4-test-suite
+
+5. VALIDACIÓN FINAL
+   - Al terminar, ejecuta ci4-hu-validator comparar lo implementado contra la HU asignada y sus Criterios de Aceptación.
+   - Corrige TODO lo que quede marcado as FALTANTE or PARCIAL.
+
+NO inventes rutas fuera de lo pedido. NO rompas la arquitectura. NO elimines registros históricos.
+----------------------------------------------------------------------
+
+
+2. PROMPTS POR HISTORIA DE USUARIO
+-----------------------------------
+
+2.1 HU-01 - REGISTRO DE NUEVOS USUARIOS
+--------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-01
+
+Implementa la HU-01: "Registro de nuevos usuarios" siguiendo el PROMPT GENERAL.
+
+OBJETIVO:
+Permitir que un visitante cree una cuenta.
+
+ALCANCE:
+- Ruta pública: /auth/registro
+- Campos: nombre, email, password
+- Rol por defecto: Propietario
+- Estado inicial: Activo
+- Contraseña hasheada con password_hash()
+
+REQUISITOS:
+- Email único (case-insensitive)
+- Mínimo 8 caracteres, al menos una letra y un número
+- Todos los campos obligatorios
+- Guardar solo hash
+- Redirigir con "Registro exitoso" tras éxito
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-01.1 A CA-01.5.
+----------------------------------------------------------------------
+
+
+2.2 HU-02 - INICIO DE SESIÓN
+----------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-02
+
+Implementa la HU-02: "Inicio de sesión" siguiendo el PROMPT GENERAL.
+
+ALCANCE:
+- /auth/login (GET/POST)
+
+REQUISITOS:
+- password_verify()
+- session()->regenerate(true) tras login exitoso
+- Mensaje genérico: "Email o contraseña incorrectos"
+- Bloquear si Bloqueado/Baja
+- Máximo 5 intentos fallidos -> bloqueo 15 minutos
+- Redirigir a /dashboard
+- Proteger rutas con filtro auth
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-02.1 A CA-02.4.
+----------------------------------------------------------------------
+
+
+2.3 HU-03 - CIERRE DE SESIÓN
+----------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-03
+
+Implementa la HU-03: "Cierre de sesión" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Ruta /auth/logout protegida
+- session()->destroy()
+- Eliminar cookie
+- Redirigir a /auth/login
+- Tras logout no acceder a rutas protegidas
+
+SKILLS: ci4-routes-guard, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-03.1.
+----------------------------------------------------------------------
+
+
+2.4 HU-04 - ALTA DE USUARIOS (SOLO ADMINISTRADOR)
+-------------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-04
+
+Implementa la HU-04: "Alta de usuarios" siguiendo el PROMPT GENERAL.
+
+ALCANCE:
+- /admin/usuarios/nuevo
+
+REQUISITOS:
+- Campos: nombre, email, password, rol
+- Rol: Administrador | Propietario
+- Email único
+- Password >= 8 con letra y número
+- Estado Activo
+- Solo Administrador puede crear con rol Administrador
+- 403 "No tiene permisos para esta acción" si no es administrador
+
+SKILLS: ci4-migration-builder, ci4-routes-guard, ci4-module-scaffold, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-04.1 A CA-04.6.
+----------------------------------------------------------------------
+
+
+2.5 HU-05 - MODIFICACIÓN AND BAJA DE USUARIOS
+---------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-05
+
+Implementa la HU-05: "Modificación y baja de usuarios" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Editables: nombre, email, rol, estado
+- Estados: Activo | Bloqueado | Baja
+- Baja lógica, sin borrado físico
+- No auto-baja/bloqueo
+- Permitir reactivar
+- Restablecer contraseña hasheada
+- Validación en UsuarioService
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-05.1 A CA-05.6.
+----------------------------------------------------------------------
+
+
+2.6 HU-06 - CONSULTA Y LISTADO DE USUARIOS
+-----------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-06
+
+Implementa la HU-06: "Consulta y listado de usuarios" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Tabla: nombre, email, rol, estado, fecha de alta
+- Búsqueda parcial por nombre/email
+- Filtros por rol/estado
+- "No se encontraron usuarios" si vacío
+- Solo Administrador
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-hu-validator
+VERIFICAR CA-06.1 A CA-06.5.
+----------------------------------------------------------------------
+
+
+2.7 HU-07 - ALTA DE TIPOS DE SERVICIO
+-------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-07
+
+Implementa la HU-07: "Alta de tipos de servicio" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Campos: nombre, categoria, unidad_medida, proveedor_predeterminado
+- Categoria: Público | Privado
+- Unidad: kWh | m³ | Gigas | Moneda fija
+- Nombre único
+- Solo Administrador
+
+SKILLS: ci4-migration-builder, ci4-routes-guard, ci4-module-scaffold, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-07.1 A CA-07.5.
+----------------------------------------------------------------------
+
+
+2.8 HU-08 - MODIFICACIÓN Y BAJA DE TIPOS DE SERVICIO
+----------------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-08
+
+Implementa the HU-08: "Modificación y baja de tipos de servicio" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Editables: nombre, categoria, unidad_medida, proveedor_predeterminado
+- Si hay servicios_inmueble con historial -> desactivar (activo = 0), no eliminar
+- Cambiar unidad no afecta facturas ya registradas
+- Solo Administrador
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-08.1 A CA-08.5.
+----------------------------------------------------------------------
+
+
+2.9 HU-09 - CONSULTA Y LISTADO DE TIPOS OF SERVICIO
+---------------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-09
+
+Implementa la HU-09: "Consulta y listado de tipos de servicio" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Admin: completo con acciones
+- Propietario: solo activos, solo lectura
+- Filtro por categoria
+- Estado vacío
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-hu-validator
+VERIFICAR CA-09.1 A CA-09.4.
+----------------------------------------------------------------------
+
+
+2.10 HU-10 - ALTA OF INMUEBLES
+-------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-10
+
+Implementa la HU-10: "Alta de inmuebles" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Campos: alias, calle, numero, piso, depto, ciudad, tipo, superficie, estado
+- Tipo: Casa | Departamento | Local Comercial | Oficina | Galpón
+- Estado: Ocupado | Disponible | En Mantenimiento
+- Superficie > 0
+- Asociado al propietario
+- Propietario solo para sí mismo, Administrador asigna
+- Control en InmuebleService
+
+SKILLS: ci4-migration-builder, ci4-routes-guard, ci4-module-scaffold, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-10.1 A CA-10.6.
+----------------------------------------------------------------------
+
+
+2.11 HU-11 - MODIFICACIÓN AND BAJA LÓGICA OF INMUEBLES
+------------------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-11
+
+Implementa la HU-11: "Modificación y baja lógica de inmuebles" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Baja lógica a Inactivo
+- Inmueble Inactivo no permite vincular servicios ni alta de facturas
+- Solo dueño o Administrador
+- Verificación de propiedad
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-11.1 A CA-11.6.
+----------------------------------------------------------------------
+
+
+2.12 HU-12 - CONSULTA Y LISTADO OF INMUEBLES
+--------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-12
+
+Implementa la HU-12: "Consulta y listado de inmuebles" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Grilla/tarjetas
+- Filtros por ciudad, tipo, estado
+- Admin filtra por propietario
+- Propietario acotado
+- Estado vacío
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-12.1 A CA-12.5.
+----------------------------------------------------------------------
+
+
+2.13 HU-13 - VINCULACIÓN OF SERVICES TO PROPERTY
+------------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-13
+
+Implementa la HU-13: "Vinculación de servicios a an inmueble" siguiendo the PROMPT GENERAL.
+
+REQUISITOS:
+- Campos obligatorios del contrato
+- Solo tipos activos
+- Unicidad por (inmueble, tipo_servicio) activo
+- Estados: Activo | Pausado | En Revisión | Inactivo
+- Solo Activo permite facturas
+- Historial preservado al dar de baja
+- No vincular si inmueble Inactivo
+
+SKILLS: ci4-migration-builder, ci4-routes-guard, ci4-module-scaffold, adminlte-view-craft, ci4-security-audit, ci4-hu-validator
+VERIFICAR CA-13.1 A CA-13.6.
+----------------------------------------------------------------------
+
+
+2.14 HU-14 - ALTA DE FACTURA
+----------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-14
+
+Implementa la HU-14: "Alta de factura" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- periodo (MM/YYYY), fecha_emision, fecha_vto1, fecha_vto2, monto_total, consumo, lectura_anterior, lectura_actual
+- Unicidad (servicio_inmueble, periodo)
+- lectura_actual >= lectura_anterior
+- fecha_vto2 > fecha_vto1 si existe
+- Solo servicio Activo
+- Prohibido Pausado/En Revisión/Inactivo
+- Verificar propiedad
+
+SKILLS: ci4-migration-builder, ci4-routes-guard, ci4-module-scaffold, adminlte-view-craft, ci4-security-audit, ci4-hu-validator, ci4-test-suite
+VERIFICAR CA-14.1 A CA-14.6.
+----------------------------------------------------------------------
+
+
+2.15 HU-15 - LISTADO DE FACTURAS CON TOTALES
+---------------------------------------------
+
+----------------------------------------------------------------------
+PROMPT HU-15
+
+Implementa la HU-15: "Listado de facturas con totales" siguiendo el PROMPT GENERAL.
+
+REQUISITOS:
+- Filtros por inmueble, servicio, estado, fechas
+- Orden por fecha_vto1 DESC
+- Total Pendiente, Total Pagado, Total General
+- Totales recalculados CON filtros aplicados
+- Propietario acotado, Administrador con filtros
+- Estado vacío "No hay facturas registradas"
+
+SKILLS: ci4-module-scaffold, ci4-routes-guard, adminlte-view-craft, ci4-security-audit, ci4-hu-validator, ci4-test-suite
+VERIFICAR CA-15.1 A CA-15.5.
+----------------------------------------------------------------------
+
+
+3. INSTRUCCIONES DE USO
+-----------------------
+
+1. Leer primero agents/servi-inmueble-ci4/SKILL.md
+2. Copiar PROMPT GENERAL al inicio
+3. Implementar UNA HU por vez
+4. Seguir orden: ci4-migration-builder -> ci4-routes-guard -> ci4-module-scaffold -> adminlte-view-craft -> ci4-security-audit -> ci4-hu-validator -> ci4-test-suite
+5. Validar con ci4-hu-validator antes de pasar a la siguiente
+6. Ante dudas volver al skill mayor
