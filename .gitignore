@@ -1,0 +1,20 @@
+# Entorno local (cada integrante tiene el suyo)
+.env
+
+# Archivos generados por CodeIgniter (se conservan los index.html)
+writable/cache/*
+!writable/cache/index.html
+writable/logs/*
+!writable/logs/index.html
+writable/session/*
+!writable/session/index.html
+writable/uploads/*
+!writable/uploads/index.html
+writable/debugbar/*
+!writable/debugbar/index.html
+
+# Sistema
+Thumbs.db
+.DS_Store
+*.log
+vendor/
