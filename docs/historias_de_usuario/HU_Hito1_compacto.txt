@@ -1,0 +1,289 @@
+HISTORIAS DE USUARIO · HITO 1 · Sistema de servicios por inmueble
+Roles: Administrador, Propietario. Estado de usuario: Activo / Bloqueado / Baja.
+Reglas globales (valen para todas las HU):
+- Password: mínimo 8 caracteres, al menos una letra y un número (registro, alta por Admin y password temporal).
+- Email único, case-insensitive, incluye usuarios en Baja. Error: "El email ya se encuentra registrado".
+- Bajas lógicas (nunca borrado físico), salvo tipo de servicio sin uso (HU-08).
+- Sin permiso: error 403 "No tiene permisos para esta acción". Se muestra una página 403 amigable con el mensaje y un botón "Volver al dashboard"; no se redirige automáticamente.
+- UI: se ocultan menús y acciones no permitidas para el rol o el estado del recurso (ej. un Propietario no ve el menú de Admin ni acciones sobre inmuebles ajenos). Ocultar es solo UX; no reemplaza la validación del servidor (403).
+- Agrupación funcional (no es un orden estricto de entrega; el orden de implementación surge de las dependencias): Grupo 1 = HU-01 a 03 | Grupo 2 = HU-04 a 06 | Grupo 3 = HU-07 a 09 | Grupo 4 = HU-10 a 12 | Grupo 5 = HU-13 a 15.
+
+=== GRUPO 1: ACCESO Y SESIÓN ===
+
+HU-01 · Registro de nuevos usuarios
+Como visitante del sitio, quiero crear una cuenta, para acceder a las funcionalidades autenticadas.
+Escenarios:
+- Registro exitoso: en /auth/registro completa nombre, email, password (el formulario NO muestra rol), acepta términos y presiona "Registrarse". Ve "Registro exitoso", el usuario queda Activo con rol Propietario y recibe email de bienvenida.
+- Email duplicado: error "El email ya se encuentra registrado", no se crea usuario.
+- Validaciones (Esquema, columnas nombre/email/password): nombre vacío -> "El nombre es obligatorio"; email vacío -> "El email es obligatorio"; email inválido -> "El email debe tener formato válido"; password vacío -> "La contraseña es obligatoria"; password corto -> "Mínimo 8 caracteres"; password sin letra o sin número -> "Debe contener al menos una letra y un número".
+Criterios:
+- CA-01.1 Password hasheado (bcrypt/argon2), nunca texto plano.
+- CA-01.2 Email validado por formato y unicidad (case-insensitive, incluye Baja).
+- CA-01.3 Password mínimo 8, con letra y número.
+- CA-01.4 Rol por defecto Propietario; solo un Admin crea Administradores.
+- CA-01.5 Cuentas nuevas nacen Activas.
+- CA-01.6 La aceptación de términos es obligatoria para completar el registro.
+
+HU-02 · Inicio de sesión
+Como usuario registrado, quiero iniciar sesión, para acceder a mi panel.
+Escenarios:
+- Login exitoso: en /auth/login ingresa email y password, es redirigido a /dashboard y ve su nombre en la barra de navegación.
+- Credenciales inválidas: "Email o contraseña incorrectos", permanece en /auth/login.
+- Usuario Bloqueado (con credenciales correctas): "Usuario bloqueado, contacte al administrador", no se crea sesión.
+- Usuario en Baja (con credenciales correctas): "Usuario dado de baja, contacte al administrador", no se crea sesión.
+- Fuerza bruta: tras 5 intentos fallidos, bloqueo temporal de 15 minutos por cuenta (email) e IP, aunque use credenciales correctas: "Demasiados intentos, intente en 15 minutos". No cambia el estado del usuario (el estado Bloqueado solo lo asigna un Admin en HU-05). El mensaje es el mismo exista o no la cuenta.
+- Password temporal: tras el login es redirigido a cambiar su contraseña y no accede al dashboard hasta hacerlo.
+Criterios:
+- CA-02.1 ID de sesión aleatorio de alta entropía, regenerado tras el login (anti fixation).
+- CA-02.2 La sesión expira a los 30 min de inactividad y al hacer logout (reutiliza la invalidación de HU-03).
+- CA-02.3 Mensaje genérico para credenciales inválidas y bloqueo por intentos (no revela si el email existe); los mensajes de Bloqueado/Baja solo se muestran después de validar la contraseña.
+- CA-02.4 Todo acceso a rutas protegidas sin sesión redirige a /auth/login.
+
+HU-03 · Cierre de sesión
+Como usuario autenticado, quiero cerrar mi sesión, para proteger mi cuenta en equipos compartidos.
+Escenario:
+- Logout exitoso: presiona "Cerrar sesión", la sesión se destruye, es redirigido a /auth/login y al intentar entrar a una ruta protegida (ej. /dashboard) ve el login [H-24, ver NOTAS].
+Criterio:
+- CA-03.1 La cookie de sesión se elimina del cliente y el registro se invalida en el servidor.
+
+=== GRUPO 2: GESTIÓN DE USUARIOS (solo Administrador) ===
+
+HU-04 · Alta de usuarios
+Como Administrador, quiero dar de alta usuarios, para autorizarles el acceso al sistema.
+Escenarios:
+- Acceso denegado: Propietario en /admin/usuarios/nuevo ve la página 403.
+- Alta exitosa: Admin crea usuario con nombre, email, password, rol Propietario, estado Activo; aparece en el listado, password hasheado, puede iniciar sesión.
+- Alta con rol Administrador: queda Administrador y puede administrar usuarios.
+- Email duplicado: "El email ya se encuentra registrado", no se crea.
+- Validaciones (Esquema nombre/email/password/rol): nombre vacío -> "El nombre es obligatorio"; email vacío -> "El email es obligatorio"; email inválido -> "El email debe tener formato válido"; password vacío -> "La contraseña es obligatoria"; password corto -> "Mínimo 8 caracteres de contraseña"; password sin letra o sin número -> "Debe contener al menos una letra y un número"; rol vacío -> "El rol es obligatorio"; rol "Superusuario" -> "Rol inválido".
+Criterios:
+- CA-04.1 Obligatorios: nombre, email, password, rol.
+- CA-04.2 Email único (case-insensitive, incluye Baja).
+- CA-04.3 Password hasheado; mínimo 8 con letra y número.
+- CA-04.4 Rol en {Administrador, Propietario}.
+- CA-04.5 Solo un Admin crea usuarios y asigna roles.
+- CA-04.6 Usuario nuevo nace Activo.
+
+HU-05 · Modificación y baja de usuarios
+Como Administrador, quiero modificar y dar de baja usuarios, para mantener el control de accesos.
+Contexto (Antecedentes): Admin logueado, existe maria@mail.com Propietario.
+Escenarios:
+- Modificar datos: cambia nombre y rol; el listado lo refleja.
+- Bloquear: estado Bloqueado; no puede iniciar sesión ("Usuario bloqueado, contacte al administrador"); se invalidan sus sesiones activas.
+- Restablecer contraseña: genera password temporal (cumple regla de password), queda marcado para cambio en el próximo login, el anterior deja de servir.
+- Baja lógica: estado Baja, no puede iniciar sesión, se invalidan sus sesiones, se conserva su historial de facturas, sigue en listados históricos con estado Baja.
+- Reactivar: de Baja o Bloqueado a Activo, puede volver a iniciar sesión.
+- No darse de baja a sí mismo: error "No puede darse de baja a sí mismo"; tampoco puede bloquearse ni quitarse el rol Administrador.
+- Email duplicado al modificar: misma regla de unicidad del alta.
+- Acceso denegado: Propietario por URL directa ve la página 403.
+Criterios:
+- CA-05.1 Editables: nombre, email, rol, estado (email con unicidad case-insensitive, incluye Baja; el rol Administrador propio no puede quitarse, CA-05.5).
+- CA-05.2 Estado en {Activo, Bloqueado, Baja}.
+- CA-05.3 Baja lógica, nunca borrado físico.
+- CA-05.4 Nunca se pierde el historial de facturas/pagos.
+- CA-05.5 Un Admin no puede darse de baja, bloquearse ni quitarse el rol Administrador a sí mismo.
+- CA-05.6 Auditoría básica: quién modificó y cuándo.
+- CA-05.7 Al bloquear o dar de baja se invalidan todas las sesiones activas del usuario (mismo mecanismo que CA-03.1).
+- CA-05.8 El password temporal cumple la política global, no puede ser igual al anterior y obliga cambio en el próximo login.
+
+HU-06 · Consulta y listado de usuarios
+Como Administrador, quiero consultar el listado de usuarios, para auditar quién tiene acceso.
+Contexto (Antecedentes): Admin logueado; existen juan@mail.com (Activo) y maria@mail.com (Baja).
+Escenarios:
+- Listado completo en /admin/usuarios: nombre, email, rol, estado y fecha de alta.
+- Búsqueda por nombre o email (parcial, case-insensitive).
+- Filtro por rol y estado.
+- Detalle: perfil + resumen de inmuebles y facturas asociados (depende de HU-10 a 15, se implementa después).
+- Acceso denegado: Propietario ve la página 403.
+- Sin resultados: "No se encontraron usuarios".
+Criterios:
+- CA-06.1 Columnas: nombre, email, rol, estado, fecha de alta.
+- CA-06.2 Búsqueda parcial case-insensitive.
+- CA-06.3 Filtros por rol y estado.
+- CA-06.4 Solo Administrador.
+- CA-06.5 Estados vacíos y mensajes claros.
+
+=== GRUPO 3: CATÁLOGO DE TIPOS DE SERVICIO ===
+
+HU-07 · Alta de tipos de servicio
+Como Administrador, quiero dar de alta tipos de servicio en el catálogo, para que los propietarios puedan vincularlos a sus inmuebles.
+Escenarios:
+- Alta exitosa: nombre "Energía Eléctrica", categoría Público, unidad kWh, proveedor Edenor; aparece en el catálogo y los propietarios lo ven al vincular.
+- Nombre duplicado: "Ya existe un tipo de servicio con ese nombre".
+- Acceso denegado: Propietario en /admin/tipos-servicio/nuevo ve la página 403.
+- Validaciones: nombre vacío -> "El nombre es obligatorio"; unidad vacía -> "La unidad de medida es obligatoria"; categoría vacía -> "La categoría es obligatoria"; categoría "Mixto" -> "Categoría inválida"; proveedor vacío -> "El proveedor es obligatorio"; unidad "Pesos" -> "Unidad de medida inválida".
+Criterios:
+- CA-07.1 Obligatorios: nombre, categoría, unidad, proveedor predeterminado.
+- CA-07.2 Categoría en {Público, Privado}.
+- CA-07.3 Unidad en {kWh, m³, Gigas, Moneda fija}; en el Hito 1 el catálogo de unidades es fijo.
+- CA-07.4 Nombre único, case-insensitive.
+- CA-07.5 Solo Administrador.
+- CA-07.6 Los tipos de servicio nuevos nacen activos y visibles para los propietarios.
+
+HU-08 · Modificación y baja de tipos de servicio
+Como Administrador, quiero modificar o dar de baja tipos de servicio, para mantener actualizado el catálogo maestro.
+Escenarios:
+- Modificar unidad: "Internet" de Gigas a Moneda fija; facturas futuras usan la nueva, las existentes conservan la original.
+- Modificar proveedor y categoría: el catálogo refleja los cambios.
+- Nombre duplicado al modificar (case-insensitive): "Ya existe un tipo de servicio con ese nombre".
+- Baja con servicios asociados: aviso "No se puede eliminar: tiene servicios asociados"; la única acción disponible es desactivar.
+- Desactivar tipo con uso: no aparece para nuevos vínculos; servicios y facturas existentes intactos.
+- Reactivar tipo desactivado: vuelve a aparecer para vincular.
+- Baja de tipo sin uso: se elimina físicamente (única excepción a la baja lógica; solo si nunca tuvo servicios).
+- Acceso denegado: Propietario ve la página 403.
+Criterios:
+- CA-08.1 Editables: nombre, categoría, unidad, proveedor y estado activo/inactivo.
+- CA-08.2 Cambiar unidad, proveedor o categoría no altera facturas ya registradas; cada factura conserva los valores del tipo al momento del alta.
+- CA-08.3 No se elimina un tipo con servicios vinculados: se desactiva.
+- CA-08.4 Se preserva siempre el historial de facturas y lecturas.
+- CA-08.5 Solo Administrador.
+- CA-08.6 La desactivación y reactivación solo la realiza un Admin; un tipo desactivado no aparece para nuevos vínculos.
+
+HU-09 · Consulta y listado de tipos de servicio
+Como usuario del sistema, quiero consultar el catálogo de tipos de servicio, para conocer los servicios disponibles y sus características.
+Contexto (Antecedentes): Administrador logueado (el escenario del Propietario tiene su propio contexto).
+Escenarios:
+- Listado Admin en /admin/tipos-servicio: nombre, categoría, unidad, proveedor, con acciones de edición.
+- Catálogo Propietario: solo tipos activos, solo lectura (la selección al vincular se mapea en HU-13).
+- Filtro por categoría.
+- Filtro por estado activo.
+- Detalle: categoría, unidad, proveedor y cantidad de inmuebles que lo tienen vinculado (depende de HU-13).
+- Catálogo vacío: "No hay tipos de servicio registrados".
+Criterios:
+- CA-09.1 Listado: nombre, categoría, unidad, proveedor.
+- CA-09.2 Filtro por categoría y por estado activo.
+- CA-09.3 Admin ve catálogo completo con edición.
+- CA-09.4 Propietario solo consulta activos (lectura).
+- CA-09.5 El detalle muestra categoría, unidad, proveedor y cantidad de inmuebles vinculados.
+
+=== GRUPO 4: INMUEBLES ===
+
+HU-10 · Alta de inmuebles
+Como Propietario/Gestor, quiero registrar un inmueble, para administrar mis propiedades.
+Escenarios:
+- Alta exitosa (Propietario): alias, calle, número, piso, depto, ciudad, tipo, superficie, estado; aparece en su listado, asignado a él.
+- Alta por Administrador: para el propietario indicado.
+- Solo ve sus propios inmuebles.
+- Validaciones: alias vacío -> "El alias es obligatorio"; calle vacía -> "La calle es obligatoria"; número vacío -> "El número es obligatorio"; ciudad vacía -> "La ciudad es obligatoria"; tipo vacío -> "El tipo es obligatorio"; estado vacío -> "El estado es obligatorio"; estado "Alquilado" -> "Estado inválido"; superficie <=0 -> "La superficie debe ser > 0"; no numérica -> "La superficie debe ser numérica"; más de 2 decimales -> "La superficie admite hasta 2 decimales"; tipo "Estacionamiento" -> "Tipo de inmueble inválido".
+Criterios:
+- CA-10.1 Obligatorios: alias, calle, número, ciudad, tipo, superficie, estado; piso/depto opcional.
+- CA-10.2 Tipo en {Casa, Departamento, Local Comercial, Oficina, Galpón}.
+- CA-10.3 Estado en {Ocupado, Disponible, En Mantenimiento}.
+- CA-10.4 Superficie positiva, máx. 2 decimales.
+- CA-10.5 Queda asociado al propietario que lo crea (o al indicado por el Admin).
+- CA-10.6 Un Propietario solo da de alta inmuebles para sí.
+
+HU-11 · Modificación y baja lógica de inmuebles
+Como Propietario/Gestor, quiero modificar o dar de baja un inmueble, para mantener actualizada la información.
+Contexto (Antecedentes): Propietario logueado, existe "Depto Centro" suyo.
+Escenarios:
+- Modificar alias, superficie, estado.
+- Cambiar a En Mantenimiento: servicios y facturas no se afectan.
+- Baja lógica: estado Inactivo, facturas e historial consultables, no aparece por defecto en el listado activo.
+- Inmueble Inactivo no admite servicios nuevos: "No se pueden agregar servicios a un inmueble inactivo".
+- Inmueble Inactivo no admite facturas nuevas: "No se pueden cargar facturas en un inmueble inactivo".
+- Reactivar a Disponible: vuelve al listado activo.
+- Inmueble ajeno por URL directa: página 403.
+- Validaciones: alias vacío -> "El alias es obligatorio"; superficie -5 -> "La superficie debe ser > 0"; estado "Alquilado" -> "Estado inválido".
+Criterios:
+- CA-11.1 Editables: alias, dirección, ciudad, tipo, superficie, estado.
+- CA-11.2 Estado en {Ocupado, Disponible, En Mantenimiento, Inactivo}.
+- CA-11.3 Baja lógica; jamás se borran facturas, servicios ni lecturas.
+- CA-11.4 Inmueble inactivo no admite nuevos servicios ni facturas.
+- CA-11.5 La reactivación restaura el acceso normal.
+- CA-11.6 Solo su propietario o un Admin puede modificarlo.
+
+HU-12 · Consulta y listado de inmuebles
+Como Propietario/Gestor (y Administrador), quiero consultar los inmuebles en grilla con filtros, para encontrar rápido una propiedad.
+Escenarios:
+- Grilla en /inmuebles: alias, dirección, ciudad, tipo, superficie, estado.
+- Filtro por ciudad y tipo.
+- Filtro por estado; por defecto solo se listan inmuebles activos y el estado Inactivo se muestra al filtrar explícitamente.
+- Detalle: todos los datos, servicios vinculados y estado de facturación.
+- Listado Admin en /admin/inmuebles: todos los inmuebles activos, con filtro por propietario y por estado (Inactivo al filtrar explícitamente).
+- Sin resultados: "No se encontraron inmuebles".
+Criterios:
+- CA-12.1 Grilla/tarjetas con datos resumidos.
+- CA-12.2 Filtros: ciudad, tipo, estado y (Admin) propietario. Por defecto solo se listan inmuebles activos; los inactivos aparecen al filtrar por estado Inactivo.
+- CA-12.3 Propietario solo lista los suyos.
+- CA-12.4 Admin audita el mapa general.
+- CA-12.5 Detalle con servicios vinculados y resumen de facturación.
+
+=== GRUPO 5: SERVICIOS Y FACTURAS ===
+
+HU-13 · Vinculación de servicios a un inmueble
+Como Propietario, quiero asociar un tipo de servicio a mi inmueble con sus datos de contrato, para poder cargar facturas.
+Contexto (Antecedentes): Propietario logueado, inmueble "Depto Centro" suyo, catálogo con "Energía Eléctrica" (kWh, Edenor).
+Escenarios:
+- Alta de servicio: tipo, CPE/Pagar, cuenta, medidor (opcional), domicilio de facturación, titular; queda Activo y permite cargar facturas.
+- Transiciones: Activo -> Pausado (no carga facturas) -> En Revisión -> Activo (vuelve a cargar).
+- Baja: estado Inactivo; facturas, lecturas y pagos consultables; no crea facturas nuevas.
+- Tipo ya vinculado vigente (Activo/Pausado/En Revisión) en el inmueble: "El inmueble ya tiene este servicio vinculado".
+- Catálogo vacío o sin tipos activos: "No hay tipos de servicio disponibles. Contacte al administrador."
+- Validaciones: tipo vacío -> "El tipo de servicio es obligatorio"; CPE vacío -> "El CPE/Pagar es obligatorio"; cuenta vacía -> "El número de cuenta es obligatorio"; domicilio vacío -> "El domicilio de facturación es obligatorio"; titular vacío -> "El titular es obligatorio".
+Criterios:
+- CA-13.1 Estados en {Activo, Pausado, En Revisión, Inactivo}.
+- CA-13.2 Obligatorios: tipo, CPE/pagar, cuenta, domicilio de facturación, titular; medidor opcional.
+- CA-13.3 Solo el propietario del inmueble o un Admin.
+- CA-13.4 Un tipo solo puede tener un vínculo vigente (Activo, Pausado o En Revisión) por inmueble; un vínculo Inactivo permite volver a vincularlo.
+- CA-13.5 Baja lógica; preserva lecturas, facturación y pagos.
+- CA-13.6 Solo servicios Activos admiten carga de facturas.
+- CA-13.7 Transiciones permitidas: Activo -> Pausado -> En Revisión -> Activo; desde cualquiera de los tres estados se puede pasar a Inactivo (baja).
+- CA-13.8 Si el catálogo no tiene tipos activos, el alta muestra "No hay tipos de servicio disponibles. Contacte al administrador.".
+- CA-13.9 Un inmueble Inactivo no admite servicios nuevos (misma regla que CA-11.4): "No se pueden agregar servicios a un inmueble inactivo".
+
+HU-14 · Alta de factura
+Como Propietario/Administrador, quiero registrar una factura con su consumo y vencimiento, para controlar la facturación del servicio.
+Contexto (Antecedentes): Propietario logueado, "Depto Centro" con "Energía Eléctrica" Activo.
+Escenarios:
+- Alta exitosa: período 10/2026, emisión, 1er y 2do vencimiento, monto, consumo, lectura anterior y actual; queda Pendiente, consumo = actual - anterior, aparece en pendientes.
+- Lecturas: actual menor a anterior -> "La lectura actual debe ser mayor o igual a la anterior".
+- Servicio sin medidor: permite cargar el consumo manualmente y no exige lecturas.
+- Período duplicado: "Ya existe una factura para ese período".
+- Vencimientos: 2do anterior al 1ro -> "El segundo vencimiento debe ser posterior al primero".
+- Servicio Pausado: "No se pueden cargar facturas sobre un servicio pausado".
+- Servicio En Revisión o Inactivo: "Solo se pueden cargar facturas sobre un servicio activo".
+- Inmueble Inactivo: "No se pueden cargar facturas en un inmueble inactivo".
+- Emisión futura: "La fecha de emisión no puede ser futura".
+- Permisos: Propietario solo sobre servicios de inmuebles propios; Admin sobre cualquiera.
+- Validaciones: período vacío -> "El período es obligatorio"; vencimiento vacío -> "La fecha de vencimiento es obligatoria"; monto vacío -> "El monto es obligatorio"; monto <=0 -> "El monto debe ser mayor a 0"; período 13/2026 -> "Período inválido"; consumo negativo -> "El consumo no puede ser negativo".
+Criterios:
+- CA-14.1 Estado en {Pendiente, Pagada, Vencida (calculado)}. Vencida = Pendiente cuyo vencimiento aplicable (2.º si existe; si no, 1.º) ya pasó.
+- CA-14.2 Campos: período, emisión, 1er vencimiento, 2do vencimiento (opcional), monto, consumo, unidad de medida, proveedor y categoría (snapshot del tipo al momento del alta), lectura anterior y actual (opcionales si el servicio no tiene medidor).
+- CA-14.3 Unicidad por (servicio, período).
+- CA-14.4 Consumo derivable de lecturas si hay medidor; sin medidor se ingresa manualmente.
+- CA-14.5 Emisión no futura.
+- CA-14.6 Solo servicios Activos. Un Propietario solo carga facturas de inmuebles propios; un Admin puede hacerlo sobre cualquier inmueble. Un inmueble Inactivo no admite facturas nuevas.
+
+HU-15 · Listado de facturas con totales
+Como Propietario/Administrador, quiero ver un listado tabular de facturas pendientes y pagadas con totales, para tener una vista rápida de mi situación.
+Escenarios:
+- Listado con totales: ejemplo 3 facturas (Energía 08/2026 12000 Pagada; Energía 09/2026 13500 Pendiente; Agua 09/2026 4300 Pendiente); orden por vencimiento aplicable descendente; pendiente 17800, pagado 12000, general 29800.
+- Factura vencida: una factura Pendiente cuyo vencimiento aplicable ya pasó se muestra como Vencida y suma al total pendiente.
+- Filtro por estado: totales solo de lo filtrado.
+- Filtro por inmueble y servicio.
+- Filtro por rango de fechas: solo facturas cuyo vencimiento aplicable cae en el rango.
+- Sin facturas: "No hay facturas registradas".
+- Permisos: Propietario ve solo las de sus inmuebles; Admin ve todas.
+Criterios:
+- CA-15.1 Tabla: inmueble, servicio, período, vencimiento aplicable (2.º si existe; si no, 1.º), monto, estado.
+- CA-15.2 Sumarios: total pendiente (incluye Pendiente y Vencida), total pagado (Pagadas) y total general (pendiente + pagado).
+- CA-15.3 Filtros: inmueble, servicio, estado y rango de fechas sobre el vencimiento aplicable.
+- CA-15.4 Totales recalculados según filtros.
+- CA-15.5 Orden por vencimiento aplicable descendente por defecto.
+
+=== TRAZABILIDAD ===
+Login/logout/sesión/registro: HU-01 a 03 | ABMC Usuarios: HU-04 (alta), 05 (modif/baja), 06 (consulta) | ABMC Tipos de servicio: HU-07, 08, 09 | ABMC Inmuebles: HU-10, 11, 12 | Servicios de un inmueble: HU-13 | Alta de factura: HU-14 | Listado con totales: HU-15.
+
+=== NOTAS (decisiones que no cambian el texto de las HU o están pendientes) ===
+- H-24 (pendiente de validar con el equipo): el escenario "Logout exitoso" de HU-03 decía "al intentar entrar a /inmuebles ve el login". /inmuebles recién existe con HU-10 a 12, y el bloque de acceso (HU-01 a 03) no puede depender de otro bloque. Se cambió por una ruta protegida genérica (ej. /dashboard, que existe desde HU-02). Mismo comportamiento que CA-02.4. Si el equipo la rechaza, volver al texto original.
+- H-25 (resuelto en esta revisión): los escenarios de HU-08 que dependen de servicios o facturas (aviso de servicios asociados, eliminación sin uso, historial preservado, facturas existentes conservan unidad) se completan en la fase de integración, después de HU-13 y HU-14; el resto de HU-08 se implementa junto con el catálogo (HU-07 y HU-09).
+- H-26: los grupos son agrupaciones funcionales, no un orden estricto de entrega. Las HU con detalle dependiente de módulos posteriores (HU-06, HU-08, HU-09, HU-11 y HU-12) se completan en integración; el orden de implementación surge de las dependencias.
+- H-27: la factura guarda un snapshot de unidad, proveedor y categoría del tipo para preservar el historial (HU-08/HU-14).
+- H-28: Vencida se calcula con el 2.º vencimiento si existe; si no, con el 1.º, y suma al total pendiente (HU-14/HU-15).
+- H-29: un vínculo Inactivo no bloquea revincular el mismo tipo; sí lo bloquea un vínculo Activo, Pausado o En Revisión (HU-13).
+- H-30: en servicios sin medidor, las lecturas son opcionales y el consumo se ingresa manualmente (HU-13/HU-14).
+- H-31: un Admin puede cargar facturas de cualquier inmueble; un Propietario solo de los propios (HU-14).
+- H-32: los accesos denegados conservan el estado HTTP 403 y muestran una página amigable con el mensaje y un botón "Volver al dashboard"; no se redirige automáticamente.
+- H-33: la UI oculta menús y acciones no permitidas según el rol y el estado del recurso; la autorización real se valida siempre en el servidor y los accesos directos devuelven 403.
+- H-14 (no aplicado en este archivo): el Gherkin completo de los archivos originales (palabras clave en inglés y texto en español) no se reproduce acá; está comprimido a una línea por escenario.
