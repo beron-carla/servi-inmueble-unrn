@@ -19,7 +19,7 @@ Como usuario registrado, quiero iniciar sesión, para acceder a mi panel.
 - Usuario Bloqueado (con credenciales correctas): "Usuario bloqueado, contacte al administrador", no se crea sesión.
 - Usuario en Baja (con credenciales correctas): "Usuario dado de baja, contacte al administrador", no se crea sesión.
 - Fuerza bruta: tras 5 intentos fallidos, bloqueo temporal de 15 minutos por cuenta (email) e IP, aunque use credenciales correctas: "Demasiados intentos, intente en 15 minutos". No cambia el estado del usuario (el estado Bloqueado solo lo asigna un Admin en HU-05). El mensaje es el mismo exista o no la cuenta.
-- Password temporal: tras el login es redirigido a cambiar su contraseña y no accede al dashboard hasta hacerlo.
+- Password temporal: tras el login es redirigido a cambiar sgit u contraseña y no accede al dashboard hasta hacerlo.
 
 ## Criterios de aceptación
 
