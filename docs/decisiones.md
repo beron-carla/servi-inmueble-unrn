@@ -423,8 +423,11 @@ El orden numérico de las HU no es válido por dependencias. Orden acordado:
 | P-01 | Registro de pagos (D-18) | (a) acción mínima `POST /facturas/{id}/pagar`; (b) solo datos sembrados; (c) nueva HU-16 | (a) para que HU-15 sea demostrable | Equipo / docente |
 | P-02 | Nombre libre de tipo de servicio (D-12/D-13) | (a) mantener ENUM + proveedor; (b) cambiar esquema a `nombre` libre único | (a) por costo y por esquema canónico | Equipo |
 | P-03 | Período anual de factura | (a) solo mensual en Hito 1; (b) habilitar toggle mes/año | (a) si no hay CA que lo exija; (b) si se quiere usar el ENUM completo | Equipo |
-| P-04 | Entrega de contraseña temporal | (a) mostrarla una vez al admin; (b) enviarla por email | (a) porque el email puede no estar configurado | Equipo |
 | P-05 | Alcance de “Total Pagado” con pagos parciales | (a) pago total solamente; (b) sumar `transaccion.monto_abonado` | (a) para el Hito 1 | Equipo |
+
+**P-02 resuelta (2026-11-08):** se aprobó mantener `tipo_servicio.tipo` como ENUM y aplicar la unicidad sobre `(tipo, proveedor_predeterminado)`, sin modificar el esquema canónico.
+
+**P-04 resuelta:** se aprobó mostrar la contraseña temporal una sola vez en la salida de consola al crear el administrador inicial; no se envía por email. Las ejecuciones posteriores del seeder no vuelven a mostrarla.
 
 ---
 

@@ -155,8 +155,8 @@ El control de propiedad se valida **en el servicio**, no solo en el filtro.
 | GET | `/admin/usuarios` | `admin.usuarios.index` | `Admin\UsuariosController::index` | `auth`, `role:admin` | HU-06 | CA-06.1 a CA-06.5 |
 | GET | `/admin/usuarios/nuevo` | `admin.usuarios.create` | `Admin\UsuariosController::create` | `auth`, `role:admin` | HU-04 | CA-04.1 a CA-04.6 |
 | POST | `/admin/usuarios` | `admin.usuarios.store` | `Admin\UsuariosController::store` | `auth`, `role:admin` | HU-04 | CA-04.1 a CA-04.6 |
-| GET | `/admin/usuarios/(:num)` | `admin.usuarios.show` | `Admin\UsuariosController::show/$1` | `auth`, `role:admin` | HU-06 | CA-06.1 a CA-06.5 |
 | GET | `/admin/usuarios/(:num)/editar` | `admin.usuarios.edit` | `Admin\UsuariosController::edit/$1` | `auth`, `role:admin` | HU-05 | CA-05.1 a CA-05.8 |
+| GET | `/admin/usuarios/(:num)` | `admin.usuarios.show` | `Admin\UsuariosController::show/$1` | `auth`, `role:admin` | HU-06 | CA-06.1 a CA-06.5 |
 | POST | `/admin/usuarios/(:num)` | `admin.usuarios.update` | `Admin\UsuariosController::update/$1` | `auth`, `role:admin` | HU-05 | CA-05.1 a CA-05.8 |
 | POST | `/admin/usuarios/(:num)/bloquear` | `admin.usuarios.block` | `Admin\UsuariosController::block/$1` | `auth`, `role:admin` | HU-05 | CA-05.2, CA-05.7 |
 | POST | `/admin/usuarios/(:num)/baja` | `admin.usuarios.deactivate` | `Admin\UsuariosController::deactivate/$1` | `auth`, `role:admin` | HU-05 | CA-05.3, CA-05.7 |
@@ -261,8 +261,8 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], static function (R
     $routes->get('usuarios', 'Admin\UsuariosController::index', ['as' => 'admin.usuarios.index']);
     $routes->get('usuarios/nuevo', 'Admin\UsuariosController::create', ['as' => 'admin.usuarios.create']);
     $routes->post('usuarios', 'Admin\UsuariosController::store', ['as' => 'admin.usuarios.store']);
-    $routes->get('usuarios/(:num)', 'Admin\UsuariosController::show/$1', ['as' => 'admin.usuarios.show']);
     $routes->get('usuarios/(:num)/editar', 'Admin\UsuariosController::edit/$1', ['as' => 'admin.usuarios.edit']);
+    $routes->get('usuarios/(:num)', 'Admin\UsuariosController::show/$1', ['as' => 'admin.usuarios.show']);
     $routes->post('usuarios/(:num)', 'Admin\UsuariosController::update/$1', ['as' => 'admin.usuarios.update']);
     $routes->post('usuarios/(:num)/bloquear', 'Admin\UsuariosController::block/$1', ['as' => 'admin.usuarios.block']);
     $routes->post('usuarios/(:num)/baja', 'Admin\UsuariosController::deactivate/$1', ['as' => 'admin.usuarios.deactivate']);

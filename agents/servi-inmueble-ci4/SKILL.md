@@ -143,6 +143,8 @@ servi-inmueble/
 
 ## 6) Database Design
 
+> **Esquema vigente:** esta sección conserva ejemplos heredados. No aplicarlos al proyecto. Usar exclusivamente `bd/serviinmueble (1).sql` y `docs/decisiones.md`; sus nombres de tabla/columna prevalecen sobre cualquier ejemplo de este skill.
+
 ### 6.1 Required Tables
 
 | Table | Purpose |

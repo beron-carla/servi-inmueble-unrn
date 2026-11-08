@@ -20,7 +20,10 @@
 # APP
 #--------------------------------------------------------------------
 
-# app.baseURL = ''
+app.baseURL = 'http://localhost/servi-inmueble/public/'
+app.indexPage = ''
+app.defaultLocale = es
+app.appTimezone = 'America/Argentina/Buenos_Aires'
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''
 # app.forceGlobalSecureRequests = false
@@ -61,6 +64,9 @@
 
 # session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
 # session.savePath = null
+session.expiration = 1800
+session.regenerateDestroy = true
+session.timeToUpdate = 300
 
 #--------------------------------------------------------------------
 # LOGGER

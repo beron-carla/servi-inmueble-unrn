@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Documentation</title>
+        <style>
+            body {
+                text-rendering: optimizeLegibility;
+                font-family: Source SansSerif Pro, Arial, sans-serif;
+                font-variant-ligatures: common-ligatures;
+                font-kerning: normal;
+                margin-left: 2rem;
+                background-color: #fff;
+                color: #000;
+            }
+
+            body > ul > li {
+                font-size: larger;
+            }
+
+            h2 {
+                font-size: larger;
+                text-decoration-line: underline;
+                text-decoration-thickness: 2px;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
+
+            ul {
+                list-style: none;
+                margin: 0 0 2rem;
+                padding: 0 0 0 1rem;
+                text-indent: -1rem;
+            }
+
+            .success:before {
+                color: #4e9a06;
+                content: '✓';
+                padding-right: 0.5rem;
+            }
+
+            .defect {
+                color: #a40000;
+            }
+
+            .defect:before {
+                color: #a40000;
+                content: '✗';
+                padding-right: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Admin Tipos Servicio Access (Tests\Feature\AdminTiposServicioAccess)</h2>
+        <ul>
+            <li class="success">Owner cannot open service type form and gets forbidden page</li>
+            <li class="success">Administrator can create an active service type with csrf</li>
+            <li class="success">Create form contains canonical options and csrf token</li>
+        </ul>
+        <h2>Admin Usuarios Access (Tests\Feature\AdminUsuariosAccess)</h2>
+        <ul>
+            <li class="success">Owner cannot open user administration and gets forbidden page</li>
+            <li class="success">Administrator can open edit form with csrf and state options</li>
+            <li class="success">Administrator can update a user through the post route</li>
+            <li class="success">Administrator resetting own password can see temporary password once</li>
+        </ul>
+        <h2>Auth Login (Tests\Feature\AuthLogin)</h2>
+        <ul>
+            <li class="success">Login page is guest accessible and has csrf protected form</li>
+            <li class="success">Guest is redirected to login from dashboard</li>
+            <li class="success">Successful login redirects to dashboard and displays user name</li>
+            <li class="success">Temporary password is redirected to change before dashboard</li>
+        </ul>
+        <h2>Auth Logout (Tests\Feature\AuthLogout)</h2>
+        <ul>
+            <li class="success">Logout invalidates server session expires cookie and blocks dashboard</li>
+        </ul>
+        <h2>Auth Registration (Tests\Feature\AuthRegistration)</h2>
+        <ul>
+            <li class="success">Registration form is guest accessible and does not expose role selection</li>
+        </ul>
+        <h2>Auth Service (Tests\Unit\Services\AuthService)</h2>
+        <ul>
+            <li class="success">Registration stores an active propietario with a hashed password</li>
+            <li class="success">Duplicate email is rejected case insensitively including baja accounts</li>
+            <li class="success">Concurrent duplicate email is reported as a validation error</li>
+            <li class="success">Registration returns the specified required and format messages</li>
+            <li class="success">Registration enforces password length and composition</li>
+            <li class="success">Registration reports when welcome email cannot be sent</li>
+        </ul>
+        <h2>Auth Service Login (Tests\Unit\Services\AuthServiceLogin)</h2>
+        <ul>
+            <li class="success">Successful login normalizes email and creates session</li>
+            <li class="success">Unknown email and wrong password have the same generic message</li>
+            <li class="success">Account state is reported only after password verification</li>
+            <li class="success">Rate limited login does not accept correct credentials</li>
+            <li class="success">Fifth failed attempt starts the cooldown</li>
+            <li class="success">Temporary password change rejects reuse and clears forced change flag</li>
+        </ul>
+        <h2>Bootstrap Config</h2>
+        <ul>
+            <li class="success">Bootstrap configuration uses spanish argentina and my sql tests</li>
+            <li class="success">Post without csrf token is forbidden</li>
+            <li class="success">Role filter returns forbidden view for disallowed role</li>
+            <li class="success">Auth layout renders spanish login container</li>
+            <li class="success">All models disable framework timestamps</li>
+            <li class="success">Base controller loads bootstrap helpers</li>
+            <li class="success">Email service can use a unit test double</li>
+        </ul>
+        <h2>Bootstrap Database</h2>
+        <ul>
+            <li class="success">Migrations create canonical tables and both triggers</li>
+            <li class="success">Catalogs and admin seed are idempotent and password is verifiable</li>
+            <li class="success">Demo seeder creates expected records only outside production</li>
+            <li class="success">Sesion service invalidates all sessions for a user</li>
+            <li class="success">Auth filter deletes sessions inactive for more than thirty minutes</li>
+            <li class="success">Temporary password restricts protected routes to password change</li>
+            <li class="success">Tipo servicio trigger rejects incompatible unit</li>
+        </ul>
+        <h2>Example Database</h2>
+        <ul>
+            <li class="success">Model find all</li>
+            <li class="success">Soft delete leaves row</li>
+        </ul>
+        <h2>Example Session</h2>
+        <ul>
+            <li class="success">Session simple</li>
+        </ul>
+        <h2>Health</h2>
+        <ul>
+            <li class="success">Is defined app path</li>
+            <li class="success">Base url has been set</li>
+        </ul>
+        <h2>Login Throttle Service (Tests\Unit\Services\LoginThrottleService)</h2>
+        <ul>
+            <li class="success">Email and ip are limited independently at five failures</li>
+        </ul>
+        <h2>Sesion Service (Tests\Unit\Services\SesionService)</h2>
+        <ul>
+            <li class="success">Starting session regenerates id and stores random token</li>
+            <li class="success">Logout invalidates persisted session and removes authentication data</li>
+        </ul>
+        <h2>Tipo Servicio Service (Tests\Unit\Services\TipoServicioService)</h2>
+        <ul>
+            <li class="success">Creates an active service type with canonical values</li>
+            <li class="success">Returns required messages for all fields</li>
+            <li class="success">Rejects invalid category and unit</li>
+            <li class="success">Rejects units that are not compatible with the selected type</li>
+            <li class="success">Rejects case insensitive duplicate type and provider</li>
+            <li class="success">Reports concurrent duplicate but rethrows other database errors</li>
+            <li class="success">Maps trigger rejection to the acceptance message</li>
+            <li class="success">Exposes only canonical form options and compatible units</li>
+        </ul>
+        <h2>Usuario Gestion</h2>
+        <ul>
+            <li class="success">Update normalizes email and audits the admin</li>
+            <li class="success">Duplicate email includes users in baja</li>
+            <li class="success">Blocking and deactivating invalidate all sessions and are audited</li>
+            <li class="success">Administrator cannot change own role block or deactivate</li>
+            <li class="success">Password reset creates one time compliant password and requires change</li>
+            <li class="success">Logical deactivation preserves invoice and payment history</li>
+        </ul>
+        <h2>Usuario Listado</h2>
+        <ul>
+            <li class="success">Search matches partial name and email without case sensitivity</li>
+            <li class="success">Role and state filters can be combined and empty search returns no users</li>
+        </ul>
+        <h2>Usuario Listado View</h2>
+        <ul>
+            <li class="success">User table contains required columns and preserves filters</li>
+            <li class="success">Empty user table shows the acceptance message</li>
+        </ul>
+        <h2>Usuario Service (Tests\Unit\Services\UsuarioService)</h2>
+        <ul>
+            <li class="success">Creates an active user with normalized email and hashed password</li>
+            <li class="success">Allows creating an administrator</li>
+            <li class="success">Created user appears in the user list</li>
+            <li class="success">User list normalizes filters and page before querying</li>
+            <li class="success">User list ignores invalid filters and page</li>
+            <li class="success">Returns required validation messages</li>
+            <li class="success">Returns password and format validation messages</li>
+            <li class="success">Rejects duplicate email including users in baja</li>
+            <li class="success">Reports concurrent duplicate email without hiding other database errors</li>
+        </ul>
+    </body>
+</html>

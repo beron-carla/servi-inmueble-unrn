@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'required' => 'El campo {field} es obligatorio.',
+    'required_with' => 'El campo {field} es obligatorio cuando se informa {param}.',
+    'valid_email' => 'El campo {field} debe contener una dirección de correo válida.',
+    'min_length' => 'El campo {field} debe tener al menos {param} caracteres.',
+    'max_length' => 'El campo {field} no puede superar los {param} caracteres.',
+    'exact_length' => 'El campo {field} debe tener exactamente {param} caracteres.',
+    'numeric' => 'El campo {field} debe contener un número.',
+    'integer' => 'El campo {field} debe contener un número entero.',
+    'decimal' => 'El campo {field} debe contener un número decimal.',
+    'greater_than' => 'El campo {field} debe ser mayor que {param}.',
+    'greater_than_equal_to' => 'El campo {field} debe ser mayor o igual que {param}.',
+    'less_than' => 'El campo {field} debe ser menor que {param}.',
+    'less_than_equal_to' => 'El campo {field} debe ser menor o igual que {param}.',
+    'matches' => 'El campo {field} no coincide con el campo {param}.',
+    'is_unique' => 'El campo {field} ya está registrado.',
+    'alpha' => 'El campo {field} solo puede contener letras.',
+    'alpha_numeric' => 'El campo {field} solo puede contener letras y números.',
+    'alpha_numeric_space' => 'El campo {field} solo puede contener letras, números y espacios.',
+    'valid_url' => 'El campo {field} debe contener una URL válida.',
+    'valid_date' => 'El campo {field} debe contener una fecha válida.',
+    'regex_match' => 'El formato del campo {field} no es válido.',
+    'in_list' => 'El valor seleccionado para {field} no es válido.',
+    'permit_empty' => 'El campo {field} puede quedar vacío.',
+    'is_natural_no_zero' => 'El campo {field} debe ser un número entero mayor que cero.',
+];

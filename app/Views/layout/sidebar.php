@@ -12,9 +12,20 @@
                     </a>
                 </li>
 
-                <?php /* MENU: Usuarios (HU-04 a HU-06) - solo administrador. Completar acá. */ ?>
-
-                <?php /* MENU: Tipos de servicio (HU-07 a HU-09) - solo administrador. Completar acá. */ ?>
+                <?php if (es_admin()) : ?>
+                    <li class="nav-item">
+                        <a href="<?= route_to('admin.usuarios.index') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>Usuarios</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= route_to('admin.tipos.create') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Alta de tipo de servicio</p>
+                        </a>
+                    </li>
+                <?php endif ?>
 
                 <?php /* MENU: Inmuebles (HU-10 a HU-12). Completar acá. */ ?>
 

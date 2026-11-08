@@ -1,0 +1,112 @@
+Admin Tipos Servicio Access (Tests\Feature\AdminTiposServicioAccess)
+ [x] Owner cannot open service type form and gets forbidden page
+ [x] Administrator can create an active service type with csrf
+ [x] Create form contains canonical options and csrf token
+
+Admin Usuarios Access (Tests\Feature\AdminUsuariosAccess)
+ [x] Owner cannot open user administration and gets forbidden page
+ [x] Administrator can open edit form with csrf and state options
+ [x] Administrator can update a user through the post route
+ [x] Administrator resetting own password can see temporary password once
+
+Auth Login (Tests\Feature\AuthLogin)
+ [x] Login page is guest accessible and has csrf protected form
+ [x] Guest is redirected to login from dashboard
+ [x] Successful login redirects to dashboard and displays user name
+ [x] Temporary password is redirected to change before dashboard
+
+Auth Logout (Tests\Feature\AuthLogout)
+ [x] Logout invalidates server session expires cookie and blocks dashboard
+
+Auth Registration (Tests\Feature\AuthRegistration)
+ [x] Registration form is guest accessible and does not expose role selection
+
+Auth Service (Tests\Unit\Services\AuthService)
+ [x] Registration stores an active propietario with a hashed password
+ [x] Duplicate email is rejected case insensitively including baja accounts
+ [x] Concurrent duplicate email is reported as a validation error
+ [x] Registration returns the specified required and format messages
+ [x] Registration enforces password length and composition
+ [x] Registration reports when welcome email cannot be sent
+
+Auth Service Login (Tests\Unit\Services\AuthServiceLogin)
+ [x] Successful login normalizes email and creates session
+ [x] Unknown email and wrong password have the same generic message
+ [x] Account state is reported only after password verification
+ [x] Rate limited login does not accept correct credentials
+ [x] Fifth failed attempt starts the cooldown
+ [x] Temporary password change rejects reuse and clears forced change flag
+
+Bootstrap Config
+ [x] Bootstrap configuration uses spanish argentina and my sql tests
+ [x] Post without csrf token is forbidden
+ [x] Role filter returns forbidden view for disallowed role
+ [x] Auth layout renders spanish login container
+ [x] All models disable framework timestamps
+ [x] Base controller loads bootstrap helpers
+ [x] Email service can use a unit test double
+
+Bootstrap Database
+ [x] Migrations create canonical tables and both triggers
+ [x] Catalogs and admin seed are idempotent and password is verifiable
+ [x] Demo seeder creates expected records only outside production
+ [x] Sesion service invalidates all sessions for a user
+ [x] Auth filter deletes sessions inactive for more than thirty minutes
+ [x] Temporary password restricts protected routes to password change
+ [x] Tipo servicio trigger rejects incompatible unit
+
+Example Database
+ [x] Model find all
+ [x] Soft delete leaves row
+
+Example Session
+ [x] Session simple
+
+Health
+ [x] Is defined app path
+ [x] Base url has been set
+
+Login Throttle Service (Tests\Unit\Services\LoginThrottleService)
+ [x] Email and ip are limited independently at five failures
+
+Sesion Service (Tests\Unit\Services\SesionService)
+ [x] Starting session regenerates id and stores random token
+ [x] Logout invalidates persisted session and removes authentication data
+
+Tipo Servicio Service (Tests\Unit\Services\TipoServicioService)
+ [x] Creates an active service type with canonical values
+ [x] Returns required messages for all fields
+ [x] Rejects invalid category and unit
+ [x] Rejects units that are not compatible with the selected type
+ [x] Rejects case insensitive duplicate type and provider
+ [x] Reports concurrent duplicate but rethrows other database errors
+ [x] Maps trigger rejection to the acceptance message
+ [x] Exposes only canonical form options and compatible units
+
+Usuario Gestion
+ [x] Update normalizes email and audits the admin
+ [x] Duplicate email includes users in baja
+ [x] Blocking and deactivating invalidate all sessions and are audited
+ [x] Administrator cannot change own role block or deactivate
+ [x] Password reset creates one time compliant password and requires change
+ [x] Logical deactivation preserves invoice and payment history
+
+Usuario Listado
+ [x] Search matches partial name and email without case sensitivity
+ [x] Role and state filters can be combined and empty search returns no users
+
+Usuario Listado View
+ [x] User table contains required columns and preserves filters
+ [x] Empty user table shows the acceptance message
+
+Usuario Service (Tests\Unit\Services\UsuarioService)
+ [x] Creates an active user with normalized email and hashed password
+ [x] Allows creating an administrator
+ [x] Created user appears in the user list
+ [x] User list normalizes filters and page before querying
+ [x] User list ignores invalid filters and page
+ [x] Returns required validation messages
+ [x] Returns password and format validation messages
+ [x] Rejects duplicate email including users in baja
+ [x] Reports concurrent duplicate email without hiding other database errors
+

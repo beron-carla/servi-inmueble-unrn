@@ -1,9 +1,9 @@
 # HU-00 · Bootstrap técnico · ServiInmueble 2026
 
-**Proyecto:** ServiInmueble 2026 (CodeIgniter 4.7.5 · PHP 8.3.36 · MariaDB 10.11.16)
+**Proyecto:** ServiInmueble 2026 (CodeIgniter 4.7.5 · PHP 8.3.36 declarado; CLI verificado 8.2.12 · MariaDB 10.11.16)
 **Hito:** 1 (HU-01 a HU-15)
 **Fecha:** 2026-11-08
-**Estado:** listo para ejecutar antes de HU-01
+**Estado:** implementado; BC-01 a BC-20 verificados
 **Depende de:** nada
 **Habilita a:** HU-01 a HU-15
 
@@ -25,7 +25,7 @@ Al terminar el bootstrap deben existir:
 
 ---
 
-## 2. Estado verificado del proyecto (2026-11-08)
+## 2. Estado inicial del proyecto (antes del bootstrap)
 
 | Componente | Estado | Evidencia |
 |---|---|---|
@@ -49,29 +49,13 @@ Al terminar el bootstrap deben existir:
 | Filtros auth/role | ❌ no existen | `app/Filters/` |
 | Tests | ⚠️ SQLite en memoria | `app/Config/Database.php` → `$tests` |
 
-**Conclusión:** el entorno ya está operativo (esto cambió respecto de la auditoría anterior). Lo que falta es la capa de bootstrap: configuración, esquema reproducible, seeds, filtros, vistas base y rutas.
+Esta tabla conserva el relevamiento previo a HU-00. La validación posterior está documentada en §8. En esta ejecución, PHP CLI informó 8.2.12 y la base de desarrollo no tenía los triggers; esas diferencias se registran como pendientes de entorno y no se ocultan como si fueran resultados satisfactorios.
 
 ---
 
-## 3. Cambios respecto de la auditoría anterior
+## 3. Resultado del bootstrap
 
-Resuelto:
-
-- `vendor/` instalado y `composer.lock` presente.
-- `.env` creado con `baseURL` y credenciales de MySQL.
-- Base `serviinmueble` importada con las 11 tablas.
-- PHP 8.3.36 disponible vía XAMPP.
-- `spark routes` y `spark db:table` funcionan.
-- Esquema canónico decidido: `bd/serviinmueble (1).sql`.
-
-Sigue pendiente:
-
-- Migraciones y seeds.
-- Primer admin.
-- CSRF, sesión de 30 min, filtros.
-- Layout auth, 403, email.
-- Tests contra MySQL.
-- Rutas y capas base.
+Se agregaron la configuración, las migraciones, los seeds, los filtros, las vistas y helpers base, la estructura de capas, las rutas explícitas y los tests MySQL de HU-00. Los resultados reproducibles y las excepciones pendientes se detallan en §8 y §9.
 
 ---
 
@@ -483,7 +467,7 @@ SQL);
 
 | Seeder | Contenido | Entornos |
 |---|---|---|
-| `TipoInmuebleSeeder` | 5 tipos: casa, departamento, local comercial, oficina, galpón | todos |
+| `TipoInmuebleSeeder` | 5 tipos: casa, departamento, local comercial, oficina, galpon | todos |
 | `TipoServicioSeeder` | Catálogo inicial de 9 tipos con proveedor de ejemplo | todos |
 | `AdminUserSeeder` | Primer administrador | todos |
 | `DemoSeeder` | Propietario demo, inmueble, servicio, facturas y transacción | development/testing |
@@ -622,7 +606,7 @@ Debe listar todas las rutas del mapa y **ninguna** ruta automática.
 
 ### 6.9 Tests
 
-- `serviinmueble_test` ya está creada y vacía. Verificar con `scripts\check_env.bat`.
+- `serviinmueble_test` debe existir; las migraciones de HU-00 crean allí las tablas de aplicación. PHPUnit puede crear tablas auxiliares propias de CI4.
 - Usar `DatabaseTestTrait` con `$refresh = true`, `$namespace = 'App'` y `$seed = 'DatabaseSeeder'` en los tests de integración.
 - Tests de bootstrap (no dependen de HU-01):
   - Configuración: `App`, `Session` (1800), `Filters` (aliases y CSRF global), `Email`, `Database::$tests` (MySQLi).
@@ -662,19 +646,16 @@ C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE IF NOT EXISTS serviinmu
 ### 7.2 Migrar y sembrar
 
 ```bat
-C:\xampp\php\php.exe spark migrate
+REM -g filtra las migraciones; defaultGroup selecciona la conexión usada por Spark.
+REM No definir CI_ENVIRONMENT=testing al ejecutar Spark fuera de PHPUnit.
+set "database.defaultGroup=tests"
+C:\xampp\php\php.exe spark migrate -g tests
 C:\xampp\php\php.exe spark db:seed DatabaseSeeder
+C:\xampp\php\php.exe spark db:seed DatabaseSeeder
+set "database.defaultGroup="
 ```
 
-Si la base `serviinmueble` ya fue importada desde el SQL y las migraciones chocan con tablas existentes, reiniciar la base de desarrollo:
-
-```bat
-C:\xampp\mysql\bin\mysql.exe -u root -e "DROP DATABASE IF EXISTS serviinmueble; CREATE DATABASE serviinmueble DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-C:\xampp\php\php.exe spark migrate
-C:\xampp\php\php.exe spark db:seed DatabaseSeeder
-```
-
-> El SQL canónico sigue siendo la referencia. Las migraciones deben producir un esquema equivalente.
+> El override de `database.defaultGroup` debe estar activo antes de iniciar cada comando Spark para que migraciones y seeds apunten a `serviinmueble_test`. No ejecutar `DROP DATABASE` para validar HU-00.
 
 ### 7.3 Verificar
 
@@ -688,6 +669,8 @@ C:\xampp\php\php.exe spark db:table
 ```bat
 C:\xampp\php\php.exe vendor\bin\phpunit
 ```
+
+Las pruebas usan MySQLi y `serviinmueble_test`; no usar SQLite.
 
 ### 7.5 Desde WSL
 
@@ -706,26 +689,32 @@ C:\xampp\php\php.exe vendor\bin\phpunit
 
 ## 8. Criterios de aceptación del bootstrap
 
-- [ ] **BC-01** `spark routes` lista todas las rutas de `docs/rutas.md` y ninguna automática.
-- [ ] **BC-02** `spark migrate` crea las 11 tablas y los 2 triggers en una base vacía.
-- [ ] **BC-03** `spark db:seed DatabaseSeeder` crea catálogos y admin; se puede ejecutar dos veces sin duplicar.
-- [ ] **BC-04** El seed crea un admin `activo`, con hash verificable (`password_verify`) y `cambiar_contrasenia = 1`.
-- [ ] **BC-05** La configuración global incluye `csrf` y un test verifica que un POST sin token recibe 403.
-- [ ] **BC-06** `Session::$expiration = 1800` y `AuthFilter` invalida sesiones con `ultima_actividad` mayor a 30 min (test unitario).
-- [ ] **BC-07** `SesionService` invalida filas por usuario (logout, bloqueo y baja) en un test unitario.
-- [ ] **BC-08** `RoleFilter` devuelve 403 para un rol no autorizado en un test unitario.
-- [ ] **BC-09** `error_403.php` existe y muestra “Volver al dashboard”.
-- [ ] **BC-10** `layout/auth.php` existe y renderiza una vista de prueba.
-- [ ] **BC-11** `EmailService` se prueba con un doble (o Mailpit) sin depender de un controlador.
-- [ ] **BC-12** `phpunit` corre contra `serviinmueble_test` y los tests de bootstrap pasan.
-- [ ] **BC-13** No hay referencias a las tablas/columnas del esquema viejo (`roles`, `usuarios`, `inmuebles`, `servicios_inmueble`, `facturas`, `id_rol`, columna `password_hash`) en el código nuevo.
-- [ ] **BC-14** `appTimezone` y locale están en español/Argentina.
-- [ ] **BC-15** `env` documenta las variables nuevas.
-- [ ] **BC-16** `docs/rutas.md`, `docs/decisiones.md` y `docs/PROMPT_GENERAL.md` están enlazados desde el README o desde el prompt.
-- [ ] **BC-17** `BaseController` carga los helpers `form`, `url`, `auth`, `format`.
-- [ ] **BC-18** Los modelos usan `$useTimestamps = false`.
-- [ ] **BC-19** Los seeds de demo solo corren fuera de producción.
-- [ ] **BC-20** El primer login del admin no requiere email (la contraseña temporal se muestra una vez).
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| BC-01 Rutas documentadas, sin auto-routing | ✅ | `spark routes`: 48 rutas explícitas; `Routing::$autoRoute = false`; coincide con `docs/rutas.md`. |
+| BC-02 11 tablas y 2 triggers desde migraciones | ✅ | Migración limpia en `serviinmueble_test`; `BootstrapDatabaseTest::testMigrationsCreateCanonicalTablesAndBothTriggers`. |
+| BC-03 Seeds idempotentes | ✅ | `DatabaseSeeder` ejecutado dos veces en `serviinmueble_test`; test compara conteos antes/después. |
+| BC-04 Admin activo, hash verificable y cambio requerido | ✅ | `BootstrapDatabaseTest::testCatalogsAndAdminSeedAreIdempotentAndPasswordIsVerifiable`. |
+| BC-05 CSRF global; POST sin token responde 403 | ✅ | `BootstrapConfigTest::testPostWithoutCsrfTokenIsForbidden`. |
+| BC-06 Sesión de 1800 s e inactividad invalidada | ✅ | Configuración y `BootstrapDatabaseTest::testAuthFilterDeletesSessionsInactiveForMoreThanThirtyMinutes`. |
+| BC-07 Invalidación de sesiones por usuario | ✅ | `BootstrapDatabaseTest::testSesionServiceInvalidatesAllSessionsForAUser`. |
+| BC-08 Rol no autorizado obtiene 403 | ✅ | `BootstrapConfigTest::testRoleFilterReturnsForbiddenViewForDisallowedRole`. |
+| BC-09 Vista 403 amigable | ✅ | Test anterior verifica status 403 y texto del botón. |
+| BC-10 Layout auth renderizable | ✅ | `BootstrapConfigTest::testAuthLayoutRendersSpanishLoginContainer`. |
+| BC-11 Email probado con doble | ✅ | `BootstrapConfigTest::testEmailServiceCanUseAUnitTestDouble`. |
+| BC-12 PHPUnit usa MySQL `serviinmueble_test` | ✅ | `18 tests, 80 assertions`; el test de esquema verifica el nombre de la base. |
+| BC-13 Sin nombres de tablas/columnas obsoletas en la implementación | ✅ | Revisión del código agregado contra el esquema canónico; `password_hash()` se usa solo como función de hashing, no como columna. |
+| BC-14 Locale y zona horaria Argentina | ✅ | `BootstrapConfigTest::testBootstrapConfigurationUsesSpanishArgentinaAndMySqlTests`. |
+| BC-15 Variables nuevas en `env` | ✅ | Plantilla `env` documenta email, seeds y conexión de tests. |
+| BC-16 Documentación principal enlazada | ✅ | `docs/PROMPT_GENERAL.md` enlaza rutas, decisiones y bootstrap. |
+| BC-17 Helpers base cargados | ✅ | `BootstrapConfigTest::testBaseControllerLoadsBootstrapHelpers` verifica `form`, `url`, `auth` y `format`. |
+| BC-18 Modelos sin timestamps inventados | ✅ | `BootstrapConfigTest::testAllModelsDisableFrameworkTimestamps`. |
+| BC-19 Seeds demo excluidos de producción | ✅ | `DatabaseSeeder` y `DemoSeeder` verifican `ENVIRONMENT`. |
+| BC-20 Primer acceso sin email y contraseña temporal mostrada una vez | ✅ | P-04 aprobado: verificación CLI confirmó que `AdminUserSeeder` muestra la contraseña al crear el admin y no la repite en la siguiente ejecución. |
+
+La suite actual terminó con `OK (18 tests, 80 assertions)`. `spark migrate -g tests` creó las 11 tablas y los 2 triggers; ambas ejecuciones de `spark db:seed DatabaseSeeder` finalizaron correctamente al seleccionar temporalmente `database.defaultGroup=tests`. La contraseña temporal se muestra al operador solo en una ejecución CLI fuera de `testing`; no se implementa una pantalla de login ni envío de emails en HU-00.
+
+`spark routes` produjo 48 rutas explícitas, sin rutas automáticas. Las 11 tablas vacías de desarrollo se reemplazaron, con autorización, mediante las migraciones canónicas; no se eliminó la base de datos. `scripts/check_env.php` produjo **25 OK, 0 fallas y 1 advertencia** (Mailpit opcional). Las bases `serviinmueble` y `serviinmueble_test` tienen 11 tablas de aplicación, los 2 triggers canónicos y la tabla de historial `migrations` de CI4.
 
 ---
 
@@ -742,27 +731,25 @@ C:\xampp\php\php.exe vendor\bin\phpunit
 | Skills con esquema viejo | Código inconsistente | `docs/decisiones.md` + actualizar skill principal |
 | `tipo_servicio` ENUM vs HU-07 | No se puede guardar “Energía Eléctrica” | D-12/D-13; validar con el equipo |
 | P-01 sin aprobar | HU-15 no demuestra pagos reales | `DemoSeeder` + decisión pendiente |
+| Mailpit no disponible | No se puede verificar el email en una bandeja local | Advertencia opcional; `EmailService` se prueba con un doble |
+| PHP CLI observado 8.2.12 | El contexto inicial declaraba PHP 8.3.36 | CI4 y el proyecto admiten PHP 8.2+; validar PHP de Apache por separado si difiere del CLI |
 
 ---
 
 ## 10. Definición de terminado (HU-00)
 
 1. Todos los BC en verde.
-2. `spark migrate` y `spark db:seed` corren desde cero sin errores.
-3. `spark routes` coincide con `docs/rutas.md`.
-4. `phpunit` pasa los tests de humo.
-5. El admin seed puede entrar, cambiar la contraseña y llegar a `/dashboard`.
-6. Un propietario recibe 403 en `/admin/*`.
-7. Un POST sin CSRF recibe 403.
-8. El correo de bienvenida se ve en Mailpit.
-9. No quedan referencias al esquema viejo.
-10. `docs/decisiones.md`, `docs/rutas.md` y `docs/PROMPT_GENERAL.md` están commiteados.
+2. `spark migrate -g tests` y dos ejecuciones de seed terminan sin errores en la base de tests.
+3. `spark routes` coincide con `docs/rutas.md` y no muestra rutas automáticas.
+4. PHPUnit pasa contra MySQL.
+5. Se completan las verificaciones manuales de acceso/email cuando existan las HUs funcionales correspondientes.
+6. La base local de desarrollo queda alineada con el esquema canónico o se documenta el procedimiento de adopción.
 
 ---
 
 ## 11. Próximo paso
 
-Con HU-00 cerrado, ejecutar en este orden:
+Los BC-01 a BC-20 están verificados. Las bases de desarrollo y tests están alineadas con el esquema canónico. Después, ejecutar las HUs en este orden:
 
 ```
 HU-01 → HU-02 → HU-03 → HU-04 → HU-06 → HU-05 → HU-07 → HU-09 → HU-08

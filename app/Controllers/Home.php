@@ -2,10 +2,14 @@
 
 namespace App\Controllers;
 
+use CodeIgniter\HTTP\RedirectResponse;
+
 class Home extends BaseController
 {
-    public function index(): string
+    public function index(): RedirectResponse
     {
-        return view('home/index', ['titulo' => 'Inicio']);
+        $destino = session()->get('id_usuario') ? 'dashboard' : 'auth/login';
+
+        return redirect()->to(site_url($destino));
     }
 }
