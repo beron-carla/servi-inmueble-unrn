@@ -67,3 +67,38 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# EMAIL (desarrollo: Mailpit en localhost:1025 / UI :8025)
+#--------------------------------------------------------------------
+
+email.fromEmail = no-reply@serviinmueble.local
+email.fromName = 'ServiInmueble 2026'
+email.protocol = smtp
+email.SMTPHost = localhost
+email.SMTPPort = 1025
+email.SMTPUser =
+email.SMTPPass =
+email.SMTPCrypto =
+email.mailType = html
+
+#--------------------------------------------------------------------
+# SEEDS
+#--------------------------------------------------------------------
+
+SEED_ADMIN_EMAIL = admin@serviinmueble.local
+SEED_ADMIN_PASSWORD = Admin1234
+
+#--------------------------------------------------------------------
+# TESTS (MySQL, no SQLite)
+#--------------------------------------------------------------------
+
+database.tests.hostname = 127.0.0.1
+database.tests.database = serviinmueble_test
+database.tests.username = root
+database.tests.password =
+database.tests.DBDriver = MySQLi
+database.tests.DBPrefix =
+database.tests.charset = utf8mb4
+database.tests.DBCollat = utf8mb4_unicode_ci
+database.tests.port = 3306

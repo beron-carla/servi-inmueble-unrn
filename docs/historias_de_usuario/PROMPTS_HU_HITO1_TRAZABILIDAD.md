@@ -2,9 +2,11 @@
 
 Este archivo contiene un prompt por cada HU de `HU_Hito1_compacto.txt`, enlazado con sus criterios de aceptación, dependencias y notas de trazabilidad (`H-24` a `H-33`).
 
+> **Actualización 2026-11-08:** el esquema canónico es `bd/serviinmueble (1).sql` y el prompt general vigente es [`../PROMPT_GENERAL.md`](../PROMPT_GENERAL.md). La sección “PROMPT GENERAL” de este archivo queda como referencia histórica; no usarla para nuevas implementaciones.
+
 ## Cómo usar este archivo
 
-1. Copiar el **PROMPT GENERAL** al inicio de la sesión de trabajo.
+1. Copiar el **PROMPT GENERAL** de [`../PROMPT_GENERAL.md`](../PROMPT_GENERAL.md) al inicio de la sesión de trabajo.
 2. Copiar el prompt de la HU asignada.
 3. Leer el archivo `HU-XX_compacto.md` correspondiente y el bloque de trazabilidad de `HU_Hito1_compacto.txt`.
 4. Implementar solo el alcance de esa HU.
