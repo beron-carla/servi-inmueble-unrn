@@ -1,6 +1,7 @@
 # Entorno local (cada integrante tiene el suyo)
 .env
 .idea
+phpunit.local.xml
 
 # Archivos generados por CodeIgniter (se conservan los index.html)
 writable/cache/*

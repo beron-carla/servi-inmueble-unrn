@@ -3,11 +3,17 @@
 namespace App\Repositories;
 
 use App\Models\TipoServicioModel;
+use CodeIgniter\Database\BaseConnection;
 
 class TipoServicioRepository
 {
-    public function __construct(private ?TipoServicioModel $model = null)
-    {
+    private BaseConnection $db;
+
+    public function __construct(
+        private ?TipoServicioModel $model = null,
+        ?BaseConnection $db = null,
+    ) {
+        $this->db = $db ?? db_connect();
         $this->model ??= new TipoServicioModel();
     }
 
@@ -17,6 +23,29 @@ class TipoServicioRepository
     public function buscarPorId(int $id): ?array
     {
         return $this->model->find($id) ?: null;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listarActivosParaVincular(): array
+    {
+        return $this->model
+            ->where('activo', 1)
+            ->orderBy('tipo', 'ASC')
+            ->orderBy('proveedor_predeterminado', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function buscarParaVincularConBloqueo(int $id): ?array
+    {
+        return $this->db->query(
+            'SELECT * FROM tipo_servicio WHERE id_tipo_servicio = ? FOR UPDATE',
+            [$id],
+        )->getRowArray() ?: null;
     }
 
     public function existePorTipoYProveedor(string $tipo, string $proveedor): bool
