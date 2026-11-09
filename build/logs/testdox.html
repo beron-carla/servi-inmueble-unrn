@@ -54,8 +54,18 @@
         <h2>Admin Tipos Servicio Access (Tests\Feature\AdminTiposServicioAccess)</h2>
         <ul>
             <li class="success">Owner cannot open service type form and gets forbidden page</li>
+            <li class="success">Owner cannot open service type edit page</li>
             <li class="success">Administrator can create an active service type with csrf</li>
             <li class="success">Create form contains canonical options and csrf token</li>
+            <li class="success">Administrator can list all types and see acceptance fields</li>
+            <li class="success">Administrator can edit and reactivate a service type with csrf</li>
+            <li class="success">Update rejects a type and provider combination already in use</li>
+            <li class="success">Physical deletion route clearly reports its deferred integration</li>
+            <li class="success">Administrator filters types by category and active state</li>
+            <li class="success">Owner sees only active types in the read only catalog</li>
+            <li class="success">Administrator can view type details and deferred property count is identified</li>
+            <li class="success">Catalog displays required empty state when search has no results</li>
+            <li class="success">Admin pagination uses documented page parameter and preserves filters</li>
         </ul>
         <h2>Admin Usuarios Access (Tests\Feature\AdminUsuariosAccess)</h2>
         <ul>
@@ -131,6 +141,21 @@
             <li class="success">Is defined app path</li>
             <li class="success">Base url has been set</li>
         </ul>
+        <h2>Inmuebles (Tests\Feature\Inmuebles)</h2>
+        <ul>
+            <li class="success">Owner can create property and address for their own account</li>
+            <li class="success">Administrator can create property for an active owner only</li>
+            <li class="success">Duplicate alias is rejected by the application and preserves form input</li>
+            <li class="success">Invalid values show the acceptance criteria messages</li>
+            <li class="success">Surface must be numeric positive and allow no more than two decimals</li>
+            <li class="success">Owner listing is scoped and hides inactive properties by default</li>
+            <li class="success">Administrator can filter all properties and owners receive forbidden on foreign detail</li>
+            <li class="success">Owner can update property address type surface and state</li>
+            <li class="success">Property update uses acceptance criteria validation messages</li>
+            <li class="success">Logical deactivation preserves property services and invoices and reactivation sets available</li>
+            <li class="success">Owner cannot edit or change state of another owners property</li>
+            <li class="success">Administrator can edit a property owned by another user</li>
+        </ul>
         <h2>Login Throttle Service (Tests\Unit\Services\LoginThrottleService)</h2>
         <ul>
             <li class="success">Email and ip are limited independently at five failures</li>
@@ -150,6 +175,11 @@
             <li class="success">Reports concurrent duplicate but rethrows other database errors</li>
             <li class="success">Maps trigger rejection to the acceptance message</li>
             <li class="success">Exposes only canonical form options and compatible units</li>
+            <li class="success">Updates service type fields and active state</li>
+            <li class="success">Rejects duplicate type and provider when updating another record</li>
+            <li class="success">Rejects invalid update state and missing record</li>
+            <li class="success">Normalizes administration filters and page before listing</li>
+            <li class="success">Owner catalog always requests active types and ignores active filter</li>
         </ul>
         <h2>Usuario Gestion</h2>
         <ul>

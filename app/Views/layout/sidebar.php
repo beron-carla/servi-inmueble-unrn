@@ -40,7 +40,27 @@
                     </li>
                 <?php endif ?>
 
-                <?php /* MENU: Inmuebles (HU-10 a HU-12). Completar acá. */ ?>
+                <?php if (es_admin()) : ?>
+                    <li class="nav-item">
+                        <a href="<?= route_to('admin.inmuebles.index') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-building"></i>
+                            <p>Inmuebles</p>
+                        </a>
+                    </li>
+                <?php else : ?>
+                    <li class="nav-item">
+                        <a href="<?= route_to('inmuebles.index') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-building"></i>
+                            <p>Mis inmuebles</p>
+                        </a>
+                    </li>
+                <?php endif ?>
+                <li class="nav-item">
+                    <a href="<?= route_to('inmuebles.create') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-plus"></i>
+                        <p>Alta de inmueble</p>
+                    </a>
+                </li>
 
                 <?php /* MENU: Servicios del inmueble (HU-13). Completar acá. */ ?>
 

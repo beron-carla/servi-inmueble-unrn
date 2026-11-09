@@ -1,7 +1,17 @@
 Admin Tipos Servicio Access (Tests\Feature\AdminTiposServicioAccess)
  [x] Owner cannot open service type form and gets forbidden page
+ [x] Owner cannot open service type edit page
  [x] Administrator can create an active service type with csrf
  [x] Create form contains canonical options and csrf token
+ [x] Administrator can list all types and see acceptance fields
+ [x] Administrator can edit and reactivate a service type with csrf
+ [x] Update rejects a type and provider combination already in use
+ [x] Physical deletion route clearly reports its deferred integration
+ [x] Administrator filters types by category and active state
+ [x] Owner sees only active types in the read only catalog
+ [x] Administrator can view type details and deferred property count is identified
+ [x] Catalog displays required empty state when search has no results
+ [x] Admin pagination uses documented page parameter and preserves filters
 
 Admin Usuarios Access (Tests\Feature\AdminUsuariosAccess)
  [x] Owner cannot open user administration and gets forbidden page
@@ -66,6 +76,20 @@ Health
  [x] Is defined app path
  [x] Base url has been set
 
+Inmuebles (Tests\Feature\Inmuebles)
+ [x] Owner can create property and address for their own account
+ [x] Administrator can create property for an active owner only
+ [x] Duplicate alias is rejected by the application and preserves form input
+ [x] Invalid values show the acceptance criteria messages
+ [x] Surface must be numeric positive and allow no more than two decimals
+ [x] Owner listing is scoped and hides inactive properties by default
+ [x] Administrator can filter all properties and owners receive forbidden on foreign detail
+ [x] Owner can update property address type surface and state
+ [x] Property update uses acceptance criteria validation messages
+ [x] Logical deactivation preserves property services and invoices and reactivation sets available
+ [x] Owner cannot edit or change state of another owners property
+ [x] Administrator can edit a property owned by another user
+
 Login Throttle Service (Tests\Unit\Services\LoginThrottleService)
  [x] Email and ip are limited independently at five failures
 
@@ -82,6 +106,11 @@ Tipo Servicio Service (Tests\Unit\Services\TipoServicioService)
  [x] Reports concurrent duplicate but rethrows other database errors
  [x] Maps trigger rejection to the acceptance message
  [x] Exposes only canonical form options and compatible units
+ [x] Updates service type fields and active state
+ [x] Rejects duplicate type and provider when updating another record
+ [x] Rejects invalid update state and missing record
+ [x] Normalizes administration filters and page before listing
+ [x] Owner catalog always requests active types and ignores active filter
 
 Usuario Gestion
  [x] Update normalizes email and audits the admin

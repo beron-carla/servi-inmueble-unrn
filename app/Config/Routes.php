@@ -24,11 +24,11 @@ $routes->get('dashboard', 'DashboardController::index', ['filter' => 'auth', 'as
 $routes->get('inmuebles', 'InmueblesController::index', ['filter' => 'auth', 'as' => 'inmuebles.index']);
 $routes->get('inmuebles/nuevo', 'InmueblesController::create', ['filter' => 'auth', 'as' => 'inmuebles.create']);
 $routes->post('inmuebles', 'InmueblesController::store', ['filter' => 'auth', 'as' => 'inmuebles.store']);
-$routes->get('inmuebles/(:num)', 'InmueblesController::show/$1', ['filter' => 'auth', 'as' => 'inmuebles.show']);
 $routes->get('inmuebles/(:num)/editar', 'InmueblesController::edit/$1', ['filter' => 'auth', 'as' => 'inmuebles.edit']);
 $routes->post('inmuebles/(:num)', 'InmueblesController::update/$1', ['filter' => 'auth', 'as' => 'inmuebles.update']);
 $routes->post('inmuebles/(:num)/baja', 'InmueblesController::deactivate/$1', ['filter' => 'auth', 'as' => 'inmuebles.deactivate']);
 $routes->post('inmuebles/(:num)/reactivar', 'InmueblesController::activate/$1', ['filter' => 'auth', 'as' => 'inmuebles.activate']);
+$routes->get('inmuebles/(:num)', 'InmueblesController::show/$1', ['filter' => 'auth', 'as' => 'inmuebles.show']);
 
 $routes->get('inmuebles/(:num)/servicios/nuevo', 'ServiciosInmuebleController::create/$1', ['filter' => 'auth', 'as' => 'servicios.create']);
 $routes->post('inmuebles/(:num)/servicios', 'ServiciosInmuebleController::store/$1', ['filter' => 'auth', 'as' => 'servicios.store']);
