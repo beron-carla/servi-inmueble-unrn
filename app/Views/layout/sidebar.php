@@ -20,9 +20,22 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="<?= route_to('admin.tipos.create') ?>" class="nav-link">
+                        <a href="<?= route_to('admin.tipos.index') ?>" class="nav-link">
                             <i class="nav-icon fas fa-list"></i>
+                            <p>Tipos de servicio</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= route_to('admin.tipos.create') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-plus"></i>
                             <p>Alta de tipo de servicio</p>
+                        </a>
+                    </li>
+                <?php else : ?>
+                    <li class="nav-item">
+                        <a href="<?= route_to('catalogo.servicios') ?>" class="nav-link">
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Catálogo de servicios</p>
                         </a>
                     </li>
                 <?php endif ?>

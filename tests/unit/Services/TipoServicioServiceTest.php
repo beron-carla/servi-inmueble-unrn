@@ -155,6 +155,185 @@ final class TipoServicioServiceTest extends CIUnitTestCase
         $this->assertSame(['Moneda fija'], $opciones['unidades_por_tipo']['impuesto']);
     }
 
+    public function testUpdatesServiceTypeFieldsAndActiveState(): void
+    {
+        $tipos = new class extends TipoServicioRepository {
+            /** @var array<string, mixed>|null */
+            public ?array $datosActualizados = null;
+
+            public function __construct() {}
+
+            public function buscarPorId(int $id): ?array
+            {
+                return $id === 7 ? ['id_tipo_servicio' => 7] : null;
+            }
+
+            public function existeOtroPorTipoYProveedor(string $tipo, string $proveedor, int $excluirId): bool
+            {
+                return false;
+            }
+
+            public function actualizar(int $id, array $datos): bool
+            {
+                $this->datosActualizados = $datos;
+
+                return true;
+            }
+        };
+
+        $resultado = (new TipoServicioService($tipos))->actualizar(
+            7,
+            ' INTERNET ',
+            ' PRIVADO ',
+            'Moneda fija',
+            ' Fibra local ',
+            '0',
+        );
+
+        $this->assertTrue($resultado['exito']);
+        $this->assertSame([
+            'tipo' => 'internet',
+            'categoria' => 'privado',
+            'unidad_medida' => 'Moneda fija',
+            'proveedor_predeterminado' => 'Fibra local',
+            'activo' => 0,
+        ], $tipos->datosActualizados);
+    }
+
+    public function testRejectsDuplicateTypeAndProviderWhenUpdatingAnotherRecord(): void
+    {
+        $tipos = new class extends TipoServicioRepository {
+            public bool $actualizarInvocado = false;
+
+            public function __construct() {}
+
+            public function buscarPorId(int $id): ?array
+            {
+                return ['id_tipo_servicio' => $id];
+            }
+
+            public function existeOtroPorTipoYProveedor(string $tipo, string $proveedor, int $excluirId): bool
+            {
+                return true;
+            }
+
+            public function actualizar(int $id, array $datos): bool
+            {
+                $this->actualizarInvocado = true;
+
+                return true;
+            }
+        };
+
+        $resultado = (new TipoServicioService($tipos))->actualizar(
+            7,
+            'agua',
+            'publico',
+            'm³',
+            'Aguas',
+            '1',
+        );
+
+        $this->assertSame(
+            'Ya existe un tipo de servicio con ese nombre',
+            $resultado['errores']['tipo'],
+        );
+        $this->assertFalse($tipos->actualizarInvocado);
+    }
+
+    public function testRejectsInvalidUpdateStateAndMissingRecord(): void
+    {
+        $tipos = new class extends TipoServicioRepository {
+            public function __construct() {}
+
+            public function buscarPorId(int $id): ?array
+            {
+                return null;
+            }
+        };
+
+        $resultado = (new TipoServicioService($tipos))->actualizar(
+            0,
+            'agua',
+            'publico',
+            'm³',
+            'Aguas',
+            '2',
+        );
+
+        $this->assertSame('Estado inválido', $resultado['errores']['activo']);
+        $this->assertSame(
+            'No se encontró el tipo de servicio solicitado.',
+            $resultado['errores']['general'],
+        );
+    }
+
+    public function testNormalizesAdministrationFiltersAndPageBeforeListing(): void
+    {
+        $tipos = new class extends TipoServicioRepository {
+            /** @var array<string, mixed>|null */
+            public ?array $filtrosRecibidos = null;
+            public ?int $paginaRecibida = null;
+
+            public function __construct() {}
+
+            public function listarParaAdministracion(array $filtros, int $pagina): array
+            {
+                $this->filtrosRecibidos = $filtros;
+                $this->paginaRecibida = $pagina;
+
+                return ['tipos' => [], 'pager' => null];
+            }
+        };
+
+        $resultado = (new TipoServicioService($tipos))->listarParaAdministracion([
+            'q' => '  gas  ',
+            'categoria' => ['publico'],
+            'activo' => '2',
+            'page' => '-1',
+        ]);
+
+        $this->assertSame([
+            'q' => 'gas',
+            'categoria' => '',
+            'activo' => '',
+        ], $tipos->filtrosRecibidos);
+        $this->assertSame(1, $tipos->paginaRecibida);
+        $this->assertSame('', $resultado['filtros']['categoria']);
+    }
+
+    public function testOwnerCatalogAlwaysRequestsActiveTypesAndIgnoresActiveFilter(): void
+    {
+        $tipos = new class extends TipoServicioRepository {
+            /** @var array<string, mixed>|null */
+            public ?array $filtrosRecibidos = null;
+            public ?int $paginaRecibida = null;
+
+            public function __construct() {}
+
+            public function listarActivos(array $filtros, int $pagina): array
+            {
+                $this->filtrosRecibidos = $filtros;
+                $this->paginaRecibida = $pagina;
+
+                return ['tipos' => [], 'pager' => null];
+            }
+        };
+
+        $resultado = (new TipoServicioService($tipos))->listarActivos([
+            'activo' => '0',
+            'page' => '3',
+        ]);
+
+        $this->assertSame([
+            'q' => '',
+            'categoria' => '',
+            'activo' => '',
+        ], $tipos->filtrosRecibidos);
+        $this->assertSame(3, $tipos->paginaRecibida);
+        $this->assertSame('', $resultado['filtros']['activo']);
+    }
+
     /**
      * @return array{TipoServicioService, TipoServicioRepository&object}
      */
