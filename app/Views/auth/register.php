@@ -12,7 +12,7 @@ $anterior = session()->getFlashdata('registro_anterior') ?? [];
     <div class="card-body">
         <p class="login-box-msg">Creá una cuenta para acceder al sistema</p>
 
-        <form action="<?= route_to('auth.register.store') ?>" method="post">
+        <form action="<?= site_url(route_to('auth.register.store')) ?>" method="post">
             <?= csrf_field() ?>
 
             <div class="form-group">

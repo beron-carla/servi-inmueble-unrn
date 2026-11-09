@@ -4996,3 +4996,935 @@ Todas están documentadas y protegidas con `auth`; los POST usan CSRF:
 - `php -l` en archivos PHP modificados: sin errores. `git diff --check`: OK, con avisos de fin de línea en logs preexistentes.
 
 **Pendientes/riesgos:** CA-11.4 debe completarse con HU-13/HU-14. Las pruebas corrieron con PHP CLI **8.2.12**, no con PHP 8.3. El árbol de trabajo ya tenía cambios previos; fueron conservados.
+
+## HU-13 + wampp implementadas
+
+Ask User
+Completed with input: {
+  "message": "¿Qué HU querés que implemente? Indicá el identificador (HU-01 a HU-15) y, si corresponde, pegá las instrucciones específicas de esa HU.",
+  "requestedSchema": {
+    "properties": {
+      "hu": {
+        "type": "string",
+        "title": "Historia de usuario",
+        "description": "Identificador de HU asignada, por ejemplo HU-01"
+      },
+      "instrucciones": {
+        "type": "string",
+        "title": "Instrucciones específicas",
+        "description": "Detalles adicionales de alcance o criterios, si los hay"
+      }
+    }
+  }
+}
+
+Voy a revisar la documentación obligatoria en el orden indicado; después comprobaré alcance, rutas y criterios de aceptación de HU-13 antes de cambiar código.
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md"
+}
+
+Read , lines 1 to 120
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read , lines 121 to 320
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md",
+  "view_range": [
+    121,
+    320
+  ]
+}
+
+Read , lines 180 to 300
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md",
+  "view_range": [
+    180,
+    300
+  ]
+}
+
+Read , lines 300 to 461
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md",
+  "view_range": [
+    300,
+    461
+  ]
+}
+
+Read , lines 450 to 461
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\decisiones.md",
+  "view_range": [
+    450,
+    461
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\rutas.md"
+}
+
+Read , lines 1 to 130
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\rutas.md",
+  "view_range": [
+    1,
+    130
+  ]
+}
+
+Read , lines 131 to 300
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\rutas.md",
+  "view_range": [
+    131,
+    300
+  ]
+}
+
+Read , lines 240 to 378
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\rutas.md",
+  "view_range": [
+    240,
+    378
+  ]
+}
+
+Read , lines 360 to 378
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\rutas.md",
+  "view_range": [
+    360,
+    378
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md"
+}
+
+Read , lines 1 to 140
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    1,
+    140
+  ]
+}
+
+Read , lines 141 to 280
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    141,
+    280
+  ]
+}
+
+Read , lines 281 to 430
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    281,
+    430
+  ]
+}
+
+Read , lines 431 to 570
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    431,
+    570
+  ]
+}
+
+Read , lines 571 to 740
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    571,
+    740
+  ]
+}
+
+Read , lines 729 to 760
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\00_bootstrap.md",
+  "view_range": [
+    729,
+    760
+  ]
+}
+
+La documentación define HU-13 con rutas explícitas existentes y una unicidad activa/pausada/en revisión. Continúo con los criterios, notas de trazabilidad y convenciones antes de inspeccionar la implementación actual.
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\historias_de_usuario\\HU-13_compacto.md"
+}
+
+Search for `^(##? .*TRAZABILIDAD|##? .*NOTAS|.*HU-13|.*CA-13)`
+
+Read , lines 1 to 50
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\historias_de_usuario\\HU_Hito1_compacto.txt",
+  "view_range": [
+    1,
+    50
+  ]
+}
+
+Search for `^={3,}.*(TRAZABILIDAD|NOTAS)|^(TRAZABILIDAD|NOTAS)`
+
+Read , lines 270 to 295
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\docs\\historias_de_usuario\\HU_Hito1_compacto.txt",
+  "view_range": [
+    270,
+    295
+  ]
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\servi-inmueble-ci4\\SKILL.md"
+}
+
+Read `SKILL.md`, lines 1 to 120
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\servi-inmueble-ci4\\SKILL.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read `SKILL.md`, lines 121 to 260
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\servi-inmueble-ci4\\SKILL.md",
+  "view_range": [
+    121,
+    260
+  ]
+}
+
+HU-13 no requiere cambiar el esquema; sus CA cubren alta/edición, permisos, estados, duplicados y rechazo de inmueble inactivo. Ahora verifico las guías de implementación de módulo, UI, seguridad y pruebas aplicables.
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-module-scaffold\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-routes-guard\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\adminlte-view-craft\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-frontend-ui\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-security-audit\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-hu-validator\\SKILL.md"
+}
+
+Read `SKILL.md`
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-test-suite\\SKILL.md"
+}
+
+Read `SKILL.md`, lines 1 to 120
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\adminlte-view-craft\\SKILL.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read `SKILL.md`, lines 1 to 180
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\agents\\ci4-frontend-ui\\SKILL.md",
+  "view_range": [
+    1,
+    180
+  ]
+}
+
+Find files matching `app/{Controllers,Services,Repositories,Models,Entities,Views}/**/*Servicio*`
+
+Find files matching `tests/**/*Servicio*`
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Config\\Routes.php"
+}
+
+Search for `ServicioInmueble|propiedad_servicio|servicios\.`
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\ServicioInmuebleService.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Repositories\\PropiedadServicioRepository.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Models\\PropiedadServicioModel.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Entities\\PropiedadServicio.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Repositories\\PropiedadRepository.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Models\\TipoServicioModel.php"
+}
+
+Find files matching `app/Controllers/**/*.php`
+
+Find files matching `app/Views/servicios-inmueble/**/*.php`
+
+Ran terminal command: git status --short; Get-ChildItem -Force app\Views
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Controllers\\InmueblesController.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\InmuebleService.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Controllers\\CatalogoServiciosController.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\TipoServicioService.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\inmuebles\\show.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\layout\\main.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\unit\\Services\\TipoServicioServiceTest.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\AdminTiposServicioAccessTest.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Models\\PropiedadModel.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Entities\\TipoServicio.php"
+}
+
+Read , lines 1 to 180
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\InmuebleService.php",
+  "view_range": [
+    1,
+    180
+  ]
+}
+
+Read , lines 1 to 150
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\TipoServicioService.php",
+  "view_range": [
+    1,
+    150
+  ]
+}
+
+Read , lines 1 to 170
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\unit\\Services\\TipoServicioServiceTest.php",
+  "view_range": [
+    1,
+    170
+  ]
+}
+
+Read , lines 1 to 180
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\AdminTiposServicioAccessTest.php",
+  "view_range": [
+    1,
+    180
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Database\\Migrations\\2026-11-09-000008_CreatePropiedadServicio.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\inmuebles\\index.php"
+}
+
+Read , lines 181 to 370
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\InmuebleService.php",
+  "view_range": [
+    181,
+    370
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Repositories\\TipoServicioRepository.php"
+}
+
+Read , lines 145 to 360
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\TipoServicioService.php",
+  "view_range": [
+    145,
+    360
+  ]
+}
+
+Read , lines 180 to 380
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\AdminTiposServicioAccessTest.php",
+  "view_range": [
+    180,
+    380
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Config\\Database.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Config\\Validation.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Controllers\\BaseController.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Database\\Migrations\\2026-11-09-000007_CreatePropiedad.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Database\\Migrations\\2026-11-09-000004_CreateUsuario.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Filters\\AuthFilter.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\errors\\html\\error_403.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\partials\\alerts.php"
+}
+
+Read , lines 330 to 390
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\AdminTiposServicioAccessTest.php",
+  "view_range": [
+    330,
+    390
+  ]
+}
+
+La funcionalidad HU-13 todavía está ausente: existen las rutas, pero el servicio es un stub y faltan controlador y vistas. Voy a completar las capas respetando el esquema canónico, conectando los servicios desde el detalle del inmueble y agregando pruebas de integración para sus reglas principales.
+
+Edit 
+
+Edit 
+
+Edit 
+
+Edit 
+
+Edit 
+
+Edit , , , , 
+
+Edit 
+
+Ran terminal command: & 'C:\xampp\php\php.exe' vendor\bin\phpunit tests\feature\ServiciosInmuebleTest.php
+Tool execution failed with exit code 1
+
+Ran terminal command: git diff --check; if ($?) { & 'C:\xampp\php\php.exe' -l app\Services\ServicioInmuebleService.php; & 'C:\xampp\php\php.exe' -l app\Controllers\ServiciosInmuebleController.php; & 'C:\xampp\php\php.exe' -l app\Repositories\PropiedadServicioRepository.php; & 'C:\xampp\php\php.exe' -l tests\feature\ServiciosInmuebleTest.php }
+Tool execution failed with exit code 1
+
+La primera validación confirmó que la ruta de PHP indicada por la documentación (`C:\xampp\php\php.exe`) no existe en este entorno. Voy a localizar el ejecutable disponible y, en paralelo, revisar el diff para corregir cualquier desajuste antes de volver a probar.
+
+Ran terminal command: Get-Command php -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source; Get-ChildItem C:\xampp\php\php.exe, C:\tools\php\php.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+Tool execution failed with exit code 1
+
+Ran terminal command: git status --short; git --no-pager diff --check; git --no-pager diff --stat; git --no-pager diff -- app\Services\ServicioInmuebleService.php app\Controllers\ServiciosInmuebleController.php app\Repositories\PropiedadServicioRepository.php app\Repositories\TipoServicioRepository.php app\Views\inmuebles\show.php
+
+Search for `"platform"|"phpunit/phpunit"`
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Config\\Routing.php"
+}
+
+Ran terminal command: $cmd = Get-Command php -ErrorAction SilentlyContinue; if ($cmd) { $cmd.Source }; Get-ChildItem C:\wamp64\bin\php\php.exe, C:\wamp\bin\php\php.exe, C:\wamp64\bin\php\php*\php.exe, C:\wamp\bin\php\php*\php.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+Tool execution failed with exit code 1
+
+Ran terminal command: git --no-pager diff --check; git status --short; Get-ChildItem C:\ -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'wamp|xampp' } | Select-Object -ExpandProperty FullName
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit tests\feature\ServiciosInmuebleTest.php
+Tool execution failed with exit code 2
+
+Ran terminal command: $php = 'C:\wamp64\bin\php\php8.3.28\php.exe'; $files = @('app\Services\ServicioInmuebleService.php','app\Controllers\ServiciosInmuebleController.php','app\Repositories\PropiedadServicioRepository.php','app\Repositories\TipoServicioRepository.php','tests\feature\ServiciosInmuebleTest.php','app\Views\servicios-inmueble\create.php','app\Views\servicios-inmueble\edit.php','app\Views\servicios-inmueble\form.php','app\Views\servicios-inmueble\show.php'); foreach ($file in $files) { & $php -l $file; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }; git --no-pager diff --check
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' spark routes
+
+El ejecutable WAMP encontrado es PHP 8.3.28; lo usé sin modificar configuración compartida ni asumir rutas de XAMPP. El código y rutas pasan sintaxis, pero la suite funcional no puede inicializarse porque MariaDB rechaza la conexión de pruebas. Estoy revisando si hay una configuración local de pruebas compatible y si los tests generaron cambios colaterales.
+
+Ran terminal command: git status --short; git --no-pager diff --check; git --no-pager diff --numstat
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\phpunit.dist.xml"
+}
+
+Read , lines 180 to 245
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Config\\Database.php",
+  "view_range": [
+    180,
+    245
+  ]
+}
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' spark routes | Select-String -Pattern 'servicios\.create|servicios\.store|servicios\.show|servicios\.edit|servicios\.update|servicios\.state|servicios\.deactivate'
+
+Search for `puedeCargarFacturas|class FacturaService|class FacturasController`
+
+Read , lines 30 to 135
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\inmuebles\\show.php",
+  "view_range": [
+    30,
+    135
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\FacturaService.php"
+}
+
+"Read" failed
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Controllers\\FacturasController.php"
+}
+Tool execution failed: Path does not exist
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Repositories\\FacturaRepository.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Models\\FacturaModel.php"
+}
+
+Read , lines 95 to 170
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Controllers\\InmueblesController.php",
+  "view_range": [
+    95,
+    170
+  ]
+}
+
+Edit , 
+
+Edit 
+
+Edit , 
+
+Edit 
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --help | Select-String -Pattern 'logging|cache-directory|configuration'
+
+Ran terminal command: $php = 'C:\wamp64\bin\php\php8.3.28\php.exe'; $files = @('app\Services\ServicioInmuebleService.php','app\Controllers\ServiciosInmuebleController.php','app\Repositories\PropiedadRepository.php','app\Repositories\PropiedadServicioRepository.php','app\Repositories\TipoServicioRepository.php','tests\feature\ServiciosInmuebleTest.php','tests\unit\Services\ServicioInmuebleServiceTest.php','app\Views\inmuebles\show.php','app\Views\servicios-inmueble\create.php','app\Views\servicios-inmueble\edit.php','app\Views\servicios-inmueble\form.php','app\Views\servicios-inmueble\show.php'); foreach ($file in $files) { & $php -l $file; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }; git --no-pager diff --check
+
+Read , lines 1 to 70
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Repositories\\TipoServicioRepository.php",
+  "view_range": [
+    1,
+    70
+  ]
+}
+
+Read , lines 100 to 225
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Services\\ServicioInmuebleService.php",
+  "view_range": [
+    100,
+    225
+  ]
+}
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\unit\Services\ServicioInmuebleServiceTest.php
+
+Ran terminal command: $php = 'C:\wamp64\bin\php\php8.3.28\php.exe'; & $php -l app\Repositories\PropiedadRepository.php; & $php -l app\Repositories\TipoServicioRepository.php; & $php -l app\Services\ServicioInmuebleService.php; & $php -l tests\unit\Services\ServicioInmuebleServiceTest.php; git --no-pager diff --check
+
+Ran terminal command: git restore -- build\.phpunit.cache\test-results build\logs\logfile.xml build\logs\testdox.html build\logs\testdox.txt; git status --short; git --no-pager diff --check
+
+El control de unicidad quedó protegido además frente a altas concurrentes, serializando la vinculación por inmueble; las pruebas unitarias independientes de MySQL pasan. La prueba HTTP sigue bloqueada por las credenciales forzadas en `phpunit.dist.xml` para MariaDB; terminaré con la matriz de trazabilidad y el estado exacto de validación.
+
+Search for `function (datosAlta|crear|detalle|actualizar|cambiarEstado|darDeBaja|puedeCar...`
+
+Search for `servicios\.create|servicios\.store|servicios\.show|servicios\.edit|servicios\...`
+
+Search for `function test|function puedeCargarFacturas|function bloquearParaVinculacion|f...`
+
+Ran terminal command: git --no-pager diff --stat; git status --short; git --no-pager diff --check
+
+Implementé HU-13 con las rutas ya definidas en el proyecto; no agregué rutas ni alteré el esquema.
+
+### Archivos creados o modificados
+
+- `ServicioInmuebleService.php` — validaciones, permisos, transiciones, baja lógica y elegibilidad para facturas.
+- `ServiciosInmuebleController.php` — operaciones HTTP y patrón PRG.
+- `PropiedadRepository.php`, `PropiedadServicioRepository.php` y `TipoServicioRepository.php` — acceso a datos y bloqueos para evitar vinculaciones duplicadas concurrentes.
+- `inmuebles/show.php` — acciones y acceso al detalle de servicios.
+- Vistas nuevas: `create.php`, `edit.php`, `form.php` y `show.php`.
+- Pruebas: `ServiciosInmuebleTest.php` y `ServicioInmuebleServiceTest.php`.
+
+### Rutas implementadas
+
+Las siete rutas existentes quedaron conectadas a `ServiciosInmuebleController`, todas con filtro `auth`:
+
+| Método | URI | Acción |
+|---|---|---|
+| GET | `/inmuebles/{id}/servicios/nuevo` | Formulario de alta |
+| POST | `/inmuebles/{id}/servicios` | Vincular servicio |
+| GET | `/servicios-inmueble/{id}` | Ver servicio |
+| GET | `/servicios-inmueble/{id}/editar` | Editar servicio |
+| POST | `/servicios-inmueble/{id}` | Guardar cambios |
+| POST | `/servicios-inmueble/{id}/estado` | Cambiar estado |
+| POST | `/servicios-inmueble/{id}/baja` | Baja lógica |
+
+### Matriz CA → implementación y prueba
+
+| Criterio | Implementación / prueba |
+|---|---|
+| CA-13.1, CA-13.7 — estados y transiciones | `ServicioInmuebleService.php`; pruebas unitarias de transiciones permitidas y rechazadas. |
+| CA-13.2 — campos obligatorios y medidor opcional | Validación y mensajes en el servicio; prueba HTTP cubre los cinco mensajes requeridos. |
+| CA-13.3 — propietario del inmueble o admin | Control de propiedad en el servicio; prueba HTTP de acceso propio, ajeno y admin. |
+| CA-13.4 — unicidad vigente y revinculación tras baja | `PropiedadServicioRepository.php`; prueba HTTP de duplicado y revinculación. |
+| CA-13.5 — baja lógica, historial preservado | Cambia únicamente `estado`; prueba HTTP verifica que se conserva el vínculo. |
+| CA-13.6 — facturas solo para servicios activos | `puedeCargarFacturas`; pruebas unitarias e integración cubren estados. HU-14 deberá usar esta validación al implementar la carga de facturas. |
+| CA-13.8 — catálogo sin tipos activos | Mensaje y formulario vacío en la vista de alta; prueba HTTP. |
+| CA-13.9 — inmueble inactivo | Rechazo en servicio, mensaje requerido y acción oculta; prueba HTTP. |
+
+### Notas y decisiones
+
+- H-29: los estados activo, pausado y en revisión bloquean otro vínculo; un vínculo inactivo permite revincular.
+- H-30: el número de medidor es opcional.
+- H-32/H-33: permisos verificados en servidor, 403 real y formularios POST con CSRF.
+- No fue necesario resolver decisiones pendientes P-XX. No se modificaron migraciones, SQL canónico ni rutas documentadas.
+
+### Validaciones ejecutadas
+
+Usé el PHP de WAMP detectado en este equipo: `C:\wamp64\bin\php\php8.3.28\php.exe`.
+
+- `php -l` en los archivos PHP afectados: **correcto**.
+- `git diff --check`: **correcto**.
+- `spark routes`: **correcto**; aparecen las siete rutas de HU-13.
+- Pruebas unitarias de HU-13: **2 pruebas, 24 aserciones, OK**.
+- Pruebas de integración: **no ejecutables aún**; las 7 fallaron al conectar con MariaDB porque `phpunit.dist.xml` fuerza el usuario `root` sin contraseña y WAMP rechazó esa conexión. No cambié credenciales ni configuración compartida.
+
+**Pendiente de validación:** configurar la conexión de `serviinmueble_test` para el MariaDB de WAMP y volver a ejecutar las pruebas HTTP.
+
+Vuelvo a ejecutar las pruebas de integración de HU-13 con PHP de WAMP; también revisaré el resultado del árbol de trabajo para no dejar artefactos generados por PHPUnit.
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\ServiciosInmuebleTest.php
+Tool execution failed with exit code 2
+
+Ran terminal command: git status --short; git --no-pager diff --check
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' -r '$db = new mysqli("127.0.0.1", "root", "", "mysql", 3306); if ($db->connect_errno) { fwrite(STDERR, $db->connect_error . PHP_EOL); exit(1); } $result = $db->query("SHOW DATABASES"); while ($row = $result->fetch_row()) { echo $row[0], PHP_EOL; }'
+Tool execution failed with exit code 255
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' -r '$db = new mysqli("127.0.0.1", "root", "", "mysql", 3306); if ($db->connect_errno) { fwrite(STDERR, $db->connect_error); exit(1); } $result = $db->query("SHOW DATABASES"); while ($row = $result->fetch_row()) { echo $row[0], PHP_EOL; }'
+Tool execution failed with exit code 255
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' -r 'echo 1;'
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' -r '$db = new mysqli("127.0.0.1", "root", "", "mysql", 3306); echo "ok";'
+Tool execution failed with exit code 255
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' -r '$db = new mysqli("localhost", "root", "", "mysql", 3306); echo "ok";'
+Tool execution failed with exit code 255
+
+Ran terminal command: Get-ChildItem C:\wamp64\bin -Directory | Select-Object -ExpandProperty FullName; Get-ChildItem C:\wamp64\bin\mariadb -Filter mysql.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName; Get-ChildItem C:\wamp64\bin\mysql -Filter mysql.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+
+Ran terminal command: & 'C:\wamp64\bin\mariadb\mariadb11.4.9\bin\mysql.exe' --protocol=TCP -h 127.0.0.1 -u root --batch --skip-column-names -e 'SHOW DATABASES'
+
+La conexión a MariaDB de WAMP ya funciona con la configuración de PHPUnit; ahora el bloqueo es que allí no existe la base `serviinmueble_test` (solo aparecen las bases del sistema). Voy a crear únicamente esa base de pruebas, como indica el bootstrap del proyecto, y reintentar HU-13.
+
+Ran terminal command: & 'C:\wamp64\bin\mariadb\mariadb11.4.9\bin\mysql.exe' --protocol=TCP -h 127.0.0.1 -u root -e "CREATE DATABASE IF NOT EXISTS serviinmueble_test DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & 'C:\wamp64\bin\mariadb\mariadb11.4.9\bin\mysql.exe' --protocol=TCP -h 127.0.0.1 -u root --batch --skip-column-names -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'serviinmueble_test';"
+
+Ran terminal command: & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\ServiciosInmuebleTest.php
+Tool execution failed with exit code 2
+
+Ran terminal command: & 'C:\wamp64\bin\mariadb\mariadb11.4.9\bin\mysql.exe' --protocol=TCP -h 127.0.0.1 -P 3306 -u root --batch --skip-column-names -e 'SELECT @@port, @@version; SHOW DATABASES'
+Tool execution failed with exit code 1
+
+Ran terminal command: Get-ChildItem C:\wamp64\bin\mariadb\mariadb11.4.9\bin\my.ini,C:\wamp64\bin\mysql\mysql8.4.7\my.ini,C:\wamp64\my.ini -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName; Get-ChildItem C:\wamp64\bin\apache -Directory | Select-Object -ExpandProperty FullName
+
+Ran terminal command: Get-ChildItem C:\wamp64\bin\mariadb,C:\wamp64\bin\mysql -Directory | Select-Object -ExpandProperty FullName
+
+Find files matching `**/my.ini`
+
+Find files matching `**/my.cnf`
+
+Read 
+Completed with input: {
+  "path": "C:\\wamp64\\bin\\mysql\\mysql8.4.7\\my.ini"
+}
+
+Search for `port\s*=|default_port|database\.tests\.(hostname|port)|database\.default\.(ho...`
+
+Read 
+Completed with input: {
+  "path": "C:\\wamp64\\bin\\mariadb\\mariadb11.4.9\\my.ini"
+}
+
+Ran terminal command: Get-ChildItem -Force | Select-Object Name,Mode; Get-CimInstance Win32_Service | Where-Object { $_.Name -match 'wamp|mysql|maria' } | Select-Object Name,State,PathName
+
+Ran terminal command: & 'C:\wamp64\bin\mysql\mysql8.4.7\bin\mysql.exe' --protocol=TCP -h 127.0.0.1 -P 3306 -u root --batch --skip-column-names -e 'SELECT @@port, @@version; SHOW DATABASES'
+
+Encontré dos instancias WAMP: PHPUnit apunta a MySQL en `3306`, pero el proyecto debe probarse contra MariaDB en `3307`; la base de pruebas se creó en esta última. Ejecutaré el mismo test usando una configuración temporal solo para cambiar el puerto, sin modificar archivos del proyecto ni credenciales.
+
+Ran terminal command: $config = Join-Path (Get-Location) 'phpunit.hu13.tmp.xml'; Copy-Item phpunit.dist.xml $config; $xml = Get-Content $config -Raw; $xml = $xml.Replace('name="database.tests.port" value="3306"', 'name="database.tests.port" value="3307"'); Set-Content -Path $config -Value $xml -NoNewline; try { & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --configuration $config --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\ServiciosInmuebleTest.php; $codigo = $LASTEXITCODE } finally { Remove-Item -LiteralPath $config -ErrorAction SilentlyContinue }; exit $codigo
+Tool execution failed with exit code 2
+
+La ejecución ya alcanzó la app y detectó fallos reales de renderizado y pruebas. Voy a corregir el paso de datos a la vista parcial y ajustar las verificaciones HTTP para que reflejen cómo CI4 renderiza el detalle y el token CSRF.
+
+Read , lines 470 to 515
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\system\\View\\View.php",
+  "view_range": [
+    470,
+    515
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\servicios-inmueble\\form.php"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\servicios-inmueble\\show.php"
+}
+
+Read , lines 155 to 235
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\ServiciosInmuebleTest.php",
+  "view_range": [
+    155,
+    235
+  ]
+}
+
+Search for `function include\(`
+
+Read , lines 200 to 270
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\system\\View\\View.php",
+  "view_range": [
+    200,
+    270
+  ]
+}
+
+Read , lines 140 to 205
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\system\\View\\View.php",
+  "view_range": [
+    140,
+    205
+  ]
+}
+
+Read , lines 350 to 430
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\system\\View\\View.php",
+  "view_range": [
+    350,
+    430
+  ]
+}
+
+Read , lines 520 to 590
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\system\\View\\View.php",
+  "view_range": [
+    520,
+    590
+  ]
+}
+
+Search for `setData\(|appendData|render\('.*form`
+
+Edit , 
+
+Ran terminal command: $config = Join-Path (Get-Location) 'phpunit.hu13.tmp.xml'; Copy-Item phpunit.dist.xml $config; $xml = Get-Content $config -Raw; $xml = $xml.Replace('name="database.tests.port" value="3306"', 'name="database.tests.port" value="3307"'); Set-Content -Path $config -Value $xml -NoNewline; try { & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --configuration $config --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\ServiciosInmuebleTest.php; $codigo = $LASTEXITCODE } finally { Remove-Item -LiteralPath $config -ErrorAction SilentlyContinue }; exit $codigo
+Tool execution failed with exit code 1
+
+Search for `There were|failure|Failed asserting|Tests:|Expected|ErrorException`
+
+Ran terminal command: git status --short; Get-ChildItem phpunit.hu13.tmp.xml -ErrorAction SilentlyContinue
+Tool execution failed with exit code 1
+
+Read tool output
+Completed with input: {
+  "path": "C:\\Users\\lggla\\AppData\\Local\\Temp\\1794245707802-copilot-tool-output-18472-9ef6c0b6-b3d0-4386-bbba-816adb3486ee.txt",
+  "view_range": [
+    1,
+    30
+  ]
+}
+
+Read tool output
+Completed with input: {
+  "path": "C:\\Users\\lggla\\AppData\\Local\\Temp\\1794245707802-copilot-tool-output-18472-9ef6c0b6-b3d0-4386-bbba-816adb3486ee.txt",
+  "view_range": [
+    245,
+    275
+  ]
+}
+
+Search for `CPE|tipo de servicio|errores|invalido|agregar servicios|No hay tipos|form action`
+
+Read tool output
+Completed with input: {
+  "path": "C:\\Users\\lggla\\AppData\\Local\\Temp\\1794245707802-copilot-tool-output-18472-9ef6c0b6-b3d0-4386-bbba-816adb3486ee.txt",
+  "view_range": [
+    100,
+    180
+  ]
+}
+
+Search for `getFlashdata\(|servicio_errores|withSession\(\$_SESSION\)`
+
+Read , lines 125 to 180
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\InmueblesTest.php",
+  "view_range": [
+    125,
+    180
+  ]
+}
+
+Read , lines 1 to 45
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\tests\\feature\\InmueblesTest.php",
+  "view_range": [
+    1,
+    45
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Proyectos\\servi-inmueble-unrn\\app\\Views\\partials\\alerts.php"
+}
+
+Edit 
+
+Ran terminal command: $config = Join-Path (Get-Location) 'phpunit.hu13.tmp.xml'; Copy-Item phpunit.dist.xml $config; $xml = Get-Content $config -Raw; $xml = $xml.Replace('name="database.tests.port" value="3306"', 'name="database.tests.port" value="3307"'); Set-Content -Path $config -Value $xml -NoNewline; try { & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --configuration $config --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\ServiciosInmuebleTest.php tests\unit\Services\ServicioInmuebleServiceTest.php; $codigo = $LASTEXITCODE } finally { Remove-Item -LiteralPath $config -ErrorAction SilentlyContinue }; exit $codigo
+
+Las pruebas de HU-13 ya pasan contra MariaDB de WAMP: 9 pruebas y 89 aserciones. Haré una última regresión del módulo de inmuebles, cuya vista de detalle también fue actualizada, y confirmaré que la configuración temporal y los registros de PHPUnit no queden en el repositorio.
+
+Ran terminal command: $config = Join-Path (Get-Location) 'phpunit.hu13.tmp.xml'; Copy-Item phpunit.dist.xml $config; $xml = Get-Content $config -Raw; $xml = $xml.Replace('name="database.tests.port" value="3306"', 'name="database.tests.port" value="3307"'); Set-Content -Path $config -Value $xml -NoNewline; try { & 'C:\wamp64\bin\php\php8.3.28\php.exe' vendor\bin\phpunit --configuration $config --no-logging --cache-directory "$env:TEMP\serviinmueble-phpunit-hu13" tests\feature\InmueblesTest.php; $codigo = $LASTEXITCODE } finally { Remove-Item -LiteralPath $config -ErrorAction SilentlyContinue }; exit $codigo
+
+Ran terminal command: git status --short; git --no-pager diff --check; if (Test-Path phpunit.hu13.tmp.xml) { Write-Error 'Temporary PHPUnit config was not cleaned up'; exit 1 }
+
+Las pruebas pasan en WAMP. El problema era que PHPUnit apuntaba a MySQL en el puerto `3306`, mientras que MariaDB de WAMP escucha en `3307`. Reejecuté las pruebas contra MariaDB usando configuración temporal, sin cambiar credenciales ni configuración permanente.
+
+- HU-13: **9 pruebas, 89 aserciones — OK** (`pruebas`, `unitarias`).
+- Regresión de inmuebles: **12 pruebas, 107 aserciones — OK**.
+- `git diff --check`: **OK**.
+
+Creé `serviinmueble_test` en MariaDB para ejecutar la suite. No quedó configuración temporal en el repositorio.

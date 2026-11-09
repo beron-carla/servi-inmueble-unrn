@@ -41,7 +41,7 @@
         </form>
 
         <p class="mt-3 mb-0 text-center">
-            <a href="<?= route_to('auth.register') ?>">Crear una cuenta</a>
+            <a href="<?= site_url(route_to('auth.register')) ?>">Crear una cuenta</a>
         </p>
     </div>
 </div>
