@@ -19,6 +19,30 @@ class TipoServicioRepository
         return $this->model->find($id) ?: null;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listarActivosParaVinculacion(): array
+    {
+        return $this->model
+            ->select('id_tipo_servicio, tipo, categoria, unidad_medida, proveedor_predeterminado')
+            ->where('activo', 1)
+            ->orderBy('tipo', 'ASC')
+            ->orderBy('proveedor_predeterminado', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function buscarActivoPorId(int $id): ?array
+    {
+        return $this->model
+            ->where('id_tipo_servicio', $id)
+            ->where('activo', 1)
+            ->first() ?: null;
+    }
+
     public function existePorTipoYProveedor(string $tipo, string $proveedor): bool
     {
         return $this->model

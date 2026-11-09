@@ -199,12 +199,26 @@ class PropiedadRepository
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function bloquearParaServicios(int $idPropiedad): ?array
+    {
+        return $this->db->query(
+            'SELECT id_propiedad, id_propietario, estado FROM propiedad WHERE id_propiedad = ? FOR UPDATE',
+            [$idPropiedad],
+        )->getRowArray() ?: null;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function listarServicios(int $idPropiedad): array
     {
         return $this->db->table('propiedad_servicio')
-            ->select('propiedad_servicio.id_propiedad_servicio, propiedad_servicio.estado, tipo_servicio.tipo, tipo_servicio.proveedor_predeterminado')
+            ->select(
+                'propiedad_servicio.id_propiedad_servicio, propiedad_servicio.estado, '
+                . 'tipo_servicio.tipo, tipo_servicio.proveedor_predeterminado',
+            )
             ->join(
                 'tipo_servicio',
                 'tipo_servicio.id_tipo_servicio = propiedad_servicio.id_tipo_servicio',

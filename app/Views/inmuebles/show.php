@@ -47,6 +47,7 @@
                             <th>Servicio</th>
                             <th>Proveedor</th>
                             <th>Estado</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,6 +56,12 @@
                                 <td><?= esc(etiqueta_tipo_servicio($servicio['tipo'])) ?></td>
                                 <td><?= esc($servicio['proveedor_predeterminado']) ?></td>
                                 <td><?= esc(etiqueta_estado_servicio($servicio['estado'])) ?></td>
+                                <td>
+                                    <a
+                                        href="<?= route_to('servicios.show', $servicio['id_propiedad_servicio']) ?>"
+                                        class="btn btn-sm btn-info"
+                                    >Ver servicio</a>
+                                </td>
                             </tr>
                         <?php endforeach ?>
                     </tbody>
@@ -68,6 +75,12 @@
         </div>
     </div>
     <div class="card-footer">
+        <?php if ($inmueble['estado'] !== 'inactivo') : ?>
+            <a
+                href="<?= route_to('servicios.create', $inmueble['id_propiedad']) ?>"
+                class="btn btn-success"
+            >Vincular servicio</a>
+        <?php endif ?>
         <a
             href="<?= route_to('inmuebles.edit', $inmueble['id_propiedad']) ?>"
             class="btn btn-primary"
