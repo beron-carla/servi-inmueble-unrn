@@ -118,9 +118,11 @@ No hace falta repetirlos en cada inicio. Si la base ya tiene las tablas y datos 
 El seeder crea el administrador inicial si todavía no existe:
 
 - Correo: `admin@serviinmueble.local`
-- Contraseña temporal: `Admin1234`
+- Contraseña temporal: `Admin1234` //localmente como admin123 
 
 En entorno de desarrollo también carga datos de demostración, incluido `propietario@serviinmueble.local` con contraseña `Propietario1234`.
+
+//aunque yo utilizo de prueba manual a `pepe@gmail.com` con contraseña `pepepepe2`.
 
 ## Iniciar la aplicación
 
