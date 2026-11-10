@@ -7,15 +7,16 @@ use App\Repositories\PropiedadServicioRepository;
 use App\Repositories\TipoServicioRepository;
 use CodeIgniter\Database\BaseConnection;
 use RuntimeException;
+use Throwable;
 
 class ServicioInmuebleService
 {
     private const ESTADOS_VIGENTES = ['activo', 'pausado', 'en revision'];
 
     private const TRANSICIONES = [
-        'activo' => 'pausado',
-        'pausado' => 'en revision',
-        'en revision' => 'activo',
+        'activo' => ['pausado', 'inactivo'],
+        'pausado' => ['en revision', 'inactivo'],
+        'en revision' => ['activo', 'inactivo'],
     ];
 
     private BaseConnection $db;
@@ -26,40 +27,55 @@ class ServicioInmuebleService
         private ?TipoServicioRepository $tipos = null,
         ?BaseConnection $db = null,
     ) {
-        $this->db = $db ?? db_connect();
         $this->servicios ??= new PropiedadServicioRepository();
         $this->propiedades ??= new PropiedadRepository();
         $this->tipos ??= new TipoServicioRepository();
+        $this->db = $db ?? db_connect();
     }
 
     /**
      * @return array{
      *     inmueble: array<string, mixed>|null,
      *     tipos: list<array<string, mixed>>,
+     *     sin_tipos: bool,
+     *     inmueble_inactivo: bool,
      *     sin_permiso: bool,
-     *     no_encontrado: bool,
-     *     inmueble_inactivo: bool
+     *     no_encontrado: bool
      * }
      */
-    public function datosAlta(int $idPropiedad, int $idUsuario, string $rol): array
+    public function opcionesAlta(int $idPropiedad, int $idUsuario, string $rol): array
     {
         $inmueble = $this->propiedades->buscarPorIdConDireccion($idPropiedad);
 
         if ($inmueble === null) {
-            return $this->resultadoAlta(null, [], false, true, false);
+            return $this->resultadoInmuebleNoEncontrado();
         }
 
         if (! $this->puedeGestionar($inmueble, $idUsuario, $rol)) {
-            return $this->resultadoAlta(null, [], true, false, false);
+            return $this->resultadoSinPermiso();
         }
 
-        return $this->resultadoAlta(
-            $inmueble,
-            $this->tipos->listarActivosParaVincular(),
-            false,
-            false,
-            $inmueble['estado'] === 'inactivo',
-        );
+        if ($inmueble['estado'] === 'inactivo') {
+            return [
+                'inmueble' => $inmueble,
+                'tipos' => [],
+                'sin_tipos' => false,
+                'inmueble_inactivo' => true,
+                'sin_permiso' => false,
+                'no_encontrado' => false,
+            ];
+        }
+
+        $tipos = $this->tipos->listarActivosParaVinculacion();
+
+        return [
+            'inmueble' => $inmueble,
+            'tipos' => $tipos,
+            'sin_tipos' => $tipos === [],
+            'inmueble_inactivo' => false,
+            'sin_permiso' => false,
+            'no_encontrado' => false,
+        ];
     }
 
     /**
@@ -68,9 +84,10 @@ class ServicioInmuebleService
      *     exito: bool,
      *     errores: array<string, string>,
      *     datos: array<string, string>,
+     *     id_propiedad_servicio: int|null,
+     *     inmueble_inactivo: bool,
      *     sin_permiso: bool,
-     *     no_encontrado: bool,
-     *     inmueble_inactivo: bool
+     *     no_encontrado: bool
      * }
      */
     public function crear(array $entrada, int $idPropiedad, int $idUsuario, string $rol): array
@@ -79,89 +96,79 @@ class ServicioInmuebleService
         $inmueble = $this->propiedades->buscarPorIdConDireccion($idPropiedad);
 
         if ($inmueble === null) {
-            return $this->resultadoOperacion($datos, false, [], false, true, false);
+            return $this->resultadoOperacion($datos, noEncontrado: true);
         }
 
         if (! $this->puedeGestionar($inmueble, $idUsuario, $rol)) {
-            return $this->resultadoOperacion($datos, false, [], true, false, false);
+            return $this->resultadoOperacion($datos, sinPermiso: true);
         }
 
         if ($inmueble['estado'] === 'inactivo') {
             return $this->resultadoOperacion(
                 $datos,
-                false,
-                ['general' => 'No se pueden agregar servicios a un inmueble inactivo'],
-                false,
-                false,
-                true,
+                errores: ['general' => 'No se pueden agregar servicios a un inmueble inactivo'],
+                inmuebleInactivo: true,
             );
         }
 
-        if ($this->tipos->listarActivosParaVincular() === []) {
-            return $this->resultadoOperacion(
-                $datos,
-                false,
-                ['general' => 'No hay tipos de servicio disponibles. Contacte al administrador.'],
-                false,
-                false,
-                false,
-            );
-        }
-
-        $errores = $this->validarDatos($datos);
-        $idTipo = filter_var($datos['id_tipo_servicio'], FILTER_VALIDATE_INT);
-        $tipo = $idTipo !== false && $idTipo !== null && $idTipo > 0
-            ? $this->tipos->buscarPorId((int) $idTipo)
-            : null;
-
-        if ($datos['id_tipo_servicio'] !== '' && ($tipo === null || (int) $tipo['activo'] !== 1)) {
-            $errores['id_tipo_servicio'] = 'El tipo de servicio seleccionado no está disponible';
-        }
+        $errores = $this->validarDatos($datos, requiereTipo: true);
 
         if ($errores !== []) {
-            return $this->resultadoOperacion($datos, false, $errores, false, false, false);
+            return $this->resultadoOperacion($datos, errores: $errores);
         }
 
         if (! $this->db->transBegin()) {
-            throw new RuntimeException('No se pudo iniciar la vinculación del servicio.');
+            throw new RuntimeException('No se pudo iniciar el alta del servicio.');
         }
 
         try {
-            if (! $this->propiedades->bloquearParaVinculacion($idPropiedad)) {
-                throw new RuntimeException('No se pudo bloquear el inmueble para vincular el servicio.');
+            $inmuebleBloqueado = $this->propiedades->bloquearParaServicios($idPropiedad);
+
+            if ($inmuebleBloqueado === null) {
+                $this->db->transRollback();
+
+                return $this->resultadoOperacion($datos, noEncontrado: true);
             }
 
-            $tipoBloqueado = $this->tipos->buscarParaVincularConBloqueo((int) $idTipo);
+            if (! $this->puedeGestionar($inmuebleBloqueado, $idUsuario, $rol)) {
+                $this->db->transRollback();
 
-            if ($tipoBloqueado === null || (int) $tipoBloqueado['activo'] !== 1) {
+                return $this->resultadoOperacion($datos, sinPermiso: true);
+            }
+
+            if ($inmuebleBloqueado['estado'] === 'inactivo') {
                 $this->db->transRollback();
 
                 return $this->resultadoOperacion(
                     $datos,
-                    false,
-                    ['id_tipo_servicio' => 'El tipo de servicio seleccionado no está disponible'],
-                    false,
-                    false,
-                    false,
+                    errores: ['general' => 'No se pueden agregar servicios a un inmueble inactivo'],
+                    inmuebleInactivo: true,
                 );
             }
 
-            if ($this->servicios->existeVigente($idPropiedad, (int) $idTipo)) {
+            $idTipoServicio = (int) $datos['id_tipo_servicio'];
+
+            if ($this->tipos->buscarActivoPorId($idTipoServicio) === null) {
                 $this->db->transRollback();
 
                 return $this->resultadoOperacion(
                     $datos,
-                    false,
-                    ['id_tipo_servicio' => 'El inmueble ya tiene este servicio vinculado'],
-                    false,
-                    false,
-                    false,
+                    errores: ['id_tipo_servicio' => 'Tipo de servicio inválido'],
+                );
+            }
+
+            if ($this->servicios->existeVigente($idPropiedad, $idTipoServicio)) {
+                $this->db->transRollback();
+
+                return $this->resultadoOperacion(
+                    $datos,
+                    errores: ['id_tipo_servicio' => 'El inmueble ya tiene este servicio vinculado'],
                 );
             }
 
             $idServicio = $this->servicios->crear([
                 'id_propiedad' => $idPropiedad,
-                'id_tipo_servicio' => (int) $idTipo,
+                'id_tipo_servicio' => $idTipoServicio,
                 'codigo_pago_electronico' => $datos['codigo_pago_electronico'],
                 'numero_cuenta_contrato' => $datos['numero_cuenta_contrato'],
                 'numero_medidor' => $datos['numero_medidor'] === '' ? null : $datos['numero_medidor'],
@@ -171,18 +178,18 @@ class ServicioInmuebleService
             ]);
 
             if ($idServicio < 1 || ! $this->db->transStatus()) {
-                throw new RuntimeException('No se pudo guardar el servicio vinculado.');
+                throw new RuntimeException('No se pudo guardar el servicio del inmueble.');
             }
 
             if (! $this->db->transCommit()) {
-                throw new RuntimeException('No se pudo completar la vinculación del servicio.');
+                throw new RuntimeException('No se pudo completar el alta del servicio.');
             }
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $this->db->transRollback();
             throw $exception;
         }
 
-        return $this->resultadoOperacion($datos, true, [], false, false, false);
+        return $this->resultadoOperacion($datos, idServicio: $idServicio, exito: true);
     }
 
     /**
@@ -194,7 +201,7 @@ class ServicioInmuebleService
      */
     public function detalle(int $idServicio, int $idUsuario, string $rol): array
     {
-        $servicio = $this->servicios->buscarPorIdConDetalle($idServicio);
+        $servicio = $this->servicios->buscarConDetalle($idServicio);
 
         if ($servicio === null) {
             return ['servicio' => null, 'sin_permiso' => false, 'no_encontrado' => true];
@@ -205,47 +212,6 @@ class ServicioInmuebleService
         }
 
         return ['servicio' => $servicio, 'sin_permiso' => false, 'no_encontrado' => false];
-    }
-
-    /**
-     * @return array{
-     *     servicio: array<string, mixed>|null,
-     *     tipos: list<array<string, mixed>>,
-     *     sin_permiso: bool,
-     *     no_encontrado: bool
-     * }
-     */
-    public function datosEdicion(int $idServicio, int $idUsuario, string $rol): array
-    {
-        $resultado = $this->detalle($idServicio, $idUsuario, $rol);
-
-        if ($resultado['servicio'] === null) {
-            return $resultado + ['tipos' => []];
-        }
-
-        $tipos = $this->tipos->listarActivosParaVincular();
-        $idTipoActual = (int) $resultado['servicio']['id_tipo_servicio'];
-        $tipoActualDisponible = false;
-
-        foreach ($tipos as $tipo) {
-            if ((int) $tipo['id_tipo_servicio'] === $idTipoActual) {
-                $tipoActualDisponible = true;
-                break;
-            }
-        }
-
-        if (! $tipoActualDisponible) {
-            $tipoActual = $this->tipos->buscarPorId($idTipoActual);
-
-            if ($tipoActual !== null) {
-                $tipos[] = $tipoActual;
-            }
-        }
-
-        return ['servicio' => $resultado['servicio'], 'tipos' => $tipos] + [
-            'sin_permiso' => false,
-            'no_encontrado' => false,
-        ];
     }
 
     /**
@@ -261,186 +227,106 @@ class ServicioInmuebleService
     public function actualizar(int $idServicio, array $entrada, int $idUsuario, string $rol): array
     {
         $datos = $this->normalizarDatos($entrada);
-        $resultado = $this->detalle($idServicio, $idUsuario, $rol);
+        $servicio = $this->servicios->buscarConDetalle($idServicio);
 
-        if ($resultado['servicio'] === null) {
-            return $this->resultadoOperacion(
-                $datos,
-                false,
-                [],
-                $resultado['sin_permiso'],
-                $resultado['no_encontrado'],
-                false,
-            );
+        if ($servicio === null) {
+            return $this->resultadoActualizacion($datos, noEncontrado: true);
         }
 
-        $servicio = $resultado['servicio'];
-        $errores = $this->validarDatos($datos);
-        $idTipo = filter_var($datos['id_tipo_servicio'], FILTER_VALIDATE_INT);
-        $tipo = $idTipo !== false && $idTipo !== null && $idTipo > 0
-            ? $this->tipos->buscarPorId((int) $idTipo)
-            : null;
-        $idTipoActual = (int) $servicio['id_tipo_servicio'];
-        $esTipoActual = $idTipo !== false && (int) $idTipo === $idTipoActual;
-
-        if (
-            $datos['id_tipo_servicio'] !== ''
-            && ($tipo === null || ((int) $tipo['activo'] !== 1 && ! $esTipoActual))
-        ) {
-            $errores['id_tipo_servicio'] = 'El tipo de servicio seleccionado no está disponible';
+        if (! $this->puedeGestionar($servicio, $idUsuario, $rol)) {
+            return $this->resultadoActualizacion($datos, sinPermiso: true);
         }
+
+        $errores = $this->validarDatos($datos, requiereTipo: false);
 
         if ($errores !== []) {
-            return $this->resultadoOperacion($datos, false, $errores, false, false, false);
+            return $this->resultadoActualizacion($datos, errores: $errores);
         }
 
-        if (! $this->db->transBegin()) {
-            throw new RuntimeException('No se pudo iniciar la modificación del servicio.');
+        if (! $this->servicios->actualizar($idServicio, [
+            'codigo_pago_electronico' => $datos['codigo_pago_electronico'],
+            'numero_cuenta_contrato' => $datos['numero_cuenta_contrato'],
+            'numero_medidor' => $datos['numero_medidor'] === '' ? null : $datos['numero_medidor'],
+            'domicilio_facturacion' => $datos['domicilio_facturacion'],
+            'titular' => $datos['titular'],
+        ])) {
+            throw new RuntimeException('No se pudieron actualizar los datos del servicio.');
         }
 
-        try {
-            if (! $this->propiedades->bloquearParaVinculacion((int) $servicio['id_propiedad'])) {
-                throw new RuntimeException('No se pudo bloquear el inmueble para modificar el servicio.');
-            }
-
-            $tipoBloqueado = $this->tipos->buscarParaVincularConBloqueo((int) $idTipo);
-
-            if (
-                $tipoBloqueado === null
-                || ((int) $tipoBloqueado['activo'] !== 1 && ! $esTipoActual)
-            ) {
-                $this->db->transRollback();
-
-                return $this->resultadoOperacion(
-                    $datos,
-                    false,
-                    ['id_tipo_servicio' => 'El tipo de servicio seleccionado no está disponible'],
-                    false,
-                    false,
-                    false,
-                );
-            }
-
-            if ($this->servicios->existeVigente((int) $servicio['id_propiedad'], (int) $idTipo, $idServicio)) {
-                $this->db->transRollback();
-
-                return $this->resultadoOperacion(
-                    $datos,
-                    false,
-                    ['id_tipo_servicio' => 'El inmueble ya tiene este servicio vinculado'],
-                    false,
-                    false,
-                    false,
-                );
-            }
-
-            $actualizado = $this->servicios->actualizar($idServicio, [
-                'id_tipo_servicio' => (int) $idTipo,
-                'codigo_pago_electronico' => $datos['codigo_pago_electronico'],
-                'numero_cuenta_contrato' => $datos['numero_cuenta_contrato'],
-                'numero_medidor' => $datos['numero_medidor'] === '' ? null : $datos['numero_medidor'],
-                'domicilio_facturacion' => $datos['domicilio_facturacion'],
-                'titular' => $datos['titular'],
-            ]);
-
-            if (! $actualizado || ! $this->db->transStatus()) {
-                throw new RuntimeException('No se pudo modificar el servicio vinculado.');
-            }
-
-            if (! $this->db->transCommit()) {
-                throw new RuntimeException('No se pudo completar la modificación del servicio.');
-            }
-        } catch (\Throwable $exception) {
-            $this->db->transRollback();
-            throw $exception;
-        }
-
-        return $this->resultadoOperacion($datos, true, [], false, false, false);
+        return $this->resultadoActualizacion($datos, exito: true);
     }
 
     /**
-     * @return array{exito: bool, errores: array<string, string>, sin_permiso: bool, no_encontrado: bool}
+     * @return array{
+     *     exito: bool,
+     *     errores: array<string, string>,
+     *     sin_permiso: bool,
+     *     no_encontrado: bool
+     * }
      */
-    public function cambiarEstado(int $idServicio, string $estado, int $idUsuario, string $rol): array
+    public function cambiarEstado(int $idServicio, string $nuevoEstado, int $idUsuario, string $rol): array
     {
-        $resultado = $this->detalle($idServicio, $idUsuario, $rol);
+        $servicio = $this->servicios->buscarConDetalle($idServicio);
 
-        if ($resultado['servicio'] === null) {
-            return [
-                'exito' => false,
-                'errores' => [],
-                'sin_permiso' => $resultado['sin_permiso'],
-                'no_encontrado' => $resultado['no_encontrado'],
-            ];
+        if ($servicio === null) {
+            return $this->resultadoEstado(noEncontrado: true);
         }
 
-        $estadoActual = $resultado['servicio']['estado'];
-
-        if ((self::TRANSICIONES[$estadoActual] ?? null) !== $estado) {
-            return [
-                'exito' => false,
-                'errores' => ['estado' => 'No se permite cambiar el servicio a ese estado.'],
-                'sin_permiso' => false,
-                'no_encontrado' => false,
-            ];
+        if (! $this->puedeGestionar($servicio, $idUsuario, $rol)) {
+            return $this->resultadoEstado(sinPermiso: true);
         }
 
-        if (! $this->servicios->actualizar($idServicio, ['estado' => $estado])) {
-            throw new RuntimeException('No se pudo modificar el estado del servicio.');
+        if (! in_array($nuevoEstado, self::TRANSICIONES[$servicio['estado']] ?? [], true)) {
+            return $this->resultadoEstado(errores: ['estado' => 'Transición de estado inválida']);
         }
 
-        return ['exito' => true, 'errores' => [], 'sin_permiso' => false, 'no_encontrado' => false];
+        if (! $this->servicios->actualizar($idServicio, ['estado' => $nuevoEstado])) {
+            throw new RuntimeException('No se pudo actualizar el estado del servicio.');
+        }
+
+        return $this->resultadoEstado(exito: true);
     }
 
     /**
-     * @return array{exito: bool, errores: array<string, string>, sin_permiso: bool, no_encontrado: bool}
+     * @return array{
+     *     permitido: bool,
+     *     mensaje: string|null,
+     *     sin_permiso: bool,
+     *     no_encontrado: bool
+     * }
      */
-    public function darDeBaja(int $idServicio, int $idUsuario, string $rol): array
+    public function validarCargaFactura(int $idServicio, int $idUsuario, string $rol): array
     {
-        $resultado = $this->detalle($idServicio, $idUsuario, $rol);
+        $servicio = $this->servicios->buscarParaFactura($idServicio);
 
-        if ($resultado['servicio'] === null) {
-            return [
-                'exito' => false,
-                'errores' => [],
-                'sin_permiso' => $resultado['sin_permiso'],
-                'no_encontrado' => $resultado['no_encontrado'],
-            ];
-        }
-
-        if (! in_array($resultado['servicio']['estado'], self::ESTADOS_VIGENTES, true)) {
-            return [
-                'exito' => false,
-                'errores' => ['estado' => 'El servicio ya está inactivo.'],
-                'sin_permiso' => false,
-                'no_encontrado' => false,
-            ];
-        }
-
-        if (! $this->servicios->actualizar($idServicio, ['estado' => 'inactivo'])) {
-            throw new RuntimeException('No se pudo dar de baja el servicio.');
-        }
-
-        return ['exito' => true, 'errores' => [], 'sin_permiso' => false, 'no_encontrado' => false];
-    }
-
-    /**
-     * @return array{permitido: bool, sin_permiso: bool, no_encontrado: bool}
-     */
-    public function puedeCargarFacturas(int $idServicio, int $idUsuario, string $rol): array
-    {
-        $resultado = $this->detalle($idServicio, $idUsuario, $rol);
-
-        if ($resultado['servicio'] === null) {
+        if ($servicio === null) {
             return [
                 'permitido' => false,
-                'sin_permiso' => $resultado['sin_permiso'],
-                'no_encontrado' => $resultado['no_encontrado'],
+                'mensaje' => null,
+                'sin_permiso' => false,
+                'no_encontrado' => true,
             ];
         }
 
+        if (! $this->puedeGestionar($servicio, $idUsuario, $rol)) {
+            return [
+                'permitido' => false,
+                'mensaje' => null,
+                'sin_permiso' => true,
+                'no_encontrado' => false,
+            ];
+        }
+
+        $mensaje = match (true) {
+            $servicio['estado_propiedad'] === 'inactivo' => 'No se pueden cargar facturas en un inmueble inactivo',
+            $servicio['estado'] === 'activo' => null,
+            $servicio['estado'] === 'pausado' => 'No se pueden cargar facturas sobre un servicio pausado',
+            default => 'Solo se pueden cargar facturas sobre un servicio activo',
+        };
+
         return [
-            'permitido' => $resultado['servicio']['estado'] === 'activo',
+            'permitido' => $mensaje === null,
+            'mensaje' => $mensaje,
             'sin_permiso' => false,
             'no_encontrado' => false,
         ];
@@ -473,42 +359,41 @@ class ServicioInmuebleService
      * @param array<string, string> $datos
      * @return array<string, string>
      */
-    private function validarDatos(array $datos): array
+    private function validarDatos(array $datos, bool $requiereTipo): array
     {
         $errores = [];
-        $idTipo = $datos['id_tipo_servicio'];
-        $idValidado = filter_var($idTipo, FILTER_VALIDATE_INT);
-
-        if ($idTipo === '') {
-            $errores['id_tipo_servicio'] = 'El tipo de servicio es obligatorio';
-        } elseif ($idValidado === false || $idValidado < 1) {
-            $errores['id_tipo_servicio'] = 'El tipo de servicio es inválido';
-        }
-
-        $requeridos = [
+        $obligatorios = [
             'codigo_pago_electronico' => 'El CPE/Pagar es obligatorio',
             'numero_cuenta_contrato' => 'El número de cuenta es obligatorio',
             'domicilio_facturacion' => 'El domicilio de facturación es obligatorio',
             'titular' => 'El titular es obligatorio',
         ];
 
-        foreach ($requeridos as $campo => $mensaje) {
+        if ($requiereTipo && $datos['id_tipo_servicio'] === '') {
+            $errores['id_tipo_servicio'] = 'El tipo de servicio es obligatorio';
+        } elseif ($requiereTipo) {
+            $idTipo = filter_var($datos['id_tipo_servicio'], FILTER_VALIDATE_INT);
+
+            if ($idTipo === false || $idTipo < 1) {
+                $errores['id_tipo_servicio'] = 'Tipo de servicio inválido';
+            }
+        }
+
+        foreach ($obligatorios as $campo => $mensaje) {
             if ($datos[$campo] === '') {
                 $errores[$campo] = $mensaje;
             }
         }
 
-        $longitudes = [
+        foreach ([
             'codigo_pago_electronico' => 20,
             'numero_cuenta_contrato' => 20,
             'numero_medidor' => 20,
             'domicilio_facturacion' => 45,
             'titular' => 50,
-        ];
-
-        foreach ($longitudes as $campo => $maximo) {
+        ] as $campo => $maximo) {
             if (mb_strlen($datos[$campo], 'UTF-8') > $maximo) {
-                $errores[$campo] = sprintf('El campo no puede superar los %d caracteres', $maximo);
+                $errores[$campo] = 'El valor ingresado supera la longitud permitida.';
             }
         }
 
@@ -524,60 +409,46 @@ class ServicioInmuebleService
             return false;
         }
 
-        if ($rol === 'admin') {
-            return true;
-        }
-
-        return $rol === 'propietario'
-            && (int) ($recurso['id_propietario'] ?? 0) === $idUsuario;
+        return $rol === 'admin'
+            || ($rol === 'propietario' && (int) $recurso['id_propietario'] === $idUsuario);
     }
 
     /**
-     * @param array<string, mixed>|null $inmueble
-     * @param list<array<string, mixed>> $tipos
-     * @return array{
-     *     inmueble: array<string, mixed>|null,
-     *     tipos: list<array<string, mixed>>,
-     *     sin_permiso: bool,
-     *     no_encontrado: bool,
-     *     inmueble_inactivo: bool
-     * }
+     * @param array<string, string> $datos
+     * @param array<string, string> $errores
+     * @return array<string, mixed>
      */
-    private function resultadoAlta(
-        ?array $inmueble,
-        array $tipos,
-        bool $sinPermiso,
-        bool $noEncontrado,
-        bool $inmuebleInactivo,
+    private function resultadoOperacion(
+        array $datos,
+        array $errores = [],
+        ?int $idServicio = null,
+        bool $exito = false,
+        bool $inmuebleInactivo = false,
+        bool $sinPermiso = false,
+        bool $noEncontrado = false,
     ): array {
         return [
-            'inmueble' => $inmueble,
-            'tipos' => $tipos,
+            'exito' => $exito,
+            'errores' => $errores,
+            'datos' => $datos,
+            'id_propiedad_servicio' => $idServicio,
+            'inmueble_inactivo' => $inmuebleInactivo,
             'sin_permiso' => $sinPermiso,
             'no_encontrado' => $noEncontrado,
-            'inmueble_inactivo' => $inmuebleInactivo,
         ];
     }
 
     /**
      * @param array<string, string> $datos
      * @param array<string, string> $errores
-     * @return array{
-     *     exito: bool,
-     *     errores: array<string, string>,
-     *     datos: array<string, string>,
-     *     sin_permiso: bool,
-     *     no_encontrado: bool,
-     *     inmueble_inactivo: bool
-     * }
+     * @return array<string, mixed>
      */
-    private function resultadoOperacion(
+    private function resultadoActualizacion(
         array $datos,
-        bool $exito,
-        array $errores,
-        bool $sinPermiso,
-        bool $noEncontrado,
-        bool $inmuebleInactivo,
+        array $errores = [],
+        bool $exito = false,
+        bool $sinPermiso = false,
+        bool $noEncontrado = false,
     ): array {
         return [
             'exito' => $exito,
@@ -585,7 +456,54 @@ class ServicioInmuebleService
             'datos' => $datos,
             'sin_permiso' => $sinPermiso,
             'no_encontrado' => $noEncontrado,
-            'inmueble_inactivo' => $inmuebleInactivo,
+        ];
+    }
+
+    /**
+     * @param array<string, string> $errores
+     * @return array<string, mixed>
+     */
+    private function resultadoEstado(
+        array $errores = [],
+        bool $exito = false,
+        bool $sinPermiso = false,
+        bool $noEncontrado = false,
+    ): array {
+        return [
+            'exito' => $exito,
+            'errores' => $errores,
+            'sin_permiso' => $sinPermiso,
+            'no_encontrado' => $noEncontrado,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resultadoSinPermiso(): array
+    {
+        return [
+            'inmueble' => null,
+            'tipos' => [],
+            'sin_tipos' => false,
+            'inmueble_inactivo' => false,
+            'sin_permiso' => true,
+            'no_encontrado' => false,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resultadoInmuebleNoEncontrado(): array
+    {
+        return [
+            'inmueble' => null,
+            'tipos' => [],
+            'sin_tipos' => false,
+            'inmueble_inactivo' => false,
+            'sin_permiso' => false,
+            'no_encontrado' => true,
         ];
     }
 }

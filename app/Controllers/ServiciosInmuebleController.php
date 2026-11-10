@@ -16,7 +16,7 @@ class ServiciosInmuebleController extends BaseController
 
     public function create(int $idPropiedad): string|ResponseInterface
     {
-        $resultado = $this->servicios->datosAlta(
+        $resultado = $this->servicios->opcionesAlta(
             $idPropiedad,
             (int) session('id_usuario'),
             (string) session('rol'),
@@ -36,10 +36,13 @@ class ServiciosInmuebleController extends BaseController
             return redirect()->to(route_to('inmuebles.show', $idPropiedad));
         }
 
-        return view('servicios-inmueble/create', [
+        return view('servicios-inmueble/form', [
             'titulo' => 'Vincular servicio',
             'inmueble' => $resultado['inmueble'],
             'tipos' => $resultado['tipos'],
+            'sinTipos' => $resultado['sin_tipos'],
+            'servicio' => null,
+            'accion' => route_to('servicios.store', $idPropiedad),
             'errores' => session()->getFlashdata('servicio_errores') ?? [],
             'anterior' => session()->getFlashdata('servicio_anterior') ?? [],
         ]);
@@ -63,7 +66,7 @@ class ServiciosInmuebleController extends BaseController
         }
 
         if ($resultado['inmueble_inactivo']) {
-            session()->setFlashdata('error', $resultado['errores']['general']);
+            session()->setFlashdata('error', 'No se pueden agregar servicios a un inmueble inactivo');
 
             return redirect()->to(route_to('inmuebles.show', $idPropiedad));
         }
@@ -78,13 +81,13 @@ class ServiciosInmuebleController extends BaseController
 
         session()->setFlashdata('success', 'Servicio vinculado correctamente.');
 
-        return redirect()->to(route_to('inmuebles.show', $idPropiedad));
+        return redirect()->to(route_to('servicios.show', $resultado['id_propiedad_servicio']));
     }
 
-    public function show(int $idServicio): string|ResponseInterface
+    public function show(int $id): string|ResponseInterface
     {
         $resultado = $this->servicios->detalle(
-            $idServicio,
+            $id,
             (int) session('id_usuario'),
             (string) session('rol'),
         );
@@ -103,10 +106,10 @@ class ServiciosInmuebleController extends BaseController
         ]);
     }
 
-    public function edit(int $idServicio): string|ResponseInterface
+    public function edit(int $id): string|ResponseInterface
     {
-        $resultado = $this->servicios->datosEdicion(
-            $idServicio,
+        $resultado = $this->servicios->detalle(
+            $id,
             (int) session('id_usuario'),
             (string) session('rol'),
         );
@@ -119,19 +122,26 @@ class ServiciosInmuebleController extends BaseController
             throw PageNotFoundException::forPageNotFound('No se encontró el servicio solicitado.');
         }
 
-        return view('servicios-inmueble/edit', [
-            'titulo' => 'Modificar servicio',
+        return view('servicios-inmueble/form', [
+            'titulo' => 'Modificar datos del servicio',
+            'inmueble' => [
+                'id_propiedad' => $resultado['servicio']['id_propiedad'],
+                'alias' => $resultado['servicio']['alias_propiedad'],
+                'estado' => $resultado['servicio']['estado_propiedad'],
+            ],
+            'tipos' => [],
+            'sinTipos' => false,
             'servicio' => $resultado['servicio'],
-            'tipos' => $resultado['tipos'],
+            'accion' => route_to('servicios.update', $id),
             'errores' => session()->getFlashdata('servicio_errores') ?? [],
             'anterior' => session()->getFlashdata('servicio_anterior') ?? [],
         ]);
     }
 
-    public function update(int $idServicio): RedirectResponse|ResponseInterface
+    public function update(int $id): RedirectResponse|ResponseInterface
     {
         $resultado = $this->servicios->actualizar(
-            $idServicio,
+            $id,
             $this->entradaFormulario(),
             (int) session('id_usuario'),
             (string) session('rol'),
@@ -150,36 +160,38 @@ class ServiciosInmuebleController extends BaseController
             session()->setFlashdata('servicio_anterior', $resultado['datos']);
             session()->setFlashdata('error', reset($resultado['errores']));
 
-            return redirect()->to(route_to('servicios.edit', $idServicio));
+            return redirect()->to(route_to('servicios.edit', $id));
         }
 
-        session()->setFlashdata('success', 'Servicio actualizado correctamente.');
+        session()->setFlashdata('success', 'Datos del servicio actualizados correctamente.');
 
-        return redirect()->to(route_to('servicios.show', $idServicio));
+        return redirect()->to(route_to('servicios.show', $id));
     }
 
-    public function changeState(int $idServicio): RedirectResponse|ResponseInterface
+    public function changeState(int $id): RedirectResponse|ResponseInterface
     {
         $estado = $this->request->getPost('estado');
+        $nuevoEstado = is_string($estado) ? $estado : '';
         $resultado = $this->servicios->cambiarEstado(
-            $idServicio,
-            is_string($estado) ? $estado : '',
+            $id,
+            $nuevoEstado,
             (int) session('id_usuario'),
             (string) session('rol'),
         );
 
-        return $this->responderEstado($idServicio, $resultado, 'El estado del servicio fue actualizado.');
+        return $this->redirigirCambioEstado($id, $resultado, $nuevoEstado);
     }
 
-    public function deactivate(int $idServicio): RedirectResponse|ResponseInterface
+    public function deactivate(int $id): RedirectResponse|ResponseInterface
     {
-        $resultado = $this->servicios->darDeBaja(
-            $idServicio,
+        $resultado = $this->servicios->cambiarEstado(
+            $id,
+            'inactivo',
             (int) session('id_usuario'),
             (string) session('rol'),
         );
 
-        return $this->responderEstado($idServicio, $resultado, 'Servicio dado de baja correctamente.');
+        return $this->redirigirCambioEstado($id, $resultado, 'inactivo');
     }
 
     /**
@@ -205,12 +217,12 @@ class ServiciosInmuebleController extends BaseController
     }
 
     /**
-     * @param array{exito: bool, errores: array<string, string>, sin_permiso: bool, no_encontrado: bool} $resultado
+     * @param array<string, mixed> $resultado
      */
-    private function responderEstado(
-        int $idServicio,
+    private function redirigirCambioEstado(
+        int $id,
         array $resultado,
-        string $mensajeExito,
+        string $estado,
     ): RedirectResponse|ResponseInterface {
         if ($resultado['sin_permiso']) {
             return $this->pagina403();
@@ -222,13 +234,14 @@ class ServiciosInmuebleController extends BaseController
 
         if (! $resultado['exito']) {
             session()->setFlashdata('error', reset($resultado['errores']));
-
-            return redirect()->to(route_to('servicios.show', $idServicio));
+        } else {
+            $mensaje = $estado === 'inactivo'
+                ? 'Servicio dado de baja correctamente.'
+                : 'Estado del servicio actualizado correctamente.';
+            session()->setFlashdata('success', $mensaje);
         }
 
-        session()->setFlashdata('success', $mensajeExito);
-
-        return redirect()->to(route_to('servicios.show', $idServicio));
+        return redirect()->to(route_to('servicios.show', $id));
     }
 
     private function pagina403(): ResponseInterface

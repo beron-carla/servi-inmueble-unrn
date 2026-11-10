@@ -64,7 +64,12 @@
 
                 <?php /* MENU: Servicios del inmueble (HU-13). Completar acá. */ ?>
 
-                <?php /* MENU: Facturas (HU-14 y HU-15). Completar acá. */ ?>
+                <li class="nav-item">
+                    <a href="<?= route_to('facturas.index') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                        <p>Facturas</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>

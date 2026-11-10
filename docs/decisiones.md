@@ -269,13 +269,8 @@ si estado = 'pendiente' y vencimiento_aplicable >= hoy → Pendiente
 ### D-18 · Pagos: `transaccion` sin HU de origen
 
 **Situación:** el esquema tiene `transaccion`, pero ninguna HU define el registro de pagos. HU-15 solo muestra totales.
-**Decisión recomendada (pendiente de aprobación):** agregar una acción mínima `POST /facturas/{id}/pagar` que:
-1. valide pertenencia y estado `pendiente`;
-2. inserte una `transaccion` con `monto_abonado = factura.monto_total`, `medio_pago`, `numero_comprobante`, `fecha_pago` y `en_mora` calculado;
-3. actualice `factura.estado = 'pagada'`.
-
-**Si no se aprueba:** HU-15 solo podrá demostrar “Total Pagado” con datos sembrados (`DemoSeeder`) y el flujo real de pago queda fuera del Hito 1.
-**Estado:** **PENDIENTE DE APROBACIÓN** (ver sección 8).
+**Decisión vigente:** HU-15 no incorpora un flujo para registrar pagos. “Total Pagado” suma `factura.monto_total` de las facturas con `estado = 'pagada'`; los datos de demostración provienen de `DemoSeeder`. No se suman pagos parciales de `transaccion`.
+**Estado:** P-01 y P-05 resueltas (ver sección 8).
 
 ---
 
@@ -402,7 +397,7 @@ El orden numérico de las HU no es válido por dependencias. Orden acordado:
 | C-02 | HU-07 pide “nombre” libre y único; SQL usa `tipo` ENUM + único `(tipo, proveedor)` | D-12 y D-13 |
 | C-03 | HU-14 pide “período 10/2026”; SQL separa `periodo`, `periodo_mes`, `periodo_anio` | D-16 |
 | C-04 | HU-14/15 hablan de “Vencida”; SQL solo tiene `pendiente`/`pagada` | D-16 (cálculo) |
-| C-05 | HU-15 necesita “Total Pagado”; no hay HU de pagos | D-18 (pendiente) |
+| C-05 | HU-15 necesita “Total Pagado”; no hay HU de pagos | D-18: suma de facturas pagadas, sin flujo de pago |
 | C-06 | HU-13 usa “En Revisión”; SQL guarda `en revision` | D-15 |
 | C-07 | HU-10 usa dirección inline; SQL tiene tabla `direccion` | D-09 |
 | C-08 | HU-05/06 usan roles; SQL no tiene tabla `roles` | D-02 |
@@ -420,14 +415,18 @@ El orden numérico de las HU no es válido por dependencias. Orden acordado:
 
 | ID | Tema | Opciones | Recomendación | Dueño |
 |---|---|---|---|---|
-| P-01 | Registro de pagos (D-18) | (a) acción mínima `POST /facturas/{id}/pagar`; (b) solo datos sembrados; (c) nueva HU-16 | (a) para que HU-15 sea demostrable | Equipo / docente |
 | P-02 | Nombre libre de tipo de servicio (D-12/D-13) | (a) mantener ENUM + proveedor; (b) cambiar esquema a `nombre` libre único | (a) por costo y por esquema canónico | Equipo |
 | P-03 | Período anual de factura | (a) solo mensual en Hito 1; (b) habilitar toggle mes/año | (a) si no hay CA que lo exija; (b) si se quiere usar el ENUM completo | Equipo |
-| P-05 | Alcance de “Total Pagado” con pagos parciales | (a) pago total solamente; (b) sumar `transaccion.monto_abonado` | (a) para el Hito 1 | Equipo |
 
 **P-02 resuelta (2026-11-08):** se aprobó mantener `tipo_servicio.tipo` como ENUM y aplicar la unicidad sobre `(tipo, proveedor_predeterminado)`, sin modificar el esquema canónico.
 
 **P-04 resuelta:** se aprobó mostrar la contraseña temporal una sola vez en la salida de consola al crear el administrador inicial; no se envía por email. Las ejecuciones posteriores del seeder no vuelven a mostrarla.
+
+**P-03 resuelta (2026-11-09):** se aprobó habilitar períodos mensuales y anuales para HU-14. Los períodos anuales se guardan con `periodo = 'anio'` y `periodo_mes = '00'`.
+
+**P-01 resuelta (2026-11-09):** se eligió la opción (b): no agregar acción de pago en HU-15; el listado se apoya en facturas pagadas existentes o sembradas.
+
+**P-05 resuelta (2026-11-09):** se eligió la opción (a): para el Hito 1 no se contemplan pagos parciales; “Total Pagado” suma el monto completo de las facturas con estado `pagada`.
 
 ---
 

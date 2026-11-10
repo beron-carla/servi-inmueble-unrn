@@ -19,7 +19,7 @@
 - Filtros: `auth`, `guest`, `role:admin`.
 - Acceso denegado: **HTTP 403** con `app/Views/errors/html/error_403.php`; no redirigir.
 - No hay rutas de recuperación de contraseña autoservicio en el Hito 1 (no está en las HU).
-- No hay rutas de pago en el Hito 1 salvo que se apruebe P-01 (`docs/decisiones.md`).
+- No hay rutas de pago en el Hito 1: P-01 se resolvió sin agregar una acción para registrar pagos.
 
 ---
 
@@ -133,10 +133,9 @@ El control de propiedad se valida **en el servicio**, no solo en el filtro.
 | GET | `/facturas` | `facturas.index` | `FacturasController::index` | `auth` | HU-15 | CA-15.1 a CA-15.5 |
 | GET | `/servicios-inmueble/(:num)/facturas/nuevo` | `facturas.create` | `FacturasController::create/$1` | `auth` | HU-14 | CA-14.1 a CA-14.6 |
 | POST | `/servicios-inmueble/(:num)/facturas` | `facturas.store` | `FacturasController::store/$1` | `auth` | HU-14 | CA-14.1 a CA-14.6 |
-| POST | `/facturas/(:num)/pagar` | `facturas.pay` | `FacturasController::pay/$1` | `auth` | HU-15 (soporte) | **P-01 pendiente** |
 
 **Notas:**
-- `pay` **solo se implementa si se aprueba P-01** (`docs/decisiones.md`). Si no, se elimina del mapa y HU-15 usa datos sembrados para “Total Pagado”.
+- No se agrega una ruta de pago en HU-15: P-01 se resolvió con la opción (b), sin acción para registrar pagos.
 - `facturas.index` acepta filtros por query string (ver sección 6).
 - El alta solo se permite sobre servicios `activo` y propiedades no `inactivo` (CA-14.6).
 
@@ -249,8 +248,7 @@ $routes->post('servicios-inmueble/(:num)/baja', 'ServiciosInmuebleController::de
 $routes->get('facturas', 'FacturasController::index', ['filter' => 'auth', 'as' => 'facturas.index']);
 $routes->get('servicios-inmueble/(:num)/facturas/nuevo', 'FacturasController::create/$1', ['filter' => 'auth', 'as' => 'facturas.create']);
 $routes->post('servicios-inmueble/(:num)/facturas', 'FacturasController::store/$1', ['filter' => 'auth', 'as' => 'facturas.store']);
-// Solo si se aprueba P-01:
-// $routes->post('facturas/(:num)/pagar', 'FacturasController::pay/$1', ['filter' => 'auth', 'as' => 'facturas.pay']);
+// No se agrega ruta de pago: P-01 quedó resuelta con la opción (b).
 
 // Catálogo para propietarios
 $routes->get('catalogo-servicios', 'CatalogoServiciosController::index', ['filter' => 'auth', 'as' => 'catalogo.servicios']);
@@ -359,7 +357,7 @@ No usar 200 para errores de permiso ni redirecciones silenciosas.
 | `/auth/recuperar`, `/auth/reset/{token}` | No hay HU de recuperación autoservicio en el Hito 1 |
 | `/api/*` | No hay SPA ni API en el Hito 1 |
 | `/admin/reportes` | No hay HU de reportes |
-| `/facturas/{id}/pagar` | Solo si se aprueba P-01 |
+| `/facturas/{id}/pagar` | No se incorpora en HU-15 según P-01 (opción b) |
 | `/perfil` | No hay HU de perfil propio; el cambio de contraseña está en `/auth/cambiar-contrasenia` |
 
 ---

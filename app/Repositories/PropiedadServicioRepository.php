@@ -3,11 +3,17 @@
 namespace App\Repositories;
 
 use App\Models\PropiedadServicioModel;
+use CodeIgniter\Database\BaseConnection;
 
 class PropiedadServicioRepository
 {
-    public function __construct(private ?PropiedadServicioModel $model = null)
-    {
+    private BaseConnection $db;
+
+    public function __construct(
+        private ?PropiedadServicioModel $model = null,
+        ?BaseConnection $db = null,
+    ) {
+        $this->db = $db ?? db_connect();
         $this->model ??= new PropiedadServicioModel();
     }
 
@@ -22,35 +28,48 @@ class PropiedadServicioRepository
     /**
      * @return array<string, mixed>|null
      */
-    public function buscarPorIdConDetalle(int $id): ?array
+    public function buscarConDetalle(int $id): ?array
     {
-        return $this->model
+        return $this->db->table('propiedad_servicio')
             ->select(
-                'propiedad_servicio.*, propiedad.id_propietario, propiedad.alias AS propiedad_alias, '
-                . 'propiedad.estado AS estado_propiedad, tipo_servicio.tipo, tipo_servicio.categoria, '
-                . 'tipo_servicio.unidad_medida, tipo_servicio.proveedor_predeterminado',
+                'propiedad_servicio.*, tipo_servicio.tipo, tipo_servicio.categoria, '
+                . 'tipo_servicio.unidad_medida, tipo_servicio.proveedor_predeterminado, '
+                . 'propiedad.alias AS alias_propiedad, propiedad.estado AS estado_propiedad, '
+                . 'propiedad.id_propietario',
+            )
+            ->join(
+                'tipo_servicio',
+                'tipo_servicio.id_tipo_servicio = propiedad_servicio.id_tipo_servicio',
             )
             ->join('propiedad', 'propiedad.id_propiedad = propiedad_servicio.id_propiedad')
-            ->join('tipo_servicio', 'tipo_servicio.id_tipo_servicio = propiedad_servicio.id_tipo_servicio')
             ->where('propiedad_servicio.id_propiedad_servicio', $id)
-            ->first() ?: null;
+            ->get()
+            ->getRowArray() ?: null;
     }
 
-    public function existeVigente(
-        int $idPropiedad,
-        int $idTipoServicio,
-        ?int $idExcluir = null,
-    ): bool {
-        $consulta = $this->model
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function buscarParaFactura(int $id): ?array
+    {
+        return $this->db->table('propiedad_servicio')
+            ->select(
+                'propiedad_servicio.id_propiedad_servicio, propiedad_servicio.estado, '
+                . 'propiedad.id_propietario, propiedad.estado AS estado_propiedad',
+            )
+            ->join('propiedad', 'propiedad.id_propiedad = propiedad_servicio.id_propiedad')
+            ->where('propiedad_servicio.id_propiedad_servicio', $id)
+            ->get()
+            ->getRowArray() ?: null;
+    }
+
+    public function existeVigente(int $idPropiedad, int $idTipoServicio): bool
+    {
+        return $this->model
             ->where('id_propiedad', $idPropiedad)
             ->where('id_tipo_servicio', $idTipoServicio)
-            ->whereIn('estado', ['activo', 'pausado', 'en revision']);
-
-        if ($idExcluir !== null) {
-            $consulta->where('id_propiedad_servicio <>', $idExcluir);
-        }
-
-        return $consulta->countAllResults() > 0;
+            ->whereIn('estado', ['activo', 'pausado', 'en revision'])
+            ->countAllResults() > 0;
     }
 
     /**
