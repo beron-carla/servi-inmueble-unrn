@@ -87,7 +87,7 @@ $anterior = session()->getFlashdata('registro_anterior') ?? [];
         </form>
 
         <p class="mt-3 mb-0 text-center">
-            <a href="<?= route_to('auth.login') ?>">Ya tengo una cuenta</a>
+            <a href="<?= site_url(route_to('auth.login')) ?>">Ya tengo una cuenta</a>
         </p>
     </div>
 </div>

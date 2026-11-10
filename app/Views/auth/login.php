@@ -8,7 +8,7 @@
     <div class="card-body">
         <p class="login-box-msg">Ingresá para iniciar tu sesión</p>
 
-        <form action="<?= route_to('auth.login.attempt') ?>" method="post">
+        <form action="<?= site_url(route_to('auth.login.attempt')) ?>" method="post">
             <?= csrf_field() ?>
 
             <div class="form-group">
