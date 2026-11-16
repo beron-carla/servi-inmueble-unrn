@@ -8,7 +8,7 @@
     <div class="card-body">
         <p class="login-box-msg">Debés cambiar tu contraseña para continuar</p>
 
-        <form action="<?= route_to('auth.password.update') ?>" method="post">
+        <form action="<?= site_url(route_to('auth.password.update')) ?>" method="post">
             <?= csrf_field() ?>
 
             <div class="form-group">

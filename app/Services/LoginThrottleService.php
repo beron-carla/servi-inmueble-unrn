@@ -8,7 +8,7 @@ use RuntimeException;
 class LoginThrottleService
 {
     private const MAX_INTENTOS = 5;
-    private const VENTANA_SEGUNDOS = 900;
+    private const VENTANA_SEGUNDOS = 10; //cambio de 900 a 10 segundos para pruebas
 
     public function __construct(private ?HistoricoLoginRepository $historico = null)
     {

@@ -136,6 +136,14 @@ class PropiedadRepository
         return $this->model->find($id) ?: null;
     }
 
+    public function bloquearParaVinculacion(int $idPropiedad): bool
+    {
+        return $this->db->query(
+            'SELECT id_propiedad FROM propiedad WHERE id_propiedad = ? FOR UPDATE',
+            [$idPropiedad],
+        )->getNumRows() === 1;
+    }
+
     /**
      * @param array{ciudad: string, tipo: string, estado: string, q: string, propietario: string} $filtros
      * @return array{inmuebles: list<array<string, mixed>>, pager: \CodeIgniter\Pager\PagerInterface|null}

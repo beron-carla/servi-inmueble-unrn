@@ -2,6 +2,10 @@
 
 Guía para ejecutar ServiInmueble localmente en Windows con XAMPP, PowerShell integrado de VS Code y el servidor de desarrollo de CodeIgniter.
 
+Si usás WampServer, consultá la [guía de inicio para WampServer](./INICIAR_PROYECTO_VSC_WAMP.md).
+
+La configuración `.env` es local y no se comparte en Git. Después de un merge, conservá tu propia URL base y credenciales de XAMPP; no necesitás revertir los cambios a los formularios de autenticación.
+
 ## Requisitos
 
 - XAMPP instalado en `C:\xampp`.
