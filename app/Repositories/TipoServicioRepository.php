@@ -33,6 +33,18 @@ class TipoServicioRepository
             ->countAllResults() > 0;
     }
 
+    public function contarPropiedadesVinculadas(int $id): int
+    {
+        $fila = $this->db->query(
+            'SELECT COUNT(DISTINCT id_propiedad) AS cantidad
+             FROM propiedad_servicio
+             WHERE id_tipo_servicio = ?',
+            [$id],
+        )->getRowArray();
+
+        return (int) ($fila['cantidad'] ?? 0);
+    }
+
     public function eliminar(int $id): bool
     {
         if ($this->tieneServiciosVinculados($id)) {

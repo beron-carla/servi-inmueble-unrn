@@ -242,7 +242,7 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         $detalle = $this->get('/admin/tipos-servicio/' . $idTipo);
         $detalle->assertOK();
         $this->assertStringContainsString(
-            'No se puede eliminar: tiene servicios asociados',
+            'No se puede eliminar: tiene inmuebles asociados',
             $detalle->response()->getBody(),
         );
 
@@ -254,7 +254,7 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
 
         $respuesta->assertRedirectTo('/admin/tipos-servicio/' . $idTipo);
         $this->assertSame(
-            'No se puede eliminar: tiene servicios asociados',
+            'No se puede eliminar: tiene inmuebles asociados',
             session()->getFlashdata('error'),
         );
         $this->assertSame(
@@ -356,6 +356,14 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         $idAdmin = $this->crearUsuario('admin', 'admin.detalle.tipos@example.test');
         $this->iniciarSesion($idAdmin, 'admin');
         $idTipo = $this->crearTipoServicio('internet', 'privado', 'Gigas', 'Proveedor HU09 detalle', 1);
+        $this->crearPropiedadServicio(
+            $this->crearUsuario('propietario', 'propietario.detalle.tipos.1@example.test'),
+            $idTipo,
+        );
+        $this->crearPropiedadServicio(
+            $this->crearUsuario('propietario', 'propietario.detalle.tipos.2@example.test'),
+            $idTipo,
+        );
 
         $respuesta = $this->get('/admin/tipos-servicio/' . $idTipo);
         $cuerpo = $respuesta->response()->getBody();
@@ -364,7 +372,9 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         $this->assertStringContainsString('Privado', $cuerpo);
         $this->assertStringContainsString('Gigas', $cuerpo);
         $this->assertStringContainsString('Proveedor HU09 detalle', $cuerpo);
-        $this->assertStringContainsString('Eliminar', $cuerpo);
+        $this->assertStringContainsString('Inmuebles vinculados', $cuerpo);
+        $this->assertMatchesRegularExpression('/Inmuebles vinculados.*<dd[^>]*>\s*2\s*<\/dd>/s', $cuerpo);
+        $this->assertStringContainsString('No se puede eliminar: tiene inmuebles asociados', $cuerpo);
     }
 
     public function testCatalogDisplaysRequiredEmptyStateWhenSearchHasNoResults(): void

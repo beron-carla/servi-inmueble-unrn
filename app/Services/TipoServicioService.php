@@ -106,6 +106,7 @@ class TipoServicioService
         }
 
         $tipo['tiene_servicios_vinculados'] = $this->tipos->tieneServiciosVinculados($id);
+        $tipo['cantidad_propiedades_vinculadas'] = $this->tipos->contarPropiedadesVinculadas($id);
 
         return $tipo;
     }
@@ -127,7 +128,7 @@ class TipoServicioService
         if ($this->tipos->tieneServiciosVinculados($id)) {
             return [
                 'exito' => false,
-                'errores' => ['general' => 'No se puede eliminar: tiene servicios asociados'],
+                'errores' => ['general' => 'No se puede eliminar: tiene inmuebles asociados'],
             ];
         }
 

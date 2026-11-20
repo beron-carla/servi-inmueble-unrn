@@ -19,12 +19,15 @@
             <dt class="col-sm-3">Proveedor</dt>
             <dd class="col-sm-9"><?= esc($tipo['proveedor_predeterminado']) ?></dd>
 
+            <dt class="col-sm-3">Inmuebles vinculados</dt>
+            <dd class="col-sm-9"><?= (int) $tipo['cantidad_propiedades_vinculadas'] ?></dd>
+
             <dt class="col-sm-3">Estado</dt>
             <dd class="col-sm-9"><?= (int) $tipo['activo'] === 1 ? 'Activo' : 'Inactivo' ?></dd>
         </dl>
         <?php if (! empty($tipo['tiene_servicios_vinculados'])) : ?>
             <div class="alert alert-warning mb-0" role="status">
-                No se puede eliminar: tiene servicios asociados
+                No se puede eliminar: tiene inmuebles asociados
             </div>
         <?php endif ?>
     </div>
