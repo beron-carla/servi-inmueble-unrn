@@ -79,6 +79,36 @@ SQL;
     }
 
     /**
+     * @return array{total_pendiente: string, total_pagado: string, total_general: string}
+     */
+    public function resumenPorPropiedad(int $idPropiedad): array
+    {
+        $resumen = $this->db->table('factura')
+            ->select(
+                "COALESCE(SUM(CASE WHEN factura.estado = 'pendiente' THEN factura.monto_total ELSE 0 END), 0) AS total_pendiente",
+                false,
+            )
+            ->select(
+                "COALESCE(SUM(CASE WHEN factura.estado = 'pagada' THEN factura.monto_total ELSE 0 END), 0) AS total_pagado",
+                false,
+            )
+            ->select('COALESCE(SUM(factura.monto_total), 0) AS total_general', false)
+            ->join(
+                'propiedad_servicio',
+                'propiedad_servicio.id_propiedad_servicio = factura.id_propiedad_servicio',
+            )
+            ->where('propiedad_servicio.id_propiedad', $idPropiedad)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'total_pendiente' => (string) ($resumen['total_pendiente'] ?? '0.00'),
+            'total_pagado' => (string) ($resumen['total_pagado'] ?? '0.00'),
+            'total_general' => (string) ($resumen['total_general'] ?? '0.00'),
+        ];
+    }
+
+    /**
      * @param array{inmueble: string, servicio: string, estado: string, desde: string, hasta: string} $filtros
      * @return array{
      *     facturas: list<array<string, mixed>>,

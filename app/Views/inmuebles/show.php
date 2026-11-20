@@ -70,8 +70,34 @@
         <?php endif ?>
 
         <h3 class="h5 mt-4">Estado de facturación</h3>
-        <div class="alert alert-info mb-0" role="status">
-            El resumen de facturación se completará en la integración con HU-14 y HU-15.
+        <div class="row">
+            <div class="col-md-4">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3><?= esc(formato_moneda((float) $resumenFacturacion['total_pendiente'])) ?></h3>
+                        <p>Total Pendiente</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3><?= esc(formato_moneda((float) $resumenFacturacion['total_pagado'])) ?></h3>
+                        <p>Total Pagado</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3><?= esc(formato_moneda((float) $resumenFacturacion['total_general'])) ?></h3>
+                        <p>Total General</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="card-footer">
