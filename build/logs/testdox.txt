@@ -72,6 +72,20 @@ Example Database
 Example Session
  [x] Session simple
 
+Facturas (Tests\Feature\Facturas)
+ [x] Owner creates monthly metered invoice with snapshot and calculated status
+ [x] Annual invoice without meter uses manual consumption and period 00
+ [x] Required values and invalid monthly period use acceptance messages
+ [x] Duplicate periods are rejected but an annual period is distinct
+ [x] Readings due dates and future issue date are validated
+ [x] Negative manual consumption is rejected
+ [x] Owner is forbidden for other owners and admin can create invoices
+ [x] Paused review and inactive properties reject invoice creation
+ [x] Calculated invoice state uses the applicable due date
+ [x] Owner invoice list is scoped sorted and shows calculated status and totals
+ [x] Invoice filters apply to rows and all summary totals
+ [x] Admin sees all invoice owners and empty filter shows empty state
+
 Health
  [x] Is defined app path
  [x] Base url has been set
@@ -91,7 +105,20 @@ Inmuebles (Tests\Feature\Inmuebles)
  [x] Administrator can edit a property owned by another user
 
 Login Throttle Service (Tests\Unit\Services\LoginThrottleService)
- [x] Email and ip are limited independently at five failures
+ [ ] Email and ip are limited independently at five failures
+
+Servicio Inmueble Service (Tests\Unit\Services\ServicioInmuebleService)
+ [ ] Only active services allow invoice entry for their owner or an administrator
+ [ ] Only documented state transitions are accepted
+
+Servicios Inmueble (Tests\Feature\ServiciosInmueble)
+ [x] Owner can create an active service without a meter
+ [x] Required contract fields use acceptance messages
+ [x] Owner cannot access another owners property and admin can
+ [x] A valid link blocks duplicates but an inactive link allows relinking
+ [x] Only active services admit invoices and only allowed transitions are accepted
+ [x] Inactive property and empty active catalog prevent new links
+ [x] Deactivation preserves existing invoice and payment history
 
 Sesion Service (Tests\Unit\Services\SesionService)
  [x] Starting session regenerates id and stores random token

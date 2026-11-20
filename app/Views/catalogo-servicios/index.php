@@ -6,7 +6,7 @@
         <h2 class="card-title">Servicios disponibles</h2>
     </div>
     <div class="card-body">
-        <form action="<?= route_to('catalogo.servicios') ?>" method="get" class="mb-3">
+        <form action="<?= url_to('catalogo.servicios') ?>" method="get" class="mb-3">
             <div class="form-row align-items-end">
                 <div class="form-group col-md-5">
                     <label for="q">Buscar por nombre o proveedor</label>
@@ -26,7 +26,7 @@
                 </div>
                 <div class="form-group col-md-3">
                     <button type="submit" class="btn btn-primary">Filtrar</button>
-                    <a href="<?= route_to('catalogo.servicios') ?>" class="btn btn-secondary">Limpiar</a>
+                    <a href="<?= url_to('catalogo.servicios') ?>" class="btn btn-secondary">Limpiar</a>
                 </div>
             </div>
         </form>

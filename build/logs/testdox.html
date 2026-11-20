@@ -136,6 +136,21 @@
         <ul>
             <li class="success">Session simple</li>
         </ul>
+        <h2>Facturas (Tests\Feature\Facturas)</h2>
+        <ul>
+            <li class="success">Owner creates monthly metered invoice with snapshot and calculated status</li>
+            <li class="success">Annual invoice without meter uses manual consumption and period 00</li>
+            <li class="success">Required values and invalid monthly period use acceptance messages</li>
+            <li class="success">Duplicate periods are rejected but an annual period is distinct</li>
+            <li class="success">Readings due dates and future issue date are validated</li>
+            <li class="success">Negative manual consumption is rejected</li>
+            <li class="success">Owner is forbidden for other owners and admin can create invoices</li>
+            <li class="success">Paused review and inactive properties reject invoice creation</li>
+            <li class="success">Calculated invoice state uses the applicable due date</li>
+            <li class="success">Owner invoice list is scoped sorted and shows calculated status and totals</li>
+            <li class="success">Invoice filters apply to rows and all summary totals</li>
+            <li class="success">Admin sees all invoice owners and empty filter shows empty state</li>
+        </ul>
         <h2>Health</h2>
         <ul>
             <li class="success">Is defined app path</li>
@@ -158,7 +173,22 @@
         </ul>
         <h2>Login Throttle Service (Tests\Unit\Services\LoginThrottleService)</h2>
         <ul>
-            <li class="success">Email and ip are limited independently at five failures</li>
+            <li class="defect">Email and ip are limited independently at five failures</li>
+        </ul>
+        <h2>Servicio Inmueble Service (Tests\Unit\Services\ServicioInmuebleService)</h2>
+        <ul>
+            <li class="defect">Only active services allow invoice entry for their owner or an administrator</li>
+            <li class="defect">Only documented state transitions are accepted</li>
+        </ul>
+        <h2>Servicios Inmueble (Tests\Feature\ServiciosInmueble)</h2>
+        <ul>
+            <li class="success">Owner can create an active service without a meter</li>
+            <li class="success">Required contract fields use acceptance messages</li>
+            <li class="success">Owner cannot access another owners property and admin can</li>
+            <li class="success">A valid link blocks duplicates but an inactive link allows relinking</li>
+            <li class="success">Only active services admit invoices and only allowed transitions are accepted</li>
+            <li class="success">Inactive property and empty active catalog prevent new links</li>
+            <li class="success">Deactivation preserves existing invoice and payment history</li>
         </ul>
         <h2>Sesion Service (Tests\Unit\Services\SesionService)</h2>
         <ul>
