@@ -22,9 +22,11 @@
             <dt class="col-sm-3">Estado</dt>
             <dd class="col-sm-9"><?= (int) $tipo['activo'] === 1 ? 'Activo' : 'Inactivo' ?></dd>
         </dl>
-        <div class="alert alert-info mb-0" role="status">
-            La cantidad de inmuebles vinculados se incorporará en la integración con HU-13.
-        </div>
+        <?php if (! empty($tipo['tiene_servicios_vinculados'])) : ?>
+            <div class="alert alert-warning mb-0" role="status">
+                No se puede eliminar: tiene servicios asociados
+            </div>
+        <?php endif ?>
     </div>
     <div class="card-footer">
         <a href="<?= route_to('admin.tipos.index') ?>" class="btn btn-secondary">Volver al catálogo</a>
@@ -46,6 +48,16 @@
             >
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-success">Reactivar</button>
+            </form>
+        <?php endif ?>
+        <?php if (empty($tipo['tiene_servicios_vinculados'])) : ?>
+            <form
+                action="<?= route_to('admin.tipos.destroy', $tipo['id_tipo_servicio']) ?>"
+                method="post"
+                class="d-inline"
+            >
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-danger">Eliminar</button>
             </form>
         <?php endif ?>
     </div>

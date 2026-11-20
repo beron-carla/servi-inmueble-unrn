@@ -99,7 +99,43 @@ class TipoServicioService
      */
     public function buscarPorId(int $id): ?array
     {
-        return $this->tipos->buscarPorId($id);
+        $tipo = $this->tipos->buscarPorId($id);
+
+        if ($tipo === null) {
+            return null;
+        }
+
+        $tipo['tiene_servicios_vinculados'] = $this->tipos->tieneServiciosVinculados($id);
+
+        return $tipo;
+    }
+
+    /**
+     * @return array{exito: bool, errores: array<string, string>}
+     */
+    public function eliminar(int $id): array
+    {
+        $tipo = $this->tipos->buscarPorId($id);
+
+        if ($tipo === null) {
+            return [
+                'exito' => false,
+                'errores' => ['general' => 'No se encontró el tipo de servicio solicitado.'],
+            ];
+        }
+
+        if ($this->tipos->tieneServiciosVinculados($id)) {
+            return [
+                'exito' => false,
+                'errores' => ['general' => 'No se puede eliminar: tiene servicios asociados'],
+            ];
+        }
+
+        if (! $this->tipos->eliminar($id)) {
+            throw new RuntimeException('No se pudo eliminar el tipo de servicio.');
+        }
+
+        return ['exito' => true, 'errores' => []];
     }
 
     /**

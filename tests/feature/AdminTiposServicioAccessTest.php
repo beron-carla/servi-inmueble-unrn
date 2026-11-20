@@ -207,7 +207,7 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         );
     }
 
-    public function testPhysicalDeletionRouteClearlyReportsItsDeferredIntegration(): void
+    public function testTypeWithoutLinksCanBeDeletedPhysically(): void
     {
         $idAdmin = $this->crearUsuario('admin', 'admin.baja.tipos@example.test');
         $idTipo = $this->crearTipoServicio('internet', 'privado', 'Gigas', 'Proveedor HU08 baja', 1);
@@ -221,15 +221,102 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
             'csrf_test_name' => $csrf,
         ]);
 
+        $respuesta->assertRedirectTo('/admin/tipos-servicio');
+        $this->assertSame(
+            'Tipo de servicio eliminado correctamente.',
+            session()->getFlashdata('success'),
+        );
+        $this->assertSame(0, $this->db->table('tipo_servicio')
+            ->where('id_tipo_servicio', $idTipo)
+            ->countAllResults());
+    }
+
+    public function testTypeWithLinkedPropertyServiceCannotBeDeletedAndCanBeDeactivated(): void
+    {
+        $idAdmin = $this->crearUsuario('admin', 'admin.baja.asociada.tipos@example.test');
+        $idPropietario = $this->crearUsuario('propietario', 'propietario.baja.asociada.tipos@example.test');
+        $idTipo = $this->crearTipoServicio('internet', 'privado', 'Gigas', 'Proveedor HU08 asociada', 1);
+        $idServicio = $this->crearPropiedadServicio($idPropietario, $idTipo);
+        $this->iniciarSesion($idAdmin, 'admin');
+
+        $detalle = $this->get('/admin/tipos-servicio/' . $idTipo);
+        $detalle->assertOK();
+        $this->assertStringContainsString(
+            'No se puede eliminar: tiene servicios asociados',
+            $detalle->response()->getBody(),
+        );
+
+        $csrf = $this->csrfToken($detalle->response()->getBody());
+        $this->withSession($_SESSION);
+        $respuesta = $this->post('/admin/tipos-servicio/' . $idTipo . '/eliminar', [
+            'csrf_test_name' => $csrf,
+        ]);
+
         $respuesta->assertRedirectTo('/admin/tipos-servicio/' . $idTipo);
         $this->assertSame(
-            'La eliminación se habilitará al completar la integración con HU-13 y HU-14.',
-            session()->getFlashdata('warning'),
+            'No se puede eliminar: tiene servicios asociados',
+            session()->getFlashdata('error'),
         );
         $this->assertSame(
             1,
             $this->db->table('tipo_servicio')->where('id_tipo_servicio', $idTipo)->countAllResults(),
         );
+        $this->assertSame(
+            1,
+            $this->db->table('propiedad_servicio')->where('id_propiedad_servicio', $idServicio)->countAllResults(),
+        );
+    }
+
+    public function testEditingTypePreservesExistingInvoiceSnapshotsAndReadings(): void
+    {
+        $idAdmin = $this->crearUsuario('admin', 'admin.snapshot.tipos@example.test');
+        $idPropietario = $this->crearUsuario('propietario', 'propietario.snapshot.tipos@example.test');
+        $idTipo = $this->crearTipoServicio('internet', 'privado', 'Gigas', 'Proveedor original', 1);
+        $idServicio = $this->crearPropiedadServicio($idPropietario, $idTipo);
+        $this->db->table('factura')->insert([
+            'id_propiedad_servicio' => $idServicio,
+            'periodo' => 'mes',
+            'periodo_mes' => '08',
+            'periodo_anio' => 2026,
+            'fecha_emision' => '2026-08-20',
+            'fecha_primer_vencimiento' => '2026-09-10',
+            'fecha_segundo_vencimiento' => null,
+            'monto_total' => '12000.00',
+            'consumo_del_periodo' => 37,
+            'lectura_anterior' => 100,
+            'lectura_actual' => 137,
+            'unidad_medida' => 'Gigas',
+            'proveedor' => 'Proveedor original',
+            'categoria_factura' => 'privado',
+            'estado' => 'pendiente',
+        ]);
+        $this->iniciarSesion($idAdmin, 'admin');
+
+        $formulario = $this->get('/admin/tipos-servicio/' . $idTipo . '/editar');
+        $csrf = $this->csrfToken($formulario->response()->getBody());
+        $this->withSession($_SESSION);
+
+        $respuesta = $this->post('/admin/tipos-servicio/' . $idTipo, [
+            'csrf_test_name' => $csrf,
+            'tipo' => 'internet',
+            'categoria' => 'publico',
+            'unidad_medida' => 'Moneda fija',
+            'proveedor_predeterminado' => 'Proveedor modificado',
+            'activo' => '0',
+        ]);
+        $respuesta->assertRedirectTo('/admin/tipos-servicio');
+
+        $factura = $this->db->table('factura')
+            ->where('id_propiedad_servicio', $idServicio)
+            ->get()
+            ->getRowArray();
+
+        $this->assertSame('Gigas', $factura['unidad_medida']);
+        $this->assertSame('Proveedor original', $factura['proveedor']);
+        $this->assertSame('privado', $factura['categoria_factura']);
+        $this->assertSame(100, (int) $factura['lectura_anterior']);
+        $this->assertSame(137, (int) $factura['lectura_actual']);
+        $this->assertSame(37, (int) $factura['consumo_del_periodo']);
     }
 
     public function testAdministratorFiltersTypesByCategoryAndActiveState(): void
@@ -264,7 +351,7 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         $this->assertStringNotContainsString('Editar', $cuerpo);
     }
 
-    public function testAdministratorCanViewTypeDetailsAndDeferredPropertyCountIsIdentified(): void
+    public function testAdministratorCanViewTypeDetails(): void
     {
         $idAdmin = $this->crearUsuario('admin', 'admin.detalle.tipos@example.test');
         $this->iniciarSesion($idAdmin, 'admin');
@@ -277,7 +364,7 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
         $this->assertStringContainsString('Privado', $cuerpo);
         $this->assertStringContainsString('Gigas', $cuerpo);
         $this->assertStringContainsString('Proveedor HU09 detalle', $cuerpo);
-        $this->assertStringContainsString('integración con HU-13', $cuerpo);
+        $this->assertStringContainsString('Eliminar', $cuerpo);
     }
 
     public function testCatalogDisplaysRequiredEmptyStateWhenSearchHasNoResults(): void
@@ -347,6 +434,46 @@ final class AdminTiposServicioAccessTest extends CIUnitTestCase
             'unidad_medida' => $unidad,
             'proveedor_predeterminado' => $proveedor,
             'activo' => $activo,
+        ]);
+
+        return (int) $this->db->insertID();
+    }
+
+    private function crearPropiedadServicio(int $idPropietario, int $idTipo): int
+    {
+        $idTipoInmueble = (int) $this->db->table('tipo_inmueble')
+            ->where('nombre', 'departamento')
+            ->get()
+            ->getRowArray()['id_tipo_inmueble'];
+
+        $this->db->table('direccion')->insert([
+            'calle' => 'Mitre',
+            'numero' => '100',
+            'piso' => null,
+            'depto' => null,
+            'ciudad' => 'Viedma',
+        ]);
+        $idDireccion = (int) $this->db->insertID();
+
+        $this->db->table('propiedad')->insert([
+            'alias' => 'Propiedad HU08 ' . $idPropietario,
+            'superficie' => '60.00',
+            'estado' => 'ocupado',
+            'id_tipo_inmueble' => $idTipoInmueble,
+            'id_propietario' => $idPropietario,
+            'id_direccion' => $idDireccion,
+        ]);
+        $idPropiedad = (int) $this->db->insertID();
+
+        $this->db->table('propiedad_servicio')->insert([
+            'id_propiedad' => $idPropiedad,
+            'id_tipo_servicio' => $idTipo,
+            'codigo_pago_electronico' => 'CPE-HU08',
+            'numero_cuenta_contrato' => 'CTA-HU08',
+            'numero_medidor' => null,
+            'domicilio_facturacion' => 'Mitre 100',
+            'titular' => 'Titular HU08',
+            'estado' => 'activo',
         ]);
 
         return (int) $this->db->insertID();

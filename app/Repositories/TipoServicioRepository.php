@@ -3,12 +3,19 @@
 namespace App\Repositories;
 
 use App\Models\TipoServicioModel;
+use CodeIgniter\Database\BaseConnection;
 
 class TipoServicioRepository
 {
-    public function __construct(private ?TipoServicioModel $model = null)
+    private BaseConnection $db;
+
+    public function __construct(
+        private ?TipoServicioModel $model = null,
+        ?BaseConnection $db = null,
+    )
     {
         $this->model ??= new TipoServicioModel();
+        $this->db = $db ?? db_connect();
     }
 
     /**
@@ -17,6 +24,22 @@ class TipoServicioRepository
     public function buscarPorId(int $id): ?array
     {
         return $this->model->find($id) ?: null;
+    }
+
+    public function tieneServiciosVinculados(int $id): bool
+    {
+        return $this->db->table('propiedad_servicio')
+            ->where('id_tipo_servicio', $id)
+            ->countAllResults() > 0;
+    }
+
+    public function eliminar(int $id): bool
+    {
+        if ($this->tieneServiciosVinculados($id)) {
+            return false;
+        }
+
+        return $this->model->delete($id) !== false;
     }
 
     /**

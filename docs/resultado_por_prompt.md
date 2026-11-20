@@ -19,7 +19,7 @@ Este documento reemplaza el registro cronológico de conversaciones y salidas re
 | HU-05 | Implementada | Edición, estados, auditoría, sesiones y contraseña temporal; `UsuarioGestionTest.php`, `AdminUsuariosAccessTest.php`. |
 | HU-06 | Implementada | Listado, búsqueda, filtros y detalle base; `UsuarioListadoTest.php`, `UsuarioListadoViewTest.php`. |
 | HU-07 | Implementada | Alta y validaciones de tipos; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. |
-| HU-08 | Base implementada; integración incompleta | CA-08.3 continúa expresamente diferido aunque HU-13 y HU-14 ya existen; CA-08.2/08.4 requieren verificar preservación tras editar el catálogo. |
+| HU-08 | Implementada e integrada | CA-08.2/08.4 conservan snapshots y lecturas; CA-08.3 elimina solo tipos sin vínculos y desactiva tipos con uso. |
 | HU-09 | Base implementada; CA-09.5 pendiente | El detalle no muestra la cantidad de inmuebles vinculados; la integración asignada a HU-13 debe completarse. |
 | HU-10 | Implementada | Alta, validaciones y asignación del propietario; `InmueblesTest.php`. |
 | HU-11 | Implementada | Edición, baja lógica, reactivación y permisos; CA-11.4 se verifica junto a HU-13/HU-14. |
@@ -30,14 +30,11 @@ Este documento reemplaza el registro cronológico de conversaciones y salidas re
 
 ### Integración que queda abierta
 
-1. **HU-08 / CA-08.3:** la acción de eliminación sigue mostrando “La eliminación se habilitará al completar la integración con HU-13 y HU-14”. Ambas HU ya están implementadas; el mensaje quedó obsoleto y el CA debe completarse conforme a H-25: eliminar físicamente solo si no hay vínculos; si hay vínculos, conservar y desactivar.
-2. **HU-08 / CA-08.2 y CA-08.4:** existe prueba de que la factura nueva guarda el snapshot. Falta prueba de regresión que edite el tipo de servicio y compruebe que una factura preexistente conserva proveedor, categoría, unidad y lecturas.
-3. **HU-09 / CA-09.5:** el detalle de tipo no cuenta los inmuebles vinculados. HU-13, responsable de la integración diferida, ya está implementada.
-4. **HU-12 / CA-12.5:** el detalle muestra los servicios vinculados, pero el bloque de resumen sigue siendo un aviso. HU-15 ya implementa el listado y los totales; falta conectar ese resumen en la vista de detalle.
-5. **HU-13 / CA-13.5:** la prueba confirma que la baja conserva la fila de factura y la transacción. No carga ni afirma valores de lectura; conviene añadir esa aserción explícita en la prueba de preservación.
-6. La integración pendiente de HU-12 CA-12.5 no bloquea el cierre base de HU-15; su integración debe reutilizar el servicio de listado/totales de facturas.
+1. **HU-09 / CA-09.5:** el detalle de tipo no cuenta los inmuebles vinculados. HU-13, responsable de la integración diferida, ya está implementada.
+2. **HU-12 / CA-12.5:** el detalle muestra los servicios vinculados, pero el bloque de resumen sigue siendo un aviso. HU-15 ya implementa el listado y los totales; falta conectar ese resumen en la vista de detalle.
+3. **HU-13 / CA-13.5:** la prueba confirma que la baja conserva la fila de factura y la transacción. No carga ni afirma valores de lectura; conviene añadir esa aserción explícita en la prueba de preservación.
 
-Los pendientes se informan en vez de declarar cierres de integración no demostrados. La implementación de HU-15 queda documentada abajo; no se modificaron las implementaciones de HU-08, HU-09 ni la vista de detalle de HU-12.
+Los pendientes restantes se informan sin declarar cierres no demostrados. HU-08 quedó integrada y documentada; permanecen pendientes HU-09 CA-09.5 y HU-12 CA-12.5.
 
 ## 2. Matriz de trazabilidad y evidencia
 
@@ -59,8 +56,8 @@ Las referencias a pruebas corresponden a `tests/`. Cada fila indica el conjunto 
 | HU-07 · CA-07.1 a CA-07.5 | Campos, categorías, unidades compatibles, unicidad tipo/proveedor y autorización Admin; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. | Verificado |
 | HU-07 · CA-07.6 | El alta guarda `activo = 1`; visibilidad en catálogo confirmada junto con HU-09; `AdminTiposServicioAccessTest.php`. | Verificado |
 | HU-08 · CA-08.1, CA-08.5, CA-08.6 | Edición base, acceso Admin y activar/desactivar; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. | Verificado |
-| HU-08 · CA-08.2, CA-08.4 | HU-14 persiste snapshot y HU-13 conserva registros al dar de baja un vínculo; falta comprobar que una edición posterior del catálogo no altera facturas/lecturas existentes. | Integración pendiente |
-| HU-08 · CA-08.3 | La ruta informa que borrar está diferido; no implementa eliminación segura ni aviso condicional por asociaciones. Prueba actual: `testPhysicalDeletionRouteClearlyReportsItsDeferredIntegration`. | Pendiente |
+| HU-08 · CA-08.2, CA-08.4 | Editar el catálogo no altera proveedor, categoría, unidad, lecturas ni consumo de facturas existentes; la factura creada conserva el snapshot. | Verificado |
+| HU-08 · CA-08.3 | Elimina físicamente solo tipos sin `propiedad_servicio`; rechaza con el mensaje exacto y conserva tipos con vínculos. | Verificado |
 | HU-09 · CA-09.1 a CA-09.4 | Listados Admin, filtros, edición accesible y catálogo de solo lectura para Propietario con tipos activos; `AdminTiposServicioAccessTest.php`. | Verificado |
 | HU-09 · CA-09.5 | El detalle muestra categoría, unidad y proveedor, pero no la cantidad de inmuebles vinculados; `TiposServicioController::show()` y `AdminTiposServicioAccessTest.php`. | Integración pendiente |
 | HU-10 · CA-10.1 a CA-10.6 | Alta, campos, catálogo, superficie, asignación de propietario y acceso; `InmueblesTest.php`. | Verificado |
@@ -128,9 +125,7 @@ La instancia MariaDB que se inició exclusivamente para ejecutar las pruebas de 
 
 ## 6. Pendientes para el próximo cierre
 
-1. Completar HU-08 CA-08.3 y retirar el aviso de integración cuando la eliminación segura esté implementada y probada.
-2. Agregar pruebas de integración HU-08 CA-08.2/08.4 sobre una factura existente después de editar el catálogo.
-3. Implementar el conteo de inmuebles vinculados de HU-09 CA-09.5.
-4. Integrar el listado/totales de HU-15 al resumen de facturación de HU-12 CA-12.5; HU-15 base ya está implementada y probada.
+1. Implementar el conteo de inmuebles vinculados de HU-09 CA-09.5.
+2. Integrar el listado/totales de HU-15 al resumen de facturación de HU-12 CA-12.5; HU-15 base ya está implementada y probada.
 5. Extender el test de baja HU-13 para registrar y afirmar explícitamente la conservación de lecturas.
 6. Repetir la suite con PHP 8.3 y MariaDB 10.11 antes de certificar esas versiones objetivo.
