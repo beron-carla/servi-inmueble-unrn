@@ -130,6 +130,13 @@ Validación de integración HU-12 del **2026-11-20**:
 | `C:\wamp64\bin\php\php8.3.28\php.exe spark routes` | Rutas explícitas y filtros `auth`/`role:admin` sin cambios incorrectos. |
 | `git diff --check` | Sin errores de whitespace en el diff. |
 
-## 6. Pendientes para el próximo cierre
+Validación completa del **2026-11-20**:
 
-1. Repetir la suite completa y resolver los fallos previos detectados en HU-02/HU-13 antes de certificar el hito completo.
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\wamp64\bin\php\php8.3.28\php.exe vendor\bin\phpunit tests\unit\Services\LoginThrottleServiceTest.php` | **1 test, 7 assertions; OK**. |
+| `C:\wamp64\bin\php\php8.3.28\php.exe vendor\bin\phpunit` | **124 tests, 773 assertions; OK**. |
+
+## 6. Pendientes
+
+No quedan fallos conocidos en la suite completa ejecutada.
