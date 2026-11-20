@@ -146,12 +146,17 @@ class TiposServicioController extends BaseController
             throw PageNotFoundException::forPageNotFound('No se encontró el tipo de servicio solicitado.');
         }
 
-        session()->setFlashdata(
-            'warning',
-            'La eliminación se habilitará al completar la integración con HU-13 y HU-14.',
-        );
+        $resultado = $this->tipos->eliminar($id);
 
-        return redirect()->to(route_to('admin.tipos.show', $id));
+        if (! $resultado['exito']) {
+            session()->setFlashdata('error', reset($resultado['errores']));
+
+            return redirect()->to(route_to('admin.tipos.show', $id));
+        }
+
+        session()->setFlashdata('success', 'Tipo de servicio eliminado correctamente.');
+
+        return redirect()->to(route_to('admin.tipos.index'));
     }
 
     private function cambiarEstado(int $id, string $activo, string $mensajeExito): RedirectResponse

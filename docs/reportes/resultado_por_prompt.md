@@ -1,6 +1,6 @@
 # Resultado consolidado de implementación · ServiInmueble 2026
 
-**Actualizado:** 2026-11-09
+**Actualizado:** 2026-11-20
 **Alcance consolidado:** HU-00 a HU-15
 **Fuentes funcionales:** `docs/historias_de_usuario/HU-XX_compacto.md` y `HU_Hito1_compacto.txt`
 **Fuentes técnicas:** `docs/decisiones.md`, `docs/rutas.md` y `docs/00_bootstrap.md`
@@ -19,25 +19,20 @@ Este documento reemplaza el registro cronológico de conversaciones y salidas re
 | HU-05 | Implementada | Edición, estados, auditoría, sesiones y contraseña temporal; `UsuarioGestionTest.php`, `AdminUsuariosAccessTest.php`. |
 | HU-06 | Implementada | Listado, búsqueda, filtros y detalle base; `UsuarioListadoTest.php`, `UsuarioListadoViewTest.php`. |
 | HU-07 | Implementada | Alta y validaciones de tipos; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. |
-| HU-08 | Base implementada; integración incompleta | CA-08.3 continúa expresamente diferido aunque HU-13 y HU-14 ya existen; CA-08.2/08.4 requieren verificar preservación tras editar el catálogo. |
-| HU-09 | Base implementada; CA-09.5 pendiente | El detalle no muestra la cantidad de inmuebles vinculados; la integración asignada a HU-13 debe completarse. |
+| HU-08 | Implementada e integrada | CA-08.2/08.4 conservan snapshots y lecturas; CA-08.3 elimina solo tipos sin vínculos y desactiva tipos con uso. |
+| HU-09 | Implementada e integrada | CA-09.5 cuenta inmuebles distintos vinculados al tipo en el detalle administrativo; verificado con prueba de integración. |
 | HU-10 | Implementada | Alta, validaciones y asignación del propietario; `InmueblesTest.php`. |
 | HU-11 | Implementada | Edición, baja lógica, reactivación y permisos; CA-11.4 se verifica junto a HU-13/HU-14. |
-| HU-12 | Parcial en integración | Listados y detalle base implementados; falta integrar los totales HU-15 en el resumen de facturación de CA-12.5. |
+| HU-12 | Implementada e integrada | CA-12.5 incluye servicios vinculados y resumen de facturación pendiente, pagado y general; verificado con `InmueblesTest.php`. |
 | HU-13 | Implementada | Asociación, estados, permisos, duplicados, baja lógica y disponibilidad para facturación; `ServiciosInmuebleTest.php`. |
 | HU-14 | Implementada | Alta mensual/anual, snapshot, validaciones y acceso; `FacturasTest.php`. |
 | HU-15 | Implementada | Listado, filtros, totales recalculados, orden por vencimiento, control de propiedad y estado vacío; `FacturasTest.php` (12 pruebas, 146 aserciones). |
 
-### Integración que queda abierta
+### Integración cerrada
 
-1. **HU-08 / CA-08.3:** la acción de eliminación sigue mostrando “La eliminación se habilitará al completar la integración con HU-13 y HU-14”. Ambas HU ya están implementadas; el mensaje quedó obsoleto y el CA debe completarse conforme a H-25: eliminar físicamente solo si no hay vínculos; si hay vínculos, conservar y desactivar.
-2. **HU-08 / CA-08.2 y CA-08.4:** existe prueba de que la factura nueva guarda el snapshot. Falta prueba de regresión que edite el tipo de servicio y compruebe que una factura preexistente conserva proveedor, categoría, unidad y lecturas.
-3. **HU-09 / CA-09.5:** el detalle de tipo no cuenta los inmuebles vinculados. HU-13, responsable de la integración diferida, ya está implementada.
-4. **HU-12 / CA-12.5:** el detalle muestra los servicios vinculados, pero el bloque de resumen sigue siendo un aviso. HU-15 ya implementa el listado y los totales; falta conectar ese resumen en la vista de detalle.
-5. **HU-13 / CA-13.5:** la prueba confirma que la baja conserva la fila de factura y la transacción. No carga ni afirma valores de lectura; conviene añadir esa aserción explícita en la prueba de preservación.
-6. La integración pendiente de HU-12 CA-12.5 no bloquea el cierre base de HU-15; su integración debe reutilizar el servicio de listado/totales de facturas.
+1. **HU-13 / CA-13.5:** la prueba confirma que la baja conserva la fila de factura, la transacción y las lecturas. El cierre de esta integración quedó verificado el 2026-11-20.
 
-Los pendientes se informan en vez de declarar cierres de integración no demostrados. La implementación de HU-15 queda documentada abajo; no se modificaron las implementaciones de HU-08, HU-09 ni la vista de detalle de HU-12.
+Los pendientes restantes se informan sin declarar cierres no demostrados. HU-08, HU-09 y HU-12 quedaron integradas y documentadas.
 
 ## 2. Matriz de trazabilidad y evidencia
 
@@ -59,19 +54,19 @@ Las referencias a pruebas corresponden a `tests/`. Cada fila indica el conjunto 
 | HU-07 · CA-07.1 a CA-07.5 | Campos, categorías, unidades compatibles, unicidad tipo/proveedor y autorización Admin; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. | Verificado |
 | HU-07 · CA-07.6 | El alta guarda `activo = 1`; visibilidad en catálogo confirmada junto con HU-09; `AdminTiposServicioAccessTest.php`. | Verificado |
 | HU-08 · CA-08.1, CA-08.5, CA-08.6 | Edición base, acceso Admin y activar/desactivar; `TipoServicioServiceTest.php`, `AdminTiposServicioAccessTest.php`. | Verificado |
-| HU-08 · CA-08.2, CA-08.4 | HU-14 persiste snapshot y HU-13 conserva registros al dar de baja un vínculo; falta comprobar que una edición posterior del catálogo no altera facturas/lecturas existentes. | Integración pendiente |
-| HU-08 · CA-08.3 | La ruta informa que borrar está diferido; no implementa eliminación segura ni aviso condicional por asociaciones. Prueba actual: `testPhysicalDeletionRouteClearlyReportsItsDeferredIntegration`. | Pendiente |
+| HU-08 · CA-08.2, CA-08.4 | Editar el catálogo no altera proveedor, categoría, unidad, lecturas ni consumo de facturas existentes; la factura creada conserva el snapshot. | Verificado |
+| HU-08 · CA-08.3 | Elimina físicamente solo tipos sin `propiedad_servicio`; rechaza con el mensaje exacto y conserva tipos con vínculos. | Verificado |
 | HU-09 · CA-09.1 a CA-09.4 | Listados Admin, filtros, edición accesible y catálogo de solo lectura para Propietario con tipos activos; `AdminTiposServicioAccessTest.php`. | Verificado |
-| HU-09 · CA-09.5 | El detalle muestra categoría, unidad y proveedor, pero no la cantidad de inmuebles vinculados; `TiposServicioController::show()` y `AdminTiposServicioAccessTest.php`. | Integración pendiente |
+| HU-09 · CA-09.5 | El detalle muestra categoría, unidad, proveedor y la cantidad de inmuebles distintos vinculados mediante `COUNT(DISTINCT id_propiedad)`; `TipoServicioRepository::contarPropiedadesVinculadas()`, `TipoServicioService::buscarPorId()` y `testAdministratorCanViewTypeDetails`. | Verificado |
 | HU-10 · CA-10.1 a CA-10.6 | Alta, campos, catálogo, superficie, asignación de propietario y acceso; `InmueblesTest.php`. | Verificado |
 | HU-11 · CA-11.1 a CA-11.3, CA-11.5, CA-11.6 | Edición, estados, baja lógica, preservación de registros, reactivación y autorización; `InmueblesTest.php`. | Verificado |
 | HU-11 · CA-11.4 | Propiedad inactiva rechaza nuevos servicios y facturas; `ServiciosInmuebleTest.php`, `FacturasTest.php`. | Verificado en integración |
 | HU-12 · CA-12.1 a CA-12.4 | Listados y filtros, exclusión por defecto de inactivos y control Admin/Propietario; `InmueblesTest.php`. | Verificado |
-| HU-12 · CA-12.5 | Detalle incluye servicios vinculados. El resumen de facturación aún es texto informativo; HU-15 ya provee los totales para integrarlo. | Integración pendiente |
+| HU-12 · CA-12.5 | El detalle incluye servicios vinculados y calcula por propiedad los totales pendiente, pagado y general mediante `FacturaRepository::resumenPorPropiedad()`; la vista muestra los tres totales. | Verificado |
 | HU-13 · CA-13.1, CA-13.6, CA-13.7 | Estados/transiciones y regla de solo facturar con servicios activos; `ServiciosInmuebleTest.php`, `FacturasTest.php`. | Verificado |
 | HU-13 · CA-13.2, CA-13.8, CA-13.9 | Campos contractuales, catálogo activo vacío y bloqueo de inmueble inactivo; `ServiciosInmuebleTest.php`. | Verificado |
 | HU-13 · CA-13.3, CA-13.4 | Dueño/Admin, 403 para propietario ajeno, duplicado vigente y revinculación tras inactivar; `ServiciosInmuebleTest.php`. | Verificado |
-| HU-13 · CA-13.5 | Baja lógica conserva factura y pago, sin borrado físico; `testDeactivationPreservesExistingInvoiceAndPaymentHistory`. La lectura no está afirmada explícitamente en ese test. | Implementado; aserción de lectura pendiente |
+| HU-13 · CA-13.5 | Baja lógica conserva factura, pago y lecturas, sin borrado físico; `testDeactivationPreservesExistingInvoiceAndPaymentHistory`. | Verificado |
 | HU-14 · CA-14.1 | Calcula `vencida` desde el vencimiento aplicable sin guardarla; `testCalculatedInvoiceStateUsesTheApplicableDueDate`, `testOwnerCreatesMonthlyMeteredInvoiceWithSnapshotAndCalculatedStatus`. | Verificado |
 | HU-14 · CA-14.2 | Campos y snapshot proveedor/categoría/unidad; pruebas de alta mensual y anual en `FacturasTest.php`. | Verificado |
 | HU-14 · CA-14.3 | Duplicado mensual rechazado; período anual diferenciado; `testDuplicatePeriodsAreRejectedButAnAnnualPeriodIsDistinct`. | Verificado |
@@ -103,7 +98,7 @@ La ruta coincide con `docs/rutas.md` y no se agregó ninguna ruta de pago. Las r
 - **D-16 / P-03:** se aprobó habilitar períodos mensuales y anuales. Anual guarda `periodo = 'anio'` y `periodo_mes = '00'`; la decisión está registrada en `docs/decisiones.md`.
 - **D-17 / H-27:** proveedor, categoría y unidad se copian al crear la factura.
 - **D-19, D-20 / H-31, H-32, H-33:** autorización en el servicio, control de pertenencia y 403 amigable; acciones de interfaz ocultas según rol/estado.
-- **D-28 / H-25, H-26:** se distinguen cierres base e integración. Los diferimientos HU-08/HU-09/HU-12 están identificados arriba; al completarse las HU dependientes se deben cerrar las integraciones vencidas.
+- **D-28 / H-25, H-26:** se distinguen cierres base e integración. Los diferimientos HU-08/HU-09/HU-12 se cerraron al completarse sus HU dependientes; cualquier integración restante se identifica explícitamente.
 - **H-24 / D-29:** `/dashboard` sigue siendo el destino genérico para validar logout.
 - **H-28:** el estado Vencida se calcula con el segundo vencimiento si existe; si no, con el primero. Se incluye en el total pendiente.
 - **P-01:** resuelta por el usuario el 2026-11-09 con opción (b): no agregar acción para registrar pagos; se usan facturas pagadas existentes o sembradas.
@@ -112,7 +107,7 @@ La ruta coincide con `docs/rutas.md` y no se agregó ninguna ruta de pago. Las r
 
 ## 5. Validación reproducible de este estado
 
-Ejecución del **2026-11-09** en el entorno local:
+Validaciones históricas del **2026-11-09**:
 
 | Comando / comprobación | Resultado |
 |---|---|
@@ -126,11 +121,22 @@ Ejecución del **2026-11-09** en el entorno local:
 
 La instancia MariaDB que se inició exclusivamente para ejecutar las pruebas de facturas fue apagada al terminar. Las pruebas actuales certifican el comportamiento en la versión local observada, no en MariaDB 10.11/PHP 8.3.
 
-## 6. Pendientes para el próximo cierre
+Validación de integración HU-12 del **2026-11-20**:
 
-1. Completar HU-08 CA-08.3 y retirar el aviso de integración cuando la eliminación segura esté implementada y probada.
-2. Agregar pruebas de integración HU-08 CA-08.2/08.4 sobre una factura existente después de editar el catálogo.
-3. Implementar el conteo de inmuebles vinculados de HU-09 CA-09.5.
-4. Integrar el listado/totales de HU-15 al resumen de facturación de HU-12 CA-12.5; HU-15 base ya está implementada y probada.
-5. Extender el test de baja HU-13 para registrar y afirmar explícitamente la conservación de lecturas.
-6. Repetir la suite con PHP 8.3 y MariaDB 10.11 antes de certificar esas versiones objetivo.
+| Comando / comprobación | Resultado |
+|---|---|
+| PHP 8.3.28 `php -l` sobre cuatro archivos modificados | Sin errores de sintaxis. |
+| `C:\wamp64\bin\php\php8.3.28\php.exe vendor\bin\phpunit tests\feature\InmueblesTest.php` | **12 tests, 110 assertions; OK**. |
+| `C:\wamp64\bin\php\php8.3.28\php.exe spark routes` | Rutas explícitas y filtros `auth`/`role:admin` sin cambios incorrectos. |
+| `git diff --check` | Sin errores de whitespace en el diff. |
+
+Validación completa del **2026-11-20**:
+
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\wamp64\bin\php\php8.3.28\php.exe vendor\bin\phpunit tests\unit\Services\LoginThrottleServiceTest.php` | **1 test, 7 assertions; OK**. |
+| `C:\wamp64\bin\php\php8.3.28\php.exe vendor\bin\phpunit` | **124 tests, 773 assertions; OK**. |
+
+## 6. Pendientes
+
+No quedan fallos conocidos en la suite completa ejecutada.

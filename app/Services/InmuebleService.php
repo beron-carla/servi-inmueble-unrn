@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Repositories\FacturaRepository;
 use App\Repositories\PropiedadRepository;
 use CodeIgniter\Database\BaseConnection;
 use RuntimeException;
@@ -17,10 +18,12 @@ class InmuebleService
 
     public function __construct(
         private ?PropiedadRepository $propiedades = null,
+        private ?FacturaRepository $facturas = null,
         ?BaseConnection $db = null,
     ) {
         $this->db = $db ?? db_connect();
         $this->propiedades ??= new PropiedadRepository();
+        $this->facturas ??= new FacturaRepository();
     }
 
     /**
@@ -156,23 +159,39 @@ class InmuebleService
     }
 
     /**
-     * @return array{inmueble: array<string, mixed>|null, servicios: list<array<string, mixed>>, sin_permiso: bool}
+     * @return array{
+     *     inmueble: array<string, mixed>|null,
+     *     servicios: list<array<string, mixed>>,
+     *     resumen_facturacion: array{total_pendiente: string, total_pagado: string, total_general: string},
+     *     sin_permiso: bool
+     * }
      */
     public function detalle(int $idPropiedad, int $idUsuario, string $rol): array
     {
         $inmueble = $this->propiedades->buscarPorIdConDireccion($idPropiedad);
 
         if ($inmueble === null) {
-            return ['inmueble' => null, 'servicios' => [], 'sin_permiso' => false];
+            return [
+                'inmueble' => null,
+                'servicios' => [],
+                'resumen_facturacion' => $this->resumenVacio(),
+                'sin_permiso' => false,
+            ];
         }
 
         if (! $this->puedeGestionar($inmueble, $idUsuario, $rol)) {
-            return ['inmueble' => null, 'servicios' => [], 'sin_permiso' => true];
+            return [
+                'inmueble' => null,
+                'servicios' => [],
+                'resumen_facturacion' => $this->resumenVacio(),
+                'sin_permiso' => true,
+            ];
         }
 
         return [
             'inmueble' => $inmueble,
             'servicios' => $this->propiedades->listarServicios($idPropiedad),
+            'resumen_facturacion' => $this->facturas->resumenPorPropiedad($idPropiedad),
             'sin_permiso' => false,
         ];
     }
@@ -548,6 +567,18 @@ class InmuebleService
             'exito' => false,
             'errores' => ['alias' => 'El alias ya está registrado para este propietario.'],
             'datos' => $datos,
+        ];
+    }
+
+    /**
+     * @return array{total_pendiente: string, total_pagado: string, total_general: string}
+     */
+    private function resumenVacio(): array
+    {
+        return [
+            'total_pendiente' => '0.00',
+            'total_pagado' => '0.00',
+            'total_general' => '0.00',
         ];
     }
 }

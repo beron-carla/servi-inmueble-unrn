@@ -157,6 +157,7 @@ class InmueblesController extends BaseController
             'titulo' => 'Detalle del inmueble',
             'inmueble' => $resultado['inmueble'],
             'servicios' => $resultado['servicios'],
+            'resumenFacturacion' => $resultado['resumen_facturacion'],
             'esAdmin' => session('rol') === 'admin',
         ]);
     }

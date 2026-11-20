@@ -182,7 +182,7 @@ El control de propiedad se valida **en el servicio**, no solo en el filtro.
 | POST | `/admin/tipos-servicio/(:num)/eliminar` | `admin.tipos.destroy` | `Admin\TiposServicioController::destroy/$1` | `auth`, `role:admin` | HU-08 | CA-08.3 |
 
 **Notas:**
-- `destroy` solo procede si no hay `propiedad_servicio` asociados; si hay, responde con el aviso “No se puede eliminar: tiene servicios asociados” y ofrece desactivar (CA-08.3).
+- `destroy` solo procede si no hay `propiedad_servicio` asociados; si hay, responde con el aviso “No se puede eliminar: tiene inmuebles asociados” y ofrece desactivar (CA-08.3).
 - La unicidad es `(tipo, proveedor_predeterminado)` (D-13).
 
 ### 4.9 Administración de inmuebles (HU-12, vista Admin)

@@ -271,6 +271,8 @@ final class ServiciosInmuebleTest extends CIUnitTestCase
             'fecha_primer_vencimiento' => '2026-01-15',
             'monto_total' => '1200.00',
             'consumo_del_periodo' => 10,
+            'lectura_anterior' => 100,
+            'lectura_actual' => 110,
             'unidad_medida' => 'kWh',
             'proveedor' => 'Proveedor histórico',
             'categoria_factura' => 'publico',
@@ -299,6 +301,13 @@ final class ServiciosInmuebleTest extends CIUnitTestCase
         $this->assertSame('inactivo', $this->estadoServicio($idServicio));
         $this->assertSame(1, $this->db->table('factura')->where('id_factura', $idFactura)->countAllResults());
         $this->assertSame(1, $this->db->table('transaccion')->where('id_factura', $idFactura)->countAllResults());
+        $historial = $this->db->table('factura')
+            ->select('lectura_anterior, lectura_actual')
+            ->where('id_factura', $idFactura)
+            ->get()
+            ->getRowArray();
+        $this->assertSame(100, (int) $historial['lectura_anterior']);
+        $this->assertSame(110, (int) $historial['lectura_actual']);
     }
 
     /**

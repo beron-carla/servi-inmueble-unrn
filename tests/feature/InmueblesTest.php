@@ -76,11 +76,43 @@ final class InmueblesTest extends CIUnitTestCase
             'titular' => 'Propietario de prueba',
             'estado' => 'activo',
         ]);
+        $idPropiedadServicio = (int) $this->db->insertID();
+        $this->db->table('factura')->insert([
+            'id_propiedad_servicio' => $idPropiedadServicio,
+            'periodo' => 'mes',
+            'periodo_mes' => '01',
+            'periodo_anio' => 2026,
+            'fecha_emision' => '2026-01-01',
+            'fecha_primer_vencimiento' => '2026-01-10',
+            'monto_total' => '100.00',
+            'consumo_del_periodo' => 10,
+            'unidad_medida' => 'kWh',
+            'proveedor' => 'Proveedor de prueba',
+            'categoria_factura' => 'publico',
+            'estado' => 'pendiente',
+        ]);
+        $this->db->table('factura')->insert([
+            'id_propiedad_servicio' => $idPropiedadServicio,
+            'periodo' => 'mes',
+            'periodo_mes' => '02',
+            'periodo_anio' => 2026,
+            'fecha_emision' => '2026-02-01',
+            'fecha_primer_vencimiento' => '2026-02-10',
+            'monto_total' => '50.00',
+            'consumo_del_periodo' => 5,
+            'unidad_medida' => 'kWh',
+            'proveedor' => 'Proveedor de prueba',
+            'categoria_factura' => 'publico',
+            'estado' => 'pagada',
+        ]);
         $detalle = $this->get('/inmuebles/' . $propiedad['id_propiedad']);
         $detalle->assertOK();
         $this->assertStringContainsString('Servicios vinculados', $detalle->response()->getBody());
         $this->assertStringContainsString('Electricidad', $detalle->response()->getBody());
-        $this->assertStringContainsString('HU-14 y HU-15', $detalle->response()->getBody());
+        $this->assertStringContainsString('Estado de facturación', $detalle->response()->getBody());
+        $this->assertStringContainsString('100,00', $detalle->response()->getBody());
+        $this->assertStringContainsString('50,00', $detalle->response()->getBody());
+        $this->assertStringContainsString('150,00', $detalle->response()->getBody());
     }
 
     public function testAdministratorCanCreatePropertyForAnActiveOwnerOnly(): void

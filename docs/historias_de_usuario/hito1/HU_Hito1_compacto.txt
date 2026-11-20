@@ -126,7 +126,7 @@ Escenarios:
 - Modificar unidad: "Internet" de Gigas a Moneda fija; facturas futuras usan la nueva, las existentes conservan la original.
 - Modificar proveedor y categoría: el catálogo refleja los cambios.
 - Nombre duplicado al modificar (case-insensitive): "Ya existe un tipo de servicio con ese nombre".
-- Baja con servicios asociados: aviso "No se puede eliminar: tiene servicios asociados"; la única acción disponible es desactivar.
+- Baja con inmuebles asociados: aviso "No se puede eliminar: tiene inmuebles asociados"; la única acción disponible es desactivar.
 - Desactivar tipo con uso: no aparece para nuevos vínculos; servicios y facturas existentes intactos.
 - Reactivar tipo desactivado: vuelve a aparecer para vincular.
 - Baja de tipo sin uso: se elimina físicamente (única excepción a la baja lógica; solo si nunca tuvo servicios).
