@@ -3,7 +3,7 @@
 **Proyecto:** ServiInmueble 2026  
 **Fecha:** 2026-11-20  
 **Estado:** definición cerrada. Decisiones aprobadas. **Sin implementación.**  
-**Fuente de verdad:** este documento + [`hito2/README.md`](hito2/README.md) + documentos individuales `hito2/HU-16_compacto.md` a `hito2/HU-22_compacto.md`.
+**Fuente de verdad:** este documento + [`hito2/README.md`](README.md) + documentos individuales `hito2/HU-16_compacto.md` a `hito2/HU-22_compacto.md`.
 
 ---
 
