@@ -248,7 +248,7 @@ HU-00 (bootstrap)
   → HU-13 → HU-14 → HU-15
 ```
 
-El prompt listo para HU-00 está en [`docs/prompts/HU-00_bootstrap.md`](prompts/HU-00_bootstrap.md). El índice de prompts es [`docs/prompts/README.md`](prompts/README.md).
+El prompt listo para HU-00 está en [`docs/prompts/HU-00_bootstrap.md`](HU-00_bootstrap.md). El índice de prompts es [`docs/prompts/README.md`](README.md).
 
 **Por qué no es numérico:**
 

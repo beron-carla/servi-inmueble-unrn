@@ -1,7 +1,7 @@
 # Prompts del Hito 1 · ServiInmueble 2026
 
 **Fecha:** 2026-11-08
-**Prompt general vigente:** [`../PROMPT_GENERAL.md`](../PROMPT_GENERAL.md)
+**Prompt general vigente:** [`../PROMPT_GENERAL.md`](PROMPT_GENERAL.md)
 **Esquema canónico:** [`bd/serviinmueble (1).sql`](<../../bd/serviinmueble (1).sql>)
 
 ---
@@ -10,7 +10,7 @@
 
 Siempre, en este orden:
 
-1. Pegar el **prompt general** de [`../PROMPT_GENERAL.md`](../PROMPT_GENERAL.md) §2.
+1. Pegar el **prompt general** de [`../PROMPT_GENERAL.md`](PROMPT_GENERAL.md) §2.
 2. Pegar el prompt de la HU correspondiente.
 3. Adjuntar o indicar los documentos de la HU:
    - `docs/historias_de_usuario/HU-XX_compacto.md`
@@ -63,7 +63,7 @@ No es el orden numérico: HU-05 necesita el listado de HU-06, HU-08 el de HU-09 
 
 ## 4. Plantilla para una HU nueva
 
-Si necesitás un prompt desde cero, usá la plantilla de [`../PROMPT_GENERAL.md`](../PROMPT_GENERAL.md) §3 y completá:
+Si necesitás un prompt desde cero, usá la plantilla de [`../PROMPT_GENERAL.md`](PROMPT_GENERAL.md) §3 y completá:
 
 - HU y título.
 - Archivo funcional.

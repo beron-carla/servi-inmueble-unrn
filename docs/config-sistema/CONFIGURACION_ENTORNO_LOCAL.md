@@ -195,10 +195,10 @@ El código de HU-00 y sus tests están implementados. Para trabajar desde `C:\xa
 
 Documentos de referencia obligatoria:
 
-- [`00_bootstrap.md`](00_bootstrap.md) — alcance, migraciones, seeds y BC-01 a BC-20.
-- [`rutas.md`](rutas.md) — mapa canónico de rutas.
-- [`decisiones.md`](decisiones.md) — esquema y decisiones D-01 a D-30.
-- [`prompts/README.md`](prompts/README.md) — índice y orden de ejecución.
+- [`00_bootstrap.md`](../historias_de_usuario/hito1/00_bootstrap.md) — alcance, migraciones, seeds y BC-01 a BC-20.
+- [`rutas.md`](../rutas.md) — mapa canónico de rutas.
+- [`decisiones.md`](../decisiones.md) — esquema y decisiones D-01 a D-30.
+- [`prompts/README.md`](../prompts/README.md) — índice y orden de ejecución.
 - [`bd/serviinmueble (1).sql`](<../bd/serviinmueble (1).sql>) — DDL canónico.
 
 > Antes de HU-14/HU-15 hay que resolver **P-01** (registro de pagos). Ver `decisiones.md` §Pendientes. P-04 está resuelta; consultar [`00_bootstrap.md`](00_bootstrap.md) §8 para la matriz de aceptación.

@@ -161,7 +161,7 @@ Al integrar estos cambios, no hace falta revertir código ni editar los formular
 - El formulario de registro ya usaba ese mismo patrón.
 - Los cambios de documentación no modifican la configuración de Apache, PHP ni la base de datos.
 
-El archivo `.env` es local y está excluido de Git; no se comparte en el merge. Cada desarrollador debe conservar o crear su propio `.env` con su URL y credenciales locales. Para la configuración de XAMPP de la guía [Iniciar proyecto desde VS Code](./INICIAR_PROYECTO_VSC.md):
+El archivo `.env` es local y está excluido de Git; no se comparte en el merge. Cada desarrollador debe conservar o crear su propio `.env` con su URL y credenciales locales. Para la configuración de XAMPP de la guía [Iniciar proyecto desde VS Code](INICIAR_PROYECTO_VSC.md):
 
 - Con Apache sirviendo el proyecto desde `htdocs`, `app.baseURL` puede ser `http://localhost/servi-inmueble/public/`.
 - Con `spark serve`, usá `app.baseURL = 'http://localhost:8080/'` y mantené el servidor corriendo en la terminal.
