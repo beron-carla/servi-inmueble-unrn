@@ -2,7 +2,7 @@
 
 **Proyecto:** ServiInmueble 2026
 **Documento base:** [`../00_bootstrap.md`](../historias_de_usuario/hito1/00_bootstrap.md)
-**Prompt general:** [`../PROMPT_GENERAL.md`](PROMPT_GENERAL.md)
+**Prompt general:** [`../PROMPT_GENERAL.md`](PROMPT_GENERAL_hito1)
 **Entorno verificado:** 2026-11-08
 
 ---
@@ -19,7 +19,7 @@
 
 2. Abrir la sesión de trabajo en la raíz del proyecto (`C:\xampp\htdocs\servi-inmueble`).
 
-3. Pegar primero el **prompt general** de [`../PROMPT_GENERAL.md`](PROMPT_GENERAL.md) §2.
+3. Pegar primero el **prompt general** de [`../PROMPT_GENERAL.md`](PROMPT_GENERAL_hito1) §2.
 
 4. Pegar después el prompt de la sección 2 de este archivo.
 
