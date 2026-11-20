@@ -22,12 +22,13 @@ final class ServicioInmuebleServiceTest extends CIUnitTestCase
             $servicios = new class($estado) extends PropiedadServicioRepository {
                 public function __construct(private string $estado) {}
 
-                public function buscarPorIdConDetalle(int $id): ?array
+                public function buscarParaFactura(int $id): ?array
                 {
                     return [
                         'id_propiedad_servicio' => $id,
                         'id_propietario' => 7,
                         'estado' => $this->estado,
+                        'estado_propiedad' => 'ocupado',
                     ];
                 }
             };
@@ -36,13 +37,13 @@ final class ServicioInmuebleServiceTest extends CIUnitTestCase
 
             $this->assertSame(
                 $esperado,
-                $service->puedeCargarFacturas(3, 7, 'propietario')['permitido'],
+                $service->validarCargaFactura(3, 7, 'propietario')['permitido'],
                 'Estado: ' . $estado,
             );
 
-            $otroPropietario = $service->puedeCargarFacturas(3, 8, 'propietario');
+            $otroPropietario = $service->validarCargaFactura(3, 8, 'propietario');
             $this->assertTrue($otroPropietario['sin_permiso']);
-            $this->assertFalse($service->puedeCargarFacturas(3, 8, 'admin')['sin_permiso']);
+            $this->assertFalse($service->validarCargaFactura(3, 8, 'admin')['sin_permiso']);
         }
     }
 
@@ -62,7 +63,7 @@ final class ServicioInmuebleServiceTest extends CIUnitTestCase
 
                 public function __construct(private string $estado) {}
 
-                public function buscarPorIdConDetalle(int $id): ?array
+                public function buscarConDetalle(int $id): ?array
                 {
                     return [
                         'id_propiedad_servicio' => $id,
