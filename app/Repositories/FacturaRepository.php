@@ -109,7 +109,7 @@ SQL;
     }
 
     /**
-     * @param array{inmueble: string, servicio: string, estado: string, desde: string, hasta: string} $filtros
+     * @param array{inmueble: string, servicio: string, estado: string, desde: string, hasta: string, id_factura: string} $filtros
      * @return array{
      *     facturas: list<array<string, mixed>>,
      *     resumen: array<string, string>,
@@ -239,7 +239,7 @@ SQL;
     }
 
     /**
-     * @param array{inmueble: string, servicio: string, estado: string, desde: string, hasta: string} $filtros
+     * @param array{inmueble: string, servicio: string, estado: string, desde: string, hasta: string, id_factura: string} $filtros
      */
     private function consultaListado(array $filtros, ?int $idPropietario, string $hoy): BaseBuilder
     {
@@ -268,6 +268,10 @@ SQL;
                 'propiedad_servicio.id_propiedad_servicio',
                 (int) $filtros['servicio'],
             );
+        }
+
+        if ($filtros['id_factura'] !== '') {
+            $consulta->where('factura.id_factura', (int) $filtros['id_factura']);
         }
 
         if ($filtros['estado'] !== '') {

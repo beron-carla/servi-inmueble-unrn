@@ -3,19 +3,26 @@
 namespace App\Controllers;
 
 use App\Services\FacturaService;
+use App\Services\NotificacionService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class FacturasController extends BaseController
 {
-    public function __construct(private ?FacturaService $facturas = null)
+    public function __construct(
+        private ?FacturaService $facturas = null,
+        private ?NotificacionService $notificaciones = null,
+    )
     {
         $this->facturas ??= new FacturaService();
+        $this->notificaciones ??= new NotificacionService();
     }
 
     public function index(): string
     {
+        $this->notificaciones->registrarVencimientos();
+
         return view('facturas/index', [
             'titulo' => 'Facturas',
             ...$this->facturas->listado(

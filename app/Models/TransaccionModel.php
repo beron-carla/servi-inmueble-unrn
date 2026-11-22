@@ -19,5 +19,11 @@ class TransaccionModel extends Model
         'numero_comprobante',
         'comprobante_digital',
         'en_mora',
+        'estado',
+        'id_admin_validador',
+        'fecha_validacion',
+        'motivo_rechazo',
+        'comprobante_nombre',
+        'comprobante_mime',
     ];
 }

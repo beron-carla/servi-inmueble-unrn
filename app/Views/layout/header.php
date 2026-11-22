@@ -8,6 +8,17 @@
     </ul>
     <ul class="navbar-nav ml-auto">
         <?php if (session()->get('id_usuario')) : ?>
+            <?php if ((string) session()->get('rol') === 'propietario') : ?>
+                <?php $contadorNotificaciones = (new \App\Services\NotificacionService())->cantidadNoLeidas((int) session()->get('id_usuario')); ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= route_to('notificaciones.index') ?>" title="Notificaciones">
+                        <i class="far fa-bell"></i>
+                        <?php if ($contadorNotificaciones > 0) : ?>
+                            <span class="badge badge-warning navbar-badge"><?= esc((string) $contadorNotificaciones) ?></span>
+                        <?php endif ?>
+                    </a>
+                </li>
+            <?php endif ?>
             <li class="nav-item d-flex align-items-center mr-3">
                 <span class="nav-link"><?= esc(session()->get('nombre_completo')) ?></span>
             </li>

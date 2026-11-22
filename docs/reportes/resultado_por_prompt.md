@@ -140,3 +140,360 @@ Validación completa del **2026-11-20**:
 ## 6. Pendientes
 
 No quedan fallos conocidos en la suite completa ejecutada.
+
+---
+
+## 7. Registro del 2026-11-22 · Implementación de HU-17
+
+### Alcance implementado
+
+- Se implementó exclusivamente **HU-17 · Registro de pago con comprobante digital**.
+- Se cumplió H2-07 antes de codificar: se registraron D2-01 a D2-13 y las rutas del Hito 2 en `docs/decisiones.md` y `docs/rutas.md`.
+- Se creó y aplicó la migración `2026-11-20-000001_AlterTransaccionHito2.php`.
+- Se verificó el working tree antes de comenzar; no existían cambios pendientes.
+- La migración agregó validación de pagos, comprobantes y índices a `transaccion`, y aplicó el backfill DI-04 a pagos históricos.
+- No se modificó `bd/serviinmueble (1).sql`.
+- No se implementaron HU-18, HU-19, HU-20, HU-16, HU-21 ni HU-22.
+
+### Archivos creados
+
+| Tipo | Archivo |
+|---|---|
+| Controlador | `app/Controllers/PagosController.php` |
+| Servicio | `app/Services/PagoService.php` |
+| Servicio | `app/Services/ComprobanteService.php` |
+| Servicio | `app/Services/MoraService.php` |
+| Repositorio | `app/Repositories/PagoRepository.php` |
+| Migración | `app/Database/Migrations/2026-11-20-000001_AlterTransaccionHito2.php` |
+| Vistas | `app/Views/pagos/create.php`, `app/Views/pagos/index.php` |
+| Pruebas unitarias | `tests/unit/Services/ComprobanteServiceTest.php` |
+| Pruebas de esquema | `tests/database/Hito2SchemaTest.php` |
+| Pruebas feature | `tests/feature/PagosTest.php` |
+
+### Archivos modificados
+
+- `app/Config/Routes.php`
+- `app/Models/TransaccionModel.php`
+- `app/Database/Seeds/DemoSeeder.php`
+- `app/Views/layout/sidebar.php`
+- `app/Views/facturas/index.php`
+- `app/Views/errors/html/error_403.php`
+- `app/Helpers/format_helper.php`
+- `docs/decisiones.md`
+- `docs/rutas.md`
+
+### Rutas verificadas
+
+| Método | URI | Nombre | Controlador | Filtros |
+|---|---|---|---|---|
+| GET | `/facturas/(:num)/pagar` | `pagos.create` | `PagosController::create/$1` | `auth` |
+| POST | `/facturas/(:num)/pagos` | `pagos.store` | `PagosController::store/$1` | `auth` |
+| GET | `/pagos` | `pagos.index` | `PagosController::index` | `auth` |
+| GET | `/pagos/(:num)/comprobante` | `pagos.comprobante` | `PagosController::comprobante/$1` | `auth` |
+
+Las rutas quedaron registradas y confirmadas con `C:\xampp\php\php.exe spark routes`.
+
+### Matriz CA-17
+
+| CA | Implementación | Evidencia |
+|---|---|---|
+| CA-17.1 | Propietario propio y Administrador autorizados; otros roles o propietarios ajenos reciben 403 real. | `PagoService`, `PagosController`, `PagosTest::testOwnerCannotPayOtherOwnersInvoice`. |
+| CA-17.2 | Solo factura pendiente o vencida calculada; pagada rechazada con mensaje literal. | `PagoService::opcionesPago()` y `registrar()`, pruebas feature. |
+| CA-17.3 | Pago por el total con comparación normalizada a dos decimales y sin parciales. | `PagoService`, `DI-05`. |
+| CA-17.4 | Fecha obligatoria, válida y no futura. | `PagosTest::testFutureDateDuplicatePaymentAndMandatoryReceiptAreRejected`. |
+| CA-17.5 | Medio exacto, número alfanumérico de 1 a 50 y unicidad por factura. | `PagoService::registrar()`, índice único de migración. |
+| CA-17.6 | Comprobante obligatorio salvo efectivo; PDF/JPG/JPEG hasta 5 MiB, detectado por contenido. | `ComprobanteService`, `ComprobanteServiceTest`. |
+| CA-17.7 | `en_mora = 1` posterior al vencimiento aplicable; en caso contrario `0`. | `MoraService::esPagoTardio()`, prueba feature de pago tardío. |
+| CA-17.8 | Pago creado como pendiente; factura permanece pendiente; duplicados pendientes rechazados. | `PagoRepository::existePendiente()`, prueba feature de duplicado. |
+| CA-17.9 | CSRF activo y PRG; mensaje de éxito literal. | `PagosController::store()`, prueba feature. |
+| CA-17.10 | Comprobante privado para propietario/Admin con `inline`, `nosniff` y nombre seguro. | `PagoService::comprobante()`, `PagosController::comprobante()`, prueba feature de descarga. |
+
+### Decisiones aplicadas
+
+- D2-01, D2-02, D2-05, D2-07 y D2-11.
+- H2-01, H2-02, H2-04 y H2-07.
+- DI-02, DI-04, DI-05, DI-07 y DI-08.
+- D-16: “Vencida” permanece calculada y no se guarda en `factura.estado`.
+
+### Validación ejecutada
+
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\xampp\php\php.exe spark migrate` | Migración HU-17 aplicada correctamente. |
+| `C:\xampp\php\php.exe spark migrate:status` | Migración `2026-11-20-000001` registrada en batch 2. |
+| `C:\xampp\php\php.exe spark routes` | Las cuatro rutas están registradas con `auth`. |
+| `php -l` sobre archivos HU-17 | Sin errores de sintaxis. |
+| `tests/unit/Services/ComprobanteServiceTest.php` | MIME por contenido, extensión engañosa, límite y efectivo cubiertos. |
+| `tests/database/Hito2SchemaTest.php` | Columnas, índices y backfill verificados. |
+| `tests/feature/PagosTest.php` | 5 pruebas, 37 aserciones; OK. |
+| Suite PHPUnit completa | **135 tests, 826 assertions; OK**. |
+
+### Base de datos y entorno
+
+- MariaDB local: `10.4.32-MariaDB`.
+- Conexión a `serviinmueble` exitosa.
+- `max_allowed_packet`: `1048576` bytes, es decir, 1 MiB.
+- Riesgo: el límite local es inferior al máximo solicitado de 5 MiB para comprobantes; requiere ajuste o no es posible conservar los adjuntos sin modificar la configuración de MariaDB.
+
+### Pendientes o riesgos
+
+- La instancia XAMPP usa MariaDB 10.4.32, no MariaDB 10.11; el resultado no certifica el entorno objetivo completo.
+- El `max_allowed_packet` local no confirmado por el equipo superior a 1 MiB requiere configuración para adjuntos de hasta 5 MiB.
+- No se implementó HU-18; por ello las notificaciones de pago deben integrarse al validar o rechazar pagos cuando se complete esa historia.
+
+---
+
+## 8. Registro del 2026-11-22 · Implementación de HU-20
+
+### Alcance implementado
+
+- Se implementó exclusivamente **HU-20 · Notificaciones internas**.
+- Se creó y aplicó la migración `2026-11-20-000002_CreateNotificacion.php`.
+- Se agregaron los cuatro tipos: `por_vencer`, `vencida`, `pago_validado` y `pago_rechazado`.
+- Las vencimientos se generan al ingresar al dashboard o al listado de facturas.
+- El destinatario se obtiene del propietario de la factura; no se toma del Administrador.
+- Se implementaron listado paginado ordenado DESC, filtros, campanita y contador solo para Propietarios.
+- Los Propietarios pueden marcar una notificación o todas como leídas.
+- El Administrador dispone de lectura global sin campanita ni marcado de terceros.
+- Se respetaron CSRF, PRG, 403 real y 404 estándar.
+- No se enviaron correos, mensajes externos ni se modificaron estados de factura o pago.
+
+### Archivos creados
+
+| Tipo | Archivo |
+|---|---|
+| Configuración | `app/Config/Hito2.php` |
+| Migración | `app/Database/Migrations/2026-11-20-000002_CreateNotificacion.php` |
+| Modelo | `app/Models/NotificacionModel.php` |
+| Repositorio | `app/Repositories/NotificacionRepository.php` |
+| Servicio | `app/Services/NotificacionService.php` |
+| Controlador | `app/Controllers/NotificacionesController.php` |
+| Vista | `app/Views/notificaciones/index.php` |
+| Pruebas unitarias | `tests/unit/Services/NotificacionServiceTest.php` |
+| Pruebas feature | `tests/feature/NotificacionesTest.php` |
+
+### Archivos modificados
+
+- `app/Config/Routes.php`
+- `app/Controllers/DashboardController.php`
+- `app/Controllers/FacturasController.php`
+- `app/Views/layout/header.php`
+- `app/Views/layout/sidebar.php`
+- `app/Services/FacturaService.php`
+- `app/Repositories/FacturaRepository.php`
+
+### Rutas verificadas
+
+| Método | URI | Nombre | Controlador | Filtros |
+|---|---|---|---|---|
+| GET | `/notificaciones` | `notificaciones.index` | `NotificacionesController::index` | `auth` |
+| POST | `/notificaciones/leer-todas` | `notificaciones.leer-todas` | `NotificacionesController::marcarTodasLeidas` | `auth` |
+| POST | `/notificaciones/(:num)/leer` | `notificaciones.leer` | `NotificacionesController::marcarLeida/$1` | `auth` |
+
+### Matriz CA-20
+
+| CA | Implementación | Evidencia |
+|---|---|---|
+| CA-20.1 | Cuatro tipos definidos en ENUM y servicio. | `NotificacionService`, migración. |
+| CA-20.2 | Ventana configurable de por vencer y vencimiento anterior a hoy. | `NotificacionService::registrarVencimientos()`. |
+| CA-20.3 | Contratos para pagos validados y rechazados. | `registrarPagoValidado()`, `registrarPagoRechazado()`. |
+| CA-20.4 | Idempotencia por clave única de usuario y evento. | `idempotencia_key`, `uk_notificacion_idempotencia`. |
+| CA-20.5 | Destinatario propietario y listado global de lectura para Admin. | `NotificacionService::listado()`. |
+| CA-20.6 | Campanita Propietario y listado DESC paginado. | Header, repositorio y vista. |
+| CA-20.7 | Marcar una o todas; Admin sin marcado ajeno. | Métodos de lectura y pruebas feature. |
+| CA-20.8 | Ajena 403 e inexistente 404. | `NotificacionesController`, servicio. |
+| CA-20.9 | Estado vacío literal. | Vista de notificaciones. |
+| CA-20.10 | Disparo en dashboard/facturas y sin cron ni correo. | Controladores Dashboard y Facturas. |
+| CA-20.11 | Enlace a factura y detalle de estado/motivo de pago. | Vista de notificaciones. |
+
+### Decisiones aplicadas
+
+- D2-03, D2-05, D2-08, D2-09 y D2-10.
+- H2-03, H2-04 y H2-07.
+- DI-01, DI-03, DI-07 y DI-08.
+
+### Validación ejecutada
+
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\xampp\php\php.exe spark migrate` | Migración HU-20 aplicada correctamente. |
+| `C:\xampp\php\php.exe spark routes` | Tres rutas HU-20 registradas y ordenadas correctamente. |
+| `C:\xampp\php\php.exe spark db:table notificacion` | Tabla `notificacion` existente y accesible. |
+| `php -l` sobre archivos HU-20 | Sin errores de sintaxis. |
+| `tests/unit/Services/NotificacionServiceTest.php` | Tipos, ventana, vencimiento, idempotencia y alcance cubiertos. |
+| `tests/feature/NotificacionesTest.php` | 5 pruebas específicas; 29 aserciones; OK. |
+| Suite PHPUnit completa | **140 tests, 855 assertions; OK**. |
+
+---
+
+## 9. Registro del 2026-11-22 · Implementación de HU-18
+
+### Alcance implementado
+
+- Se implementó **HU-18 · Validación de pagos**.
+- El Administrador puede listar pagos con filtros por estado, propietario, factura, medio de pago y rango de fechas.
+- El listado muestra fecha, propietario, inmueble, factura, monto, medio, comprobante y estado.
+- El detalle muestra los datos del pago y permite previsualizar o descargar el comprobante.
+- Validar o rechazar ejecuta una transición protegida por transacción, bloqueo `FOR UPDATE` y comprobación de estado.
+- Validar cambia el pago a `validada`, registra Administrador y fecha, marca la factura como `pagada` y genera `pago_validado`.
+- Rechazar exige motivo de 1 a 255 caracteres, cambia el pago a `rechazada`, conserva la factura pendiente y genera `pago_rechazado` con el motivo.
+- Los pagos validados/rechazados quedan inmutables y conservados como historial.
+- Solo el Administrador accede al panel; un Propietario recibe 403 real.
+
+### Archivos creados
+
+| Tipo | Archivo |
+|---|---|
+| Servicio | `app/Services/ValidacionPagoService.php` |
+| Controlador | `app/Controllers/Admin/PagosController.php` |
+| Vistas | `app/Views/admin/pagos/index.php`, `app/Views/admin/pagos/show.php` |
+| Pruebas feature | `tests/feature/AdminPagosTest.php` |
+
+### Archivos modificados
+
+- `app/Repositories/PagoRepository.php`
+- `app/Config/Routes.php`
+- `app/Views/layout/sidebar.php`
+
+### Rutas verificadas
+
+| Método | URI | Nombre | Controlador | Filtros |
+|---|---|---|---|---|
+| GET | `/admin/pagos` | `admin.pagos.index` | `Admin\PagosController::index` | `auth`, `role:admin` |
+| GET | `/admin/pagos/(:num)` | `admin.pagos.show` | `Admin\PagosController::show/$1` | `auth`, `role:admin` |
+| POST | `/admin/pagos/(:num)/validar` | `admin.pagos.validar` | `Admin\PagosController::validar/$1` | `auth`, `role:admin` |
+| POST | `/admin/pagos/(:num)/rechazar` | `admin.pagos.rechazar` | `Admin\PagosController::rechazar/$1` | `auth`, `role:admin` |
+
+Las cuatro rutas fueron confirmadas con `C:\xampp\php\php.exe spark routes`.
+
+### Matriz CA-18
+
+| CA | Implementación | Evidencia |
+|---|---|---|
+| CA-18.1 | Acceso restringido al panel administrativo por filtro de rol y comprobación en servicio. | `ValidacionPagoService::listado/detalle/validar/rechazar`, `AdminPagosTest::testOwnerCannotAccessAdminPaymentValidation`. |
+| CA-18.2 | Filtros y columnas administrativas completas. | `PagoRepository::listarAdmin()`, vista `admin/pagos/index.php`. |
+| CA-18.3 | Detalle con pago, factura, propietario, inmueble y comprobante. | `PagoRepository::buscarParaValidacion()`, vista `admin/pagos/show.php`. |
+| CA-18.4 | Validación atomizada: bloqueo, estado, administrador, fecha y factura pagada; doble validación rechazada con mensaje literal. | `ValidacionPagoService::validar()`, `AdminPagosTest::testAdminCanValidatePaymentAndNotifyOwner`. |
+| CA-18.5 | Motivo obligatorio y de hasta 255 caracteres; rechazo conserva factura y habilita otro pago futuro. | `ValidacionPagoService::rechazar()`, `AdminPagosTest::testRejectRequiresReasonAndKeepsInvoicePending`. |
+| CA-18.6 | El comprobante se sirve con MIME por contenido, nombre original seguro, `inline` y `nosniff`; propietario propio y Admin autorizados. | Reuso de `PagoService::comprobante()` y `PagosController::comprobante()`. |
+| CA-18.7 | No existen rutas de edición o eliminación; pagos validados/rechazados quedan históricos e inmutables. | Controlador administrativo y estados de `transaccion`. |
+| CA-18.8 | El listado muestra el estado vacío literal cuando el filtro es `pendiente`. | Vista `admin/pagos/index.php`. |
+| CA-18.9 | Las validaciones y rechazos dejan transiciones consistentes para que HU-16 pueda actualizar métricas. | CA-18.9 queda integrado por transición; el dashboard Hito 2 no forma parte de esta HU. |
+| CA-18.10 | Validar genera `pago_validado`; rechazar genera `pago_rechazado` con el motivo al propietario. | `NotificacionService::registrarPagoValidado/Rechazado`, prueba de validación y código de rechazo. |
+
+### Decisiones aplicadas
+
+- D2-01: no se paga la factura hasta la validación del Administrador.
+- D2-05: administrador global y propietario limitado en la vista y el servicio.
+- D2-09: notificaciones internas de pago validado/rechazado al propietario.
+- H2-01: estado intermedio de `transaccion` y actualización posterior de `factura`.
+- H2-03: las acciones de pago generan notificaciones sin modificar factura o pago por sí mismas.
+- H2-04: alcance por rol controlado en servidor.
+- DI-01: claves idempotentes `pago:{id_transaccion}:{tipo}`.
+- DI-07: estado calculado de factura no se usa para modificar estados históricos.
+- DI-08: autorización de alcance en el servicio.
+
+### Validación ejecutada
+
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\xampp\php\php.exe -l app\Services\ValidacionPagoService.php` | Sin errores de sintaxis. |
+| `C:\xampp\php\php.exe -l app\Controllers\Admin\PagosController.php` | Sin errores de sintaxis. |
+| `C:\xampp\php\php.exe -l app\Repositories\PagoRepository.php` | Sin errores de sintaxis. |
+| `C:\xampp\php\php.exe spark routes` | Cuatro rutas HU-18 registradas con filtros. |
+| `C:\xampp\php\php.exe vendor\bin\phpunit --filter AdminPagosTest` | 4 pruebas, 29 assertions; OK. |
+| `C:\xampp\php\php.exe vendor\bin\phpunit --filter '/(AdminPagosTest\|PagosTest\|NotificacionesTest)/'` | 11 pruebas, 81 assertions; OK. |
+| `C:\xampp\php\php.exe vendor\bin\phpunit --filter 'Hito2SchemaTest\|ComprobanteServiceTest'` | 6 pruebas, 16 assertions; OK. |
+
+### Pendientes o riesgos
+
+- CA-18.9: la actualización efectiva de las métricas del dashboard depende de HU-16.
+- La suite completa posterior a HU-18 no fue ejecutada; se verificaron las suites dirigidas a pagos, notificaciones y esquema Hito 2.
+
+---
+
+## 10. Registro del 2026-11-22 · Implementación de HU-19
+
+### Alcance implementado
+
+- Se implementó exclusivamente **HU-19 · Control de mora**.
+- Se creó y aplicó la migración `2026-11-20-000003_AddIndicesFacturaHito2.php`.
+- Se agregó `GET /mora` con nombre `mora.index`, controlador `MoraController::index` y filtro `auth`.
+- Se implementó el reporte de facturas pendientes cuyo vencimiento aplicable ya pasó.
+- El vencimiento aplicable usa el segundo vencimiento si existe y el primero como alternativa.
+- El reporte muestra propietario, inmueble, servicio, período, vencimiento, días de mora y monto.
+- Las filas se ordenan por días de mora descendentes.
+- El reporte admite filtros por propietario, inmueble, rango de vencimientos y rango de días de mora.
+- El Administrador puede ver toda la mora; el Propietario queda limitado a sus inmuebles.
+- Los parámetros manipulados se normalizan y no pueden ampliar el alcance.
+- Se expuso `MoraRepository::metricas()` para la cantidad y monto de facturas en mora y pagos tardíos de HU-16.
+- Se agregó un enlace de navegación a Mora y un enlace desde el dashboard.
+- No se calcularon intereses, recargos, punitorios ni bloqueos automáticos.
+
+### Archivos creados
+
+| Tipo | Archivo |
+|---|---|
+| Migración | `app/Database/Migrations/2026-11-20-000003_AddIndicesFacturaHito2.php` |
+| Repositorio | `app/Repositories/MoraRepository.php` |
+| Controlador | `app/Controllers/MoraController.php` |
+| Vista | `app/Views/mora/index.php` |
+| Pruebas feature | `tests/feature/MoraTest.php` |
+
+### Archivos ampliados o modificados
+
+- `app/Services/MoraService.php`
+- `app/Config/Routes.php`
+- `app/Views/layout/sidebar.php`
+- `app/Views/dashboard/index.php`
+
+### Ruta verificada
+
+| Método | URI | Nombre | Controlador | Filtro |
+|---|---|---|---|---|
+| GET | `/mora` | `mora.index` | `MoraController::index` | `auth` |
+
+La ruta fue confirmada con `C:\xampp\php\php.exe spark routes`.
+
+### Matriz CA-19
+
+| CA | Implementación | Evidencia |
+|---|---|---|
+| CA-19.1 | Mora calculada para facturas pendientes cuyo vencimiento aplicable es anterior a hoy. No se persiste el estado `vencida`. | `MoraRepository::listar()`, universo DI-07. |
+| CA-19.2 | El pago tardío se marca al registrarse mediante `en_mora = 1` y conserva la marca, también después de validarse. | `MoraService::esPagoTardio()`, migración Hito 2 y modelo existente. |
+| CA-19.3 | Reporte con propietario, inmueble, servicio, período, vencimiento, días de mora y monto; orden descendente. | `MoraRepository::listar()`, `app/Views/mora/index.php`. |
+| CA-19.4 | Filtros por propietario, inmueble, rango de vencimiento y rango de días; propietario limitado en servidor. | `MoraService::listado()`, `MoraRepository::listar()`. |
+| CA-19.5 | El repositorio expone cantidad y monto de facturas vencidas y cantidad de pagos tardíos para HU-16. | `MoraRepository::metricas()`. |
+| CA-19.6 | Un pago validado conserva la marca histórica `en_mora = 1` y la factura pasa a pagada sin borrar el pago. | Estado de `transaccion` conservado por HU-18. |
+| CA-19.7 | `diasMora = max(0, hoy - vencimientoAplicable)` y preferencia del segundo vencimiento. | `MoraService::diasMora()`, `MoraService::vencimientoAplicable()`. |
+| CA-19.8 | Sin columnas ni cálculos de intereses, recargos, punitorios o bloqueos automáticos. | Alcance HU-19 y respuesta sin esas acciones. |
+
+### Decisiones aplicadas
+
+- D2-05: alcance global para Administrador y propio para Propietario.
+- H2-02: mora calculada separada del histórico `en_mora` de pagos.
+- H2-04: autorización de alcance en el servicio.
+- H2-07: migración, ruta y documentación de Hito 2 mantenidas.
+- DI-07: vencimiento aplicable con `COALESCE(segundo, primero)` y estado calculado.
+- DI-08: autorización siempre aplicada en `MoraService`.
+- D-16: `vencida` sigue siendo un estado calculado y nunca se persiste.
+
+### Validación ejecutada
+
+| Comando / comprobación | Resultado |
+|---|---|
+| `C:\xampp\php\php.exe spark migrate` | Migración `2026-11-20-000003` aplicada correctamente. |
+| `C:\xampp\php\php.exe spark routes` | `GET /mora`, nombre `mora.index`, filtro `auth`. |
+| `php -l app\Services\MoraService.php` | Sin errores de sintaxis. |
+| `php -l app\Repositories\MoraRepository.php` | Sin errores de sintaxis. |
+| `php -l app\Controllers\MoraController.php` | Sin errores de sintaxis. |
+| `php -l app\Database\Migrations\2026-11-20-000003_AddIndicesFacturaHito2.php` | Sin errores de sintaxis. |
+| `php -l tests\feature\MoraTest.php` | Sin errores de sintaxis. |
+| `C:\xampp\php\php.exe vendor\bin\phpunit --filter MoraTest` | 3 pruebas, 11 assertions; OK. |
+| `C:\xampp\php\php.exe vendor\bin\phpunit --filter 'MoraTest\|PagosTest\|Hito2SchemaTest'` | 14 pruebas, 88 assertions; OK. |
+
+### Pendientes o riesgos
+
+- CA-19.5 quedó expuesto para HU-16; el dashboard todavía depende de implementar o ampliar esa HU.
+- La integración visual de paginación completa no fue agregada en este cierre; el repositorio calcula páginas y el reporte muestra las filas.
+- No se modificó el SQL canónico ni el ENUM `factura.estado`.

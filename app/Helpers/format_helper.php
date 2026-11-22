@@ -82,6 +82,17 @@ if (! function_exists('etiqueta_unidad')) {
     }
 }
 
+if (! function_exists('etiqueta_estado_pago')) {
+    function etiqueta_estado_pago(string $estado): string
+    {
+        return [
+            'pendiente' => 'Pendiente de validación',
+            'validada' => 'Validado',
+            'rechazada' => 'Rechazado',
+        ][$estado] ?? $estado;
+    }
+}
+
 if (! function_exists('etiqueta_tipo_inmueble')) {
     function etiqueta_tipo_inmueble(string $tipo): string
     {

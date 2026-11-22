@@ -49,6 +49,7 @@ class FacturaService
                 $entrada['estado'] ?? null,
                 ['pendiente', 'pagada', 'vencida'],
             ),
+            'id_factura' => $this->normalizarIdFactura($entrada['id_factura'] ?? null),
             'desde' => $this->normalizarFechaFiltro($entrada['desde'] ?? null),
             'hasta' => $this->normalizarFechaFiltro($entrada['hasta'] ?? null),
         ];
@@ -452,6 +453,18 @@ class FacturaService
         $valor = trim($valor);
 
         return $this->esFechaValida($valor) ? $valor : '';
+    }
+
+    private function normalizarIdFactura(mixed $valor): string
+    {
+        if ((! is_string($valor) && ! is_int($valor))
+            || ! ctype_digit((string) $valor)
+            || (int) $valor < 1
+        ) {
+            return '';
+        }
+
+        return (string) (int) $valor;
     }
 
     private function normalizarPagina(mixed $valor): int

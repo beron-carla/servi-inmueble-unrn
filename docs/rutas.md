@@ -135,9 +135,28 @@ El control de propiedad se valida **en el servicio**, no solo en el filtro.
 | POST | `/servicios-inmueble/(:num)/facturas` | `facturas.store` | `FacturasController::store/$1` | `auth` | HU-14 | CA-14.1 a CA-14.6 |
 
 **Notas:**
-- No se agrega una ruta de pago en HU-15: P-01 se resolvió con la opción (b), sin acción para registrar pagos.
 - `facturas.index` acepta filtros por query string (ver sección 6).
 - El alta solo se permite sobre servicios `activo` y propiedades no `inactivo` (CA-14.6).
+
+### 4.6 Pagos y extensiones Hito 2
+
+| Método | URI | Nombre | Controlador::método | Filtros | HU |
+|---|---|---|---|---|---|
+| GET | `/dashboard` | `dashboard` | `DashboardController::index` | `auth` | HU-16 |
+| GET | `/facturas/(:num)/pagar` | `pagos.create` | `PagosController::create/$1` | `auth` | HU-17 |
+| POST | `/facturas/(:num)/pagos` | `pagos.store` | `PagosController::store/$1` | `auth` | HU-17 |
+| GET | `/pagos` | `pagos.index` | `PagosController::index` | `auth` | HU-17/18 |
+| GET | `/pagos/(:num)/comprobante` | `pagos.comprobante` | `PagosController::comprobante/$1` | `auth` | HU-17/18 |
+| GET | `/admin/pagos` | `admin.pagos.index` | `Admin\PagosController::index` | `auth`, `role:admin` | HU-18 |
+| GET | `/admin/pagos/(:num)` | `admin.pagos.show` | `Admin\PagosController::show/$1` | `auth`, `role:admin` | HU-18 |
+| POST | `/admin/pagos/(:num)/validar` | `admin.pagos.validar` | `Admin\PagosController::validar/$1` | `auth`, `role:admin` | HU-18 |
+| POST | `/admin/pagos/(:num)/rechazar` | `admin.pagos.rechazar` | `Admin\PagosController::rechazar/$1` | `auth`, `role:admin` | HU-18 |
+| GET | `/mora` | `mora.index` | `MoraController::index` | `auth` | HU-19 |
+| GET | `/notificaciones` | `notificaciones.index` | `NotificacionesController::index` | `auth` | HU-20 |
+| POST | `/notificaciones/leer-todas` | `notificaciones.leer-todas` | `NotificacionesController::marcarTodasLeidas` | `auth` | HU-20 |
+| POST | `/notificaciones/(:num)/leer` | `notificaciones.leer` | `NotificacionesController::marcarLeida/$1` | `auth` | HU-20 |
+| GET | `/informes/consumo-interanual` | `informes.consumo-interanual` | `InformesController::consumoInteranual` | `auth` | HU-21 |
+| GET | `/informes/promedio-unidad` | `informes.promedio-unidad` | `InformesController::promedioUnidad` | `auth` | HU-22 |
 
 ### 4.6 Catálogo de servicios (HU-09, vista Propietario)
 
@@ -248,6 +267,12 @@ $routes->post('servicios-inmueble/(:num)/baja', 'ServiciosInmuebleController::de
 $routes->get('facturas', 'FacturasController::index', ['filter' => 'auth', 'as' => 'facturas.index']);
 $routes->get('servicios-inmueble/(:num)/facturas/nuevo', 'FacturasController::create/$1', ['filter' => 'auth', 'as' => 'facturas.create']);
 $routes->post('servicios-inmueble/(:num)/facturas', 'FacturasController::store/$1', ['filter' => 'auth', 'as' => 'facturas.store']);
+
+// Pagos HU-17
+$routes->get('facturas/(:num)/pagar', 'PagosController::create/$1', ['filter' => 'auth', 'as' => 'pagos.create']);
+$routes->post('facturas/(:num)/pagos', 'PagosController::store/$1', ['filter' => 'auth', 'as' => 'pagos.store']);
+$routes->get('pagos', 'PagosController::index', ['filter' => 'auth', 'as' => 'pagos.index']);
+$routes->get('pagos/(:num)/comprobante', 'PagosController::comprobante/$1', ['filter' => 'auth', 'as' => 'pagos.comprobante']);
 // No se agrega ruta de pago: P-01 quedó resuelta con la opción (b).
 
 // Catálogo para propietarios
@@ -296,6 +321,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], static function (R
 | `/inmuebles` | `ciudad`, `tipo`, `estado`, `q`, `page` | Por defecto oculta `inactivo`; `estado=inactivo` lo muestra explícitamente (CA-12.2) |
 | `/admin/inmuebles` | `propietario`, `ciudad`, `tipo`, `estado`, `q`, `page` | `propietario` = `id_usuario`; por defecto oculta `inactivo` |
 | `/facturas` | `inmueble`, `servicio`, `estado`, `desde`, `hasta`, `page` | `estado` ∈ {pendiente, pagada, vencida} (vencida es calculado); `desde`/`hasta` en `Y-m-d` sobre vencimiento aplicable |
+| `/pagos` | `estado`, `desde`, `hasta`, `page` | Estados validos: pendiente, validada, rechazada; fechas en `Y-m-d` |
 | `/catalogo-servicios` | `categoria`, `q` | Solo `activo = 1` |
 
 Validar siempre los parámetros en el servidor; ignorar valores inválidos en lugar de romper.
@@ -357,7 +383,6 @@ No usar 200 para errores de permiso ni redirecciones silenciosas.
 | `/auth/recuperar`, `/auth/reset/{token}` | No hay HU de recuperación autoservicio en el Hito 1 |
 | `/api/*` | No hay SPA ni API en el Hito 1 |
 | `/admin/reportes` | No hay HU de reportes |
-| `/facturas/{id}/pagar` | No se incorpora en HU-15 según P-01 (opción b) |
 | `/perfil` | No hay HU de perfil propio; el cambio de contraseña está en `/auth/cambiar-contrasenia` |
 
 ---

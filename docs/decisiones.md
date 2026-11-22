@@ -389,6 +389,67 @@ El orden numérico de las HU no es válido por dependencias. Orden acordado:
 
 ---
 
+## 6.1 Extensiones aprobadas del Hito 2
+
+### D2-01 · Validación de pagos
+Todo pago requiere validación del Administrador. Mientras tanto queda pendiente y la factura no cambia de estado.
+
+### D2-02 · Pago por el total
+`monto_abonado` debe ser igual a `monto_total`; no se admiten pagos parciales.
+
+### D2-03 · Notificaciones internas
+Las alertas son internas. No se envían emails ni notificaciones push.
+
+### D2-04 · Promedios por unidad
+Los informes agrupan por unidad; kWh/m³/Gigas usan consumo y Moneda fija usa monto.
+
+### D2-05 · Alcance por rol
+El Administrador ve todo y el Propietario solo sus inmuebles; el filtrado se aplica en servidor.
+
+### D2-06 · Chart.js local
+Chart.js se carga desde `public/assets/plugins/chart.js/`, sin CDN.
+
+### D2-07 · Comprobante digital
+Es obligatorio salvo efectivo. Si se adjunta, debe ser PDF/JPG/JPEG, máximo 5 MB y validado por contenido.
+
+### D2-08 · Ventana por vencer
+Por vencer es dentro de 7 días corridos por defecto, con valor configurable.
+
+### D2-09 · Resultado de validación
+El Propietario recibe `pago_validado` o `pago_rechazado`, incluyendo el motivo de rechazo.
+
+### D2-10 · Lectura global del Administrador
+El Administrador puede leer notificaciones globales sin campanita propia.
+
+### D2-11 · Comprobante único por factura
+`numero_comprobante` es único dentro de cada factura mediante (`id_factura`, `numero_comprobante`).
+
+### D2-12 · Informes mensuales
+Los informes mensuales usan `periodo = 'mes'`; los informes anuales tienen resumen separado.
+
+### D2-13 · Recaudación
+La recaudación suma `monto_abonado` de pagos validados según `fecha_pago`.
+
+### DI-01 · Idempotencia
+Las notificaciones usan `idempotencia_key`; vencimientos usan `venc:{id_factura}:{tipo}` y pagos usan `pago:{id_transaccion}:{tipo}`.
+
+### DI-02 · Comprobantes seguros
+Se valida BLOB + MIME por contenido con finfo, máximo 5 MiB. La descarga usa inline y `X-Content-Type-Options: nosniff`.
+
+### DI-04 · Backfill de pagos históricos
+Los pagos existentes pasan a `estado = 'validada'` y `fecha_validacion = CONCAT(fecha_pago, ' 00:00:00')`.
+
+### DI-05 · Comparación de montos
+Los montos se comparan con `number_format(..., 2, '.', '')`.
+
+### DI-07 · Estado calculado
+El estado vencido reutiliza `FacturaService::estadoCalculado()`.
+
+### DI-08 · Alcance en el servicio
+El propietario se valida siempre en el servicio y nunca se toma del POST.
+
+---
+
 ## 7. Conflictos detectados y resolución
 
 | # | Conflicto | Resolución |

@@ -8,7 +8,7 @@
 <body>
     <main>
         <h1>403 - Acceso denegado</h1>
-        <p>No tiene permisos para esta acción.</p>
+        <p>No tiene permisos para esta acción</p>
         <?php $destino = session()->get('id_usuario') ? 'dashboard' : 'auth/login'; ?>
         <a href="<?= site_url($destino) ?>">Volver al dashboard</a>
     </main>

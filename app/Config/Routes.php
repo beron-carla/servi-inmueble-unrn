@@ -42,9 +42,25 @@ $routes->get('facturas', 'FacturasController::index', ['filter' => 'auth', 'as' 
 $routes->get('servicios-inmueble/(:num)/facturas/nuevo', 'FacturasController::create/$1', ['filter' => 'auth', 'as' => 'facturas.create']);
 $routes->post('servicios-inmueble/(:num)/facturas', 'FacturasController::store/$1', ['filter' => 'auth', 'as' => 'facturas.store']);
 
+$routes->get('facturas/(:num)/pagar', 'PagosController::create/$1', ['filter' => 'auth', 'as' => 'pagos.create']);
+$routes->post('facturas/(:num)/pagos', 'PagosController::store/$1', ['filter' => 'auth', 'as' => 'pagos.store']);
+$routes->get('pagos', 'PagosController::index', ['filter' => 'auth', 'as' => 'pagos.index']);
+$routes->get('pagos/(:num)/comprobante', 'PagosController::comprobante/$1', ['filter' => 'auth', 'as' => 'pagos.comprobante']);
+
+$routes->get('mora', 'MoraController::index', ['filter' => 'auth', 'as' => 'mora.index']);
+ 
+$routes->get('notificaciones', 'NotificacionesController::index', ['filter' => 'auth', 'as' => 'notificaciones.index']);
+$routes->post('notificaciones/leer-todas', 'NotificacionesController::marcarTodasLeidas', ['filter' => 'auth', 'as' => 'notificaciones.leer-todas']);
+$routes->post('notificaciones/(:num)/leer', 'NotificacionesController::marcarLeida/$1', ['filter' => 'auth', 'as' => 'notificaciones.leer']);
+
 $routes->get('catalogo-servicios', 'CatalogoServiciosController::index', ['filter' => 'auth', 'as' => 'catalogo.servicios']);
 
 $routes->group('admin', ['filter' => ['auth', 'role:admin']], static function (RouteCollection $routes): void {
+    $routes->get('pagos', 'Admin\PagosController::index', ['as' => 'admin.pagos.index']);
+    $routes->get('pagos/(:num)', 'Admin\PagosController::show/$1', ['as' => 'admin.pagos.show']);
+    $routes->post('pagos/(:num)/validar', 'Admin\PagosController::validar/$1', ['as' => 'admin.pagos.validar']);
+    $routes->post('pagos/(:num)/rechazar', 'Admin\PagosController::rechazar/$1', ['as' => 'admin.pagos.rechazar']);
+
     $routes->get('usuarios', 'Admin\UsuariosController::index', ['as' => 'admin.usuarios.index']);
     $routes->get('usuarios/nuevo', 'Admin\UsuariosController::create', ['as' => 'admin.usuarios.create']);
     $routes->post('usuarios', 'Admin\UsuariosController::store', ['as' => 'admin.usuarios.store']);

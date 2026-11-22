@@ -130,6 +130,7 @@
                         <th>Vencimiento aplicable</th>
                         <th class="text-right">Monto</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -164,6 +165,16 @@
                                 <span class="badge badge-<?= esc($badge, 'attr') ?>">
                                     <?= esc(ucfirst($factura['estado_calculado'])) ?>
                                 </span>
+                            </td>
+                            <td>
+                                <?php if ($factura['estado_calculado'] !== 'pagada') : ?>
+                                    <a
+                                        class="btn btn-sm btn-primary"
+                                        href="<?= route_to('pagos.create', $factura['id_factura']) ?>"
+                                    >
+                                        Registrar pago
+                                    </a>
+                                <?php endif ?>
                             </td>
                         </tr>
                     <?php endforeach ?>

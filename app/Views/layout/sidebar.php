@@ -70,6 +70,24 @@
                         <p>Facturas</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?= es_admin() ? route_to('admin.pagos.index') : route_to('pagos.index') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-cash-register"></i>
+                        <p><?= es_admin() ? 'Validar pagos' : 'Mis pagos' ?></p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= route_to('mora.index') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-exclamation-triangle"></i>
+                        <p>Mora</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= route_to('notificaciones.index') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-bell"></i>
+                        <p>Notificaciones</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>

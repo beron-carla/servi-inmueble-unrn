@@ -150,6 +150,8 @@ class DemoSeeder extends Seeder
                     'numero_comprobante' => 'DEMO-FACTURA-PAGADA',
                     'comprobante_digital' => null,
                     'en_mora' => 0,
+                    'estado' => 'validada',
+                    'fecha_validacion' => $currentMonth->modify('-1 month')->format('Y-m-d') . ' 00:00:00',
                 ]);
             }
         }
