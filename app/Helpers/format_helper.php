@@ -20,6 +20,13 @@ if (! function_exists('formato_fecha')) {
     }
 }
 
+if (! function_exists('formato_porcentaje')) {
+    function formato_porcentaje(float $valor): string
+    {
+        return number_format($valor, 1, ',', '.') . '%';
+    }
+}
+
 if (! function_exists('etiqueta_rol')) {
     function etiqueta_rol(string $rol): string
     {
