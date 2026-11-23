@@ -37,6 +37,24 @@ final class InformesController extends BaseController
         ]);
     }
 
+    public function promedioUnidad(): string|ResponseInterface
+    {
+        $resultado = $this->informes->promedioPorUnidad(
+            $this->request->getGet() ?? [],
+            (int) session('id_usuario'),
+            (string) session('rol'),
+        );
+
+        if ($resultado['sin_permiso']) {
+            return $this->pagina403();
+        }
+
+        return view('informes/promedio-unidad', [
+            'titulo' => 'Promedio de consumo por unidad de medida',
+            ...$resultado,
+        ]);
+    }
+
     private function pagina403(): ResponseInterface
     {
         return $this->response

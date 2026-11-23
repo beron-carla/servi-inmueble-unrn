@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\InformeRepository;
+use DateTimeImmutable;
 
 final class InformeService
 {
@@ -198,6 +199,80 @@ final class InformeService
         ];
     }
 
+    /**
+     * @param array<string, mixed> $entrada
+     * @return array<string, mixed>
+     */
+    public function promedioPorUnidad(array $entrada, int $idUsuario, string $rol): array
+    {
+        $rol = strtolower(trim($rol));
+        if (! in_array($rol, ['admin', 'propietario'], true)
+            || ($rol === 'propietario' && $idUsuario < 1)
+        ) {
+            return $this->resultadoPromedioSinPermiso();
+        }
+
+        $idPropietario = $rol === 'propietario' ? $idUsuario : null;
+        $inmuebles = $this->repo->opcionesInmuebles($idPropietario);
+        $valorInmueble = $entrada['inmueble'] ?? null;
+        $idPropiedad = $this->normalizarId($valorInmueble, $inmuebles, 'id_propiedad');
+
+        if ($idPropiedad === 0 && $this->esIdPositivo($valorInmueble)) {
+            $propiedad = $this->repo->buscarPropiedad((int) trim((string) $valorInmueble));
+            if ($propiedad !== null
+                && $rol === 'propietario'
+                && (int) $propiedad['id_propietario'] !== $idUsuario
+            ) {
+                return $this->resultadoPromedioSinPermiso();
+            }
+        }
+
+        $servicios = $this->repo->opcionesServicios(
+            $idPropietario,
+            $idPropiedad > 0 ? $idPropiedad : null,
+        );
+        $idServicio = $this->normalizarId(
+            $entrada['servicio'] ?? null,
+            $servicios,
+            'id_propiedad_servicio',
+        );
+        $unidad = $this->normalizarUnidad($entrada['unidad'] ?? null, null);
+        $desde = $this->normalizarPeriodo($entrada['desde'] ?? null);
+        $hasta = $this->normalizarPeriodo($entrada['hasta'] ?? null);
+
+        if ($desde !== '' && $hasta !== '' && $desde > $hasta) {
+            $desde = '';
+            $hasta = '';
+        }
+
+        $filtros = [
+            'desde' => $desde,
+            'hasta' => $hasta,
+            'inmueble' => $idPropiedad > 0 ? (string) $idPropiedad : '',
+            'servicio' => $idServicio > 0 ? (string) $idServicio : '',
+            'unidad' => $unidad,
+        ];
+        $datos = $this->repo->promedioPorUnidad($filtros, $idPropietario);
+
+        return [
+            'sin_permiso' => false,
+            'inmuebles' => $inmuebles,
+            'servicios' => $servicios,
+            'unidades' => self::UNIDADES,
+            'filtros' => $filtros,
+            'filas' => $datos['filas'],
+            'grafico' => array_map(
+                static fn (array $fila): array => [
+                    'unidad' => $fila['unidad'],
+                    'promedio' => (float) $fila['promedio'],
+                ],
+                $datos['filas'],
+            ),
+            'resumen_anual' => $datos['resumen_anual'],
+            'sin_datos' => $datos['filas'] === [] && $datos['resumen_anual'] === [],
+        ];
+    }
+
     private function normalizarId(mixed $valor, array $opciones, string $campo): int
     {
         if (! is_string($valor) && ! is_int($valor)) {
@@ -243,6 +318,40 @@ final class InformeService
         return '';
     }
 
+    private function normalizarPeriodo(mixed $valor): string
+    {
+        if (! is_string($valor)) {
+            return '';
+        }
+
+        $valor = trim($valor);
+        $periodo = DateTimeImmutable::createFromFormat('!Y-m', $valor);
+        $errores = DateTimeImmutable::getLastErrors();
+
+        if ($periodo === false
+            || ($errores !== false
+                && ($errores['warning_count'] > 0 || $errores['error_count'] > 0))
+            || $periodo->format('Y-m') !== $valor
+            || (int) $periodo->format('Y') < 1901
+            || (int) $periodo->format('Y') > 2155
+        ) {
+            return '';
+        }
+
+        return $valor;
+    }
+
+    private function esIdPositivo(mixed $valor): bool
+    {
+        if (! is_string($valor) && ! is_int($valor)) {
+            return false;
+        }
+
+        $valor = trim((string) $valor);
+
+        return ctype_digit($valor) && (int) $valor > 0;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -268,6 +377,30 @@ final class InformeService
             'hay_datos' => false,
             'etiqueta_valor' => 'Consumo',
             'es_monto' => false,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resultadoPromedioSinPermiso(): array
+    {
+        return [
+            'sin_permiso' => true,
+            'inmuebles' => [],
+            'servicios' => [],
+            'unidades' => self::UNIDADES,
+            'filtros' => [
+                'desde' => '',
+                'hasta' => '',
+                'inmueble' => '',
+                'servicio' => '',
+                'unidad' => '',
+            ],
+            'filas' => [],
+            'grafico' => [],
+            'resumen_anual' => [],
+            'sin_datos' => true,
         ];
     }
 }

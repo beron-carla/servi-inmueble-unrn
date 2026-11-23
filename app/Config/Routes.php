@@ -54,6 +54,7 @@ $routes->post('notificaciones/leer-todas', 'NotificacionesController::marcarToda
 $routes->post('notificaciones/(:num)/leer', 'NotificacionesController::marcarLeida/$1', ['filter' => 'auth', 'as' => 'notificaciones.leer']);
 
 $routes->get('informes/consumo-interanual', 'InformesController::consumoInteranual', ['filter' => 'auth', 'as' => 'informes.consumo-interanual']);
+$routes->get('informes/promedio-unidad', 'InformesController::promedioUnidad', ['filter' => 'auth', 'as' => 'informes.promedio-unidad']);
 
 $routes->get('catalogo-servicios', 'CatalogoServiciosController::index', ['filter' => 'auth', 'as' => 'catalogo.servicios']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\BaseConnection;
 
 final class InformeRepository
@@ -19,9 +20,7 @@ final class InformeRepository
     public function opcionesInmuebles(?int $idPropietario): array
     {
         $consulta = $this->db->table('propiedad')
-            ->distinct()
-            ->select('propiedad.id_propiedad, propiedad.alias')
-            ->join('propiedad_servicio', 'propiedad_servicio.id_propiedad = propiedad.id_propiedad');
+            ->select('propiedad.id_propiedad, propiedad.alias');
 
         if ($idPropietario !== null) {
             $consulta->where('propiedad.id_propietario', $idPropietario);
@@ -180,5 +179,134 @@ final class InformeRepository
             ->orderBy('factura.periodo_anio', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    /**
+     * @param array{
+     *     desde: string,
+     *     hasta: string,
+     *     inmueble: string,
+     *     servicio: string,
+     *     unidad: string
+     * } $filtros
+     * @return array{
+     *     filas: list<array<string, mixed>>,
+     *     resumen_anual: list<array<string, mixed>>
+     * }
+     */
+    public function promedioPorUnidad(array $filtros, ?int $idPropietario): array
+    {
+        return [
+            'filas' => $this->consultaPromedio($filtros, $idPropietario, 'mes')
+                ->get()
+                ->getResultArray(),
+            'resumen_anual' => $this->consultaPromedio($filtros, $idPropietario, 'anio')
+                ->get()
+                ->getResultArray(),
+        ];
+    }
+
+    /**
+     * @param array{
+     *     desde: string,
+     *     hasta: string,
+     *     inmueble: string,
+     *     servicio: string,
+     *     unidad: string
+     * } $filtros
+     */
+    private function consultaPromedio(
+        array $filtros,
+        ?int $idPropietario,
+        string $periodo,
+    ): BaseBuilder {
+        $valor = "CASE WHEN factura.unidad_medida = 'Moneda fija' "
+            . 'THEN factura.monto_total ELSE factura.consumo_del_periodo END';
+        $consulta = $this->db->table('factura')
+            ->select('factura.unidad_medida AS unidad', false)
+            ->select('COUNT(*) AS cantidad', false)
+            ->select("AVG({$valor}) AS promedio", false)
+            ->select("MIN({$valor}) AS minimo", false)
+            ->select("MAX({$valor}) AS maximo", false)
+            ->join(
+                'propiedad_servicio',
+                'propiedad_servicio.id_propiedad_servicio = factura.id_propiedad_servicio',
+            )
+            ->join(
+                'propiedad',
+                'propiedad.id_propiedad = propiedad_servicio.id_propiedad',
+            )
+            ->where('factura.periodo', $periodo)
+            ->whereIn('factura.unidad_medida', ['kWh', 'm³', 'Gigas', 'Moneda fija']);
+
+        if ($idPropietario !== null) {
+            $consulta->where('propiedad.id_propietario', $idPropietario);
+        }
+        if ($filtros['inmueble'] !== '') {
+            $consulta->where('propiedad.id_propiedad', (int) $filtros['inmueble']);
+        }
+        if ($filtros['servicio'] !== '') {
+            $consulta->where(
+                'factura.id_propiedad_servicio',
+                (int) $filtros['servicio'],
+            );
+        }
+        if ($filtros['unidad'] !== '') {
+            $consulta->where('factura.unidad_medida', $filtros['unidad']);
+        }
+
+        if ($periodo === 'mes') {
+            $this->aplicarRangoMensual($consulta, $filtros);
+        } else {
+            $this->aplicarRangoAnual($consulta, $filtros);
+        }
+
+        return $consulta
+            ->groupBy('factura.unidad_medida')
+            ->orderBy('factura.unidad_medida', 'ASC');
+    }
+
+    /**
+     * @param array{desde: string, hasta: string} $filtros
+     */
+    private function aplicarRangoMensual(BaseBuilder $consulta, array $filtros): void
+    {
+        if ($filtros['desde'] !== '') {
+            [$anio, $mes] = array_map('intval', explode('-', $filtros['desde']));
+            $consulta->groupStart()
+                ->where('factura.periodo_anio >', $anio)
+                ->orGroupStart()
+                    ->where('factura.periodo_anio', $anio)
+                    ->where('factura.periodo_mes >=', sprintf('%02d', $mes))
+                ->groupEnd()
+            ->groupEnd();
+        }
+
+        if ($filtros['hasta'] !== '') {
+            [$anio, $mes] = array_map('intval', explode('-', $filtros['hasta']));
+            $consulta->groupStart()
+                ->where('factura.periodo_anio <', $anio)
+                ->orGroupStart()
+                    ->where('factura.periodo_anio', $anio)
+                    ->where('factura.periodo_mes <=', sprintf('%02d', $mes))
+                ->groupEnd()
+            ->groupEnd();
+        }
+    }
+
+    /**
+     * @param array{desde: string, hasta: string} $filtros
+     */
+    private function aplicarRangoAnual(BaseBuilder $consulta, array $filtros): void
+    {
+        if ($filtros['desde'] !== '') {
+            [$anio] = explode('-', $filtros['desde']);
+            $consulta->where('factura.periodo_anio >=', (int) $anio);
+        }
+
+        if ($filtros['hasta'] !== '') {
+            [$anio] = explode('-', $filtros['hasta']);
+            $consulta->where('factura.periodo_anio <=', (int) $anio);
+        }
     }
 }
