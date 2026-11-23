@@ -1,0 +1,76 @@
+﻿Sprint 1: análisis, diseño e implementación hito 1
+
+
+Primero empezamos el proyecto diseñando el modelo conceptual (MER) en excalidraw,la url se encuentra en el repositorio,  y preparamos el miro para hacer un mapa de las historias de usuario, las cuales historias de usuario en una primer instancia fueron generadas por Opencode - Big Pickle. 
+
+
+Opencode - Big Pickle hizo un análisis de los requerimientos.
+A partir de entender el contexto y el alcance del problema creó las historias de usuario junto con los criterios de aceptación. Se generaron las historias de usuario en formato Gherkin y se respetó el mismo formato para las posteriores historias de usuario y/o archivos de la documentación.
+
+
+En Miró generamos las tablas de las HU y la IA integrada encontró huecos. Generamos documentación de los mismos y le indicamos a Claude Code que los corrija. 
+
+
+Por otro lado con OpenCode - Big Pickle se definió un SKILL con la especificación de las tecnologías a usar y la arquitectura del proyecto. También se definieron SKILLS específicas, en formato .md,  para la construcción, seguridad/auditoría y desarrollo front-end. (desarrollar)
+
+
+También creamos un archivo con una traza de ejecución y un prompt general que verifica el uso de skills. De paso ejecutamos una sesión por historia de usuario y pusimos arnés a la IA.
+
+
+Hicimos la base de datos en phpmyadmin mientras debatimos de qué tipo debería ser cada atributo y sus posibles objetos, a continuación, comparamos el modelo físico recién creado con las historias de usuarios para encontrar posibles fallas o huecos. Consecuentemente modificamos las que no cumplían con las historias.
+
+
+
+
+Para la etapa de implementación OpenCode hizo una revisión de las historias de usuario del hito 1, y generó prompts que luego fueron interpretados por VS Studio code.
+
+
+
+
+En el proceso del HU-13 nos encontramos un error de compatibilidad con wampp, que resultaron ser más por cosas de servicio internos.
+
+
+En todas las etapas tuvimos instancias de revisión.
+
+
+
+
+
+
+________________
+
+
+Sprint 2: análisis, diseño e implementación hito 2
+Se repitió el mismo proceso de desarrollo que en el hito 1. Y además previo a la implementación se hizo un análisis de las HU, para verificar la falta de inconsistencias y evitar errores en estas nuevas implementaciones, para que no choque con las implementaciones del hito 2. Mejorar esta redacción. 
+
+
+
+
+Reuniones: fueron diarias con un periodo de duración entre 2 a 3 horas
+
+
+
+
+Haciéndolas en este orden y tiempo:
+* HU-00 37 min
+* HU-01 8 min
+* HU-02 21 min
+* HU-03 12 min
+* HU-04 5 min
+* HU-06 6 min
+* HU-05 10 min
+* HU-07 6 min
+* HU-09 11
+* HU-08 10 min
+* HU-10 y HU-12 11 min
+* HU-11 15 min
+* HU-13 12 min
+* HU-14 12 min 
+* HU-15 8 min
+* HU-16 20 min
+* HU-17  13 min
+* HU-18  4 min
+* HU-19  4 min
+* HU-20 9 min
+* HU-21 21 min
+* HU-22 40 min
