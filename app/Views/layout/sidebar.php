@@ -88,6 +88,18 @@
                         <p>Notificaciones</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?= route_to('informes.consumo-interanual') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>Consumo interanual</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= route_to('informes.promedio-unidad') ?>" class="nav-link">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>Promedio por unidad</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
