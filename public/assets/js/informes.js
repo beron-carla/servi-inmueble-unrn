@@ -1,6 +1,14 @@
 (function () {
     'use strict';
 
+    const servicio = document.getElementById('servicio');
+    const unidad = document.getElementById('unidad');
+    if (servicio && unidad) {
+        servicio.addEventListener('change', function () {
+            unidad.value = '';
+        });
+    }
+
     const canvas = document.getElementById('grafico-consumo-interanual');
     if (!canvas || typeof window.Chart === 'undefined') {
         return;
