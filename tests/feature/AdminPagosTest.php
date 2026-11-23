@@ -108,6 +108,9 @@ final class AdminPagosTest extends CIUnitTestCase
         $detalle = $this->get('/admin/pagos/' . $idPago);
         $detalle->assertStatus(200);
         $detalle->assertSee('Detalle del pago');
+        $detalle->assertSee(
+            'CP-' . (new DateTimeImmutable('today'))->format('Ymd') . '-000001',
+        );
     }
 
     private function postConCsrf(string $uri, array $datos): \CodeIgniter\Test\TestResponse
@@ -201,7 +204,7 @@ final class AdminPagosTest extends CIUnitTestCase
             'fecha_pago' => $hoy->format('Y-m-d'),
             'monto_abonado' => '1500.00',
             'medio_pago' => 'transferencia',
-            'numero_comprobante' => 'HU18-' . bin2hex(random_bytes(4)),
+            'numero_comprobante' => 'CP-' . $hoy->format('Ymd') . '-000001',
             'comprobante_digital' => "%PDF-1.4\n%%EOF",
             'comprobante_nombre' => 'comprobante.pdf',
             'comprobante_mime' => 'application/pdf',

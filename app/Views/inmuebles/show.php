@@ -131,7 +131,7 @@
             </form>
         <?php endif ?>
         <a
-            href="<?= route_to($esAdmin ? 'admin.inmuebles.index' : 'inmuebles.index') ?>"
+            href="<?= site_url(route_to($esAdmin ? 'admin.inmuebles.index' : 'inmuebles.index')) ?>"
             class="btn btn-secondary"
         >Volver al listado</a>
     </div>

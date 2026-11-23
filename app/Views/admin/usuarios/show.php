@@ -27,7 +27,7 @@
         </div>
     </div>
     <div class="card-footer">
-        <a href="<?= route_to('admin.usuarios.index') ?>" class="btn btn-secondary">Volver al listado</a>
+        <a href="<?= site_url(route_to('admin.usuarios.index')) ?>" class="btn btn-secondary">Volver al listado</a>
         <a
             href="<?= route_to('admin.usuarios.edit', $usuario['id_usuario']) ?>"
             class="btn btn-primary"

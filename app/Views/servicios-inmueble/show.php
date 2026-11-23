@@ -95,7 +95,7 @@ $siguientesEstados = $transiciones[$servicio['estado']] ?? [];
             </form>
         <?php endif ?>
         <a
-            href="<?= route_to('inmuebles.show', $servicio['id_propiedad']) ?>"
+            href="<?= site_url(route_to('inmuebles.show', $servicio['id_propiedad'])) ?>"
             class="btn btn-secondary"
         >Volver al inmueble</a>
     </div>

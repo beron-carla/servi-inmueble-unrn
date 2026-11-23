@@ -89,7 +89,6 @@ class FacturasController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('factura_errores', $resultado['errores']);
             session()->setFlashdata('factura_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('facturas.create', $idServicio));
         }

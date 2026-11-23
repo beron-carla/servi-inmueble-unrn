@@ -83,7 +83,6 @@ class UsuariosController extends BaseController
                 'mail' => $mail,
                 'rol' => $rol,
             ]);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('admin.usuarios.create'));
         }
@@ -120,10 +119,6 @@ class UsuariosController extends BaseController
                 'rol' => $rol,
                 'estado' => $estado,
             ]);
-            session()->setFlashdata(
-                'error',
-                reset($resultado['errores']) ?: 'No se pudo modificar el usuario.',
-            );
 
             return redirect()->to(route_to('admin.usuarios.edit', $id));
         }

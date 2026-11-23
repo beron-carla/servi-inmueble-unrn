@@ -12,17 +12,20 @@ use Throwable;
 final class PagoService
 {
     private BaseConnection $db;
+    private ?NumeroComprobanteService $numeros;
 
     public function __construct(
         private ?PagoRepository $repo = null,
         private ?ComprobanteService $comprobantes = null,
         private ?MoraService $mora = null,
         ?BaseConnection $db = null,
+        ?NumeroComprobanteService $numeros = null,
     ) {
         $this->repo ??= new PagoRepository();
         $this->comprobantes ??= new ComprobanteService();
         $this->mora ??= new MoraService();
         $this->db = $db ?? db_connect();
+        $this->numeros ??= $numeros ?? new NumeroComprobanteService($this->db);
     }
 
     public function opcionesPago(int $idFactura, int $idUsuario, string $rol): array
@@ -118,6 +121,10 @@ final class PagoService
                 $this->archivoEntrada($entrada),
                 $datos['medio_pago'],
             );
+            $datos['numero_comprobante'] = $this->numeros->siguiente($datos['fecha_pago']);
+            if (! preg_match('/^[A-Z]{2}-[0-9]{8}-[0-9]{6}$/', $datos['numero_comprobante'])) {
+                throw new RuntimeException('No se pudo generar un número de comprobante válido.');
+            }
 
             $datosPago = [
                 'id_factura' => $idFactura,
@@ -148,7 +155,7 @@ final class PagoService
                 return $this->resultado(
                     datos: $datos,
                     errores: [
-                        'numero_comprobante' => 'Ya existe un comprobante con ese número para esta factura',
+                        'registro' => 'No se pudo registrar el pago porque ocurrió una colisión al generar el número de comprobante. Intente nuevamente.',
                     ],
                 );
             }
@@ -197,7 +204,7 @@ final class PagoService
     private function normalizarEntrada(array $entrada): array
     {
         $datos = [];
-        foreach (['fecha_pago', 'monto_abonado', 'medio_pago', 'numero_comprobante'] as $campo) {
+        foreach (['fecha_pago', 'monto_abonado', 'medio_pago'] as $campo) {
             $valor = $entrada[$campo] ?? '';
             $datos[$campo] = is_string($valor) || is_numeric($valor)
                 ? trim((string) $valor)
@@ -234,19 +241,6 @@ final class PagoService
             'billetera virtual',
         ], true)) {
             $errores['medio_pago'] = 'El medio de pago es inválido';
-        }
-
-        if ($datos['numero_comprobante'] === '') {
-            $errores['numero_comprobante'] = 'El número de comprobante es obligatorio';
-        } elseif (! preg_match('/^[A-Za-z0-9]{1,50}$/', $datos['numero_comprobante'])) {
-            $errores['numero_comprobante'] =
-                'El número de comprobante debe ser alfanumérico de 1 a 50 caracteres';
-        } elseif ($this->repo->existeNumeroComprobante(
-            (int) $factura['id_factura'],
-            $datos['numero_comprobante'],
-        )) {
-            $errores['numero_comprobante'] =
-                'Ya existe un comprobante con ese número para esta factura';
         }
 
         $archivo = $this->archivoEntrada($entrada);

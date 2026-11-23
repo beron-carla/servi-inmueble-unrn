@@ -1,13 +1,18 @@
 <?= $this->extend('layout/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+$queryFiltros = http_build_query(array_filter(
+    $filtros,
+    static fn (string $valor): bool => $valor !== '',
+));
+?>
 <div class="card card-primary">
     <div class="card-header">
-        <h2 class="card-title">Validación de pagos</h2>
+        <h2 class="card-title">Filtros de pagos</h2>
     </div>
     <form action="<?= route_to('admin.pagos.index') ?>" method="get">
         <div class="card-body">
-            <?= $this->include('partials/alerts') ?>
             <div class="row">
                 <div class="col-md-3 form-group">
                     <label for="estado">Estado</label>
@@ -71,7 +76,8 @@
                         <th>Factura</th>
                         <th>Monto</th>
                         <th>Medio</th>
-                        <th>Comprobante</th>
+                        <th>N.º de comprobante</th>
+                        <th>Comprobante digital</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -85,6 +91,7 @@
                             <td>#<?= (int) $pago['id_factura'] ?></td>
                             <td><?= esc(formato_moneda((float) $pago['monto_abonado'])) ?></td>
                             <td><?= esc(ucfirst($pago['medio_pago'])) ?></td>
+                            <td><?= esc(strtoupper((string) $pago['numero_comprobante'])) ?></td>
                             <td>
                                 <?php if ($pago['comprobante_digital'] !== null) : ?>
                                     <a class="btn btn-sm btn-outline-primary" href="<?= route_to('pagos.comprobante', $pago['id_transaccion']) ?>" target="_blank">Ver</a>
@@ -93,7 +100,12 @@
                                 <?php endif ?>
                             </td>
                             <td><?= esc(etiqueta_estado_pago($pago['estado'])) ?></td>
-                            <td><a class="btn btn-sm btn-info" href="<?= route_to('admin.pagos.show', $pago['id_transaccion']) ?>">Ver detalle</a></td>
+                            <td>
+                                <a
+                                    class="btn btn-sm btn-info"
+                                    href="<?= site_url(route_to('admin.pagos.show', $pago['id_transaccion']) . ($queryFiltros === '' ? '' : '?' . $queryFiltros)) ?>"
+                                >Ver detalle</a>
+                            </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>

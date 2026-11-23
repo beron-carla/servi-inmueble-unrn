@@ -3,12 +3,11 @@
 <?= $this->section('content') ?>
 <div class="card card-primary">
     <div class="card-header">
-        <h2 class="card-title">Registrar pago</h2>
+        <h2 class="card-title">Datos del pago</h2>
     </div>
     <form action="<?= route_to('pagos.store', $factura['id_factura']) ?>" method="post" enctype="multipart/form-data">
         <?= csrf_field() ?>
         <div class="card-body">
-            <?= $this->include('partials/alerts') ?>
             <dl class="row">
                 <dt class="col-sm-3">Inmueble</dt>
                 <dd class="col-sm-9"><?= esc($factura['inmueble']) ?></dd>
@@ -61,20 +60,14 @@
                     <small class="text-danger"><?= esc($errores['medio_pago']) ?></small>
                 <?php endif ?>
             </div>
+            <?php if (isset($errores['registro'])) : ?>
+                <div class="alert alert-danger"><?= esc($errores['registro']) ?></div>
+            <?php endif ?>
             <div class="form-group">
-                <label for="numero_comprobante">Número de comprobante</label>
-                <input
-                    class="form-control"
-                    type="text"
-                    id="numero_comprobante"
-                    name="numero_comprobante"
-                    maxlength="50"
-                    value="<?= esc($anterior['numero_comprobante'] ?? '', 'attr') ?>"
-                    required
-                >
-                <?php if (isset($errores['numero_comprobante'])) : ?>
-                    <small class="text-danger"><?= esc($errores['numero_comprobante']) ?></small>
-                <?php endif ?>
+                <p class="form-text text-muted">
+                    El número de comprobante se generará automáticamente al registrar el pago
+                    (formato CP-YYYYMMDD-NNNNNN).
+                </p>
             </div>
             <div class="form-group">
                 <label for="comprobante">Comprobante digital</label>

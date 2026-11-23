@@ -74,9 +74,6 @@ class AuthController extends BaseController
                 'acepta_terminos'  => $aceptoTerminos,
             ]);
 
-            $primerError = reset($resultado['errores']);
-            session()->setFlashdata('error', $primerError);
-
             return redirect()->to(route_to('auth.register'));
         }
 

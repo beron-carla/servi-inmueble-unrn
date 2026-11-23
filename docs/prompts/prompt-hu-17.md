@@ -37,7 +37,7 @@ CRITERIOS DE ACEPTACIÓN LITERALES (copiar tal cual en la matriz de cierre)
 - CA-17.2 Solo se admite sobre facturas en estado pendiente o vencida (calculado). Si la factura está pagada: "La factura ya está pagada".
 - CA-17.3 monto_abonado debe ser igual a monto_total; si no: "El monto debe ser igual al total de la factura". No se admiten pagos parciales.
 - CA-17.4 fecha_pago es obligatoria, válida y no futura: "La fecha de pago no puede ser futura".
-- CA-17.5 medio_pago es obligatorio y debe ser uno de {transferencia, débito automático, efectivo, billetera virtual}. numero_comprobante es obligatorio, alfanumérico, de 1 a 50 caracteres y único por factura.
+- CA-17.5 medio_pago es obligatorio y debe ser uno de {transferencia, débito automático, efectivo, billetera virtual}. `numero_comprobante` se genera automáticamente como `CP-YYYYMMDD-NNNNNN`, usando `fecha_pago` y un correlativo diario; es único.
 - CA-17.6 El comprobante es obligatorio para transferencia, débito automático y billetera virtual; es opcional para efectivo. Si se adjunta, el formato debe ser PDF, JPG o JPEG, máximo 5 MB, validado por contenido. Errores: "El comprobante debe ser PDF, JPG o JPEG" y "El comprobante no puede superar los 5 MB".
 - CA-17.7 Se guarda en_mora = 1 si fecha_pago es posterior al vencimiento aplicable (2.º si existe; si no, 1.º); en caso contrario, 0.
 - CA-17.8 El pago se crea en estado "pendiente de validación" y la factura sigue pendiente. Si ya existe un pago pendiente para la factura: "Ya existe un pago pendiente de validación para esta factura".
@@ -79,7 +79,7 @@ REGLAS DE NEGOCIO
 - Igualdad de montos con number_format((float)$valor, 2, '.', '') en ambos lados (DI-05).
 - medio_pago guardado SIN tilde: transferencia | debito automatico | efectivo | billetera virtual. La etiqueta de UI puede decir "débito automático".
 - Comprobante obligatorio salvo efectivo. MIME detectado por contenido con finfo: application/pdf, image/jpeg. Límite 5 * 1024 * 1024 bytes (DI-02).
-- numero_comprobante: alfanumérico de 1 a 50 caracteres, único por factura (D2-11).
+- numero_comprobante: generado como `CP-YYYYMMDD-NNNNNN`, con correlativo diario basado en `fecha_pago`; único globalmente y, por lo tanto, único por factura (D2-11).
 - Alta con estado='pendiente'; la factura NO cambia de estado (D2-01, H2-01). en_mora calculado al registrar (H2-02).
 - Un pago pendiente por factura; rechazados y validados no se editan ni borran.
 - Servir comprobante con Content-Type guardado, Content-Disposition: inline, X-Content-Type-Options: nosniff y sin ejecución (DI-02). Nunca acceso público.
@@ -104,9 +104,6 @@ MENSAJES LITERALES (copiar sin cambiar tildes ni puntos)
 "La factura ya está pagada"
 "El monto debe ser igual al total de la factura"
 "La fecha de pago no puede ser futura"
-"El número de comprobante es obligatorio"
-"El número de comprobante debe ser alfanumérico de 1 a 50 caracteres"
-"Ya existe un comprobante con ese número para esta factura"
 "El comprobante debe ser PDF, JPG o JPEG"
 "El comprobante no puede superar los 5 MB"
 "El comprobante es obligatorio para este medio de pago"
@@ -135,7 +132,7 @@ Matriz CA-17.1..CA-17.10 -> archivo/test, decisiones aplicadas, comandos y resul
 | CA-17.2 | `PagoRepository::buscarFacturaParaPago()` + `estadoCalculado()` | `PagosTest::testFacturaPagadaRechazaPago()` |
 | CA-17.3 | `PagoService::registrar()` + DI-05 | `PagosTest::testMontoDebeSerTotal()` |
 | CA-17.4 | Validación de `fecha_pago` en el servicio | `PagosTest::testFechaFuturaRechazada()` |
-| CA-17.5 | Validación de `medio_pago` y `numero_comprobante` + D2-11 | `PagosTest::testMedioYNumeroComprobante()` |
+| CA-17.5 | Validación de `medio_pago` y generación de `numero_comprobante` + D2-11 | `PagosTest::testDailySequenceIncrementsAndResetsForPaymentDate()` |
 | CA-17.6 | `ComprobanteService::validar()` + DI-02 | `ComprobanteServiceTest`, `PagosTest::testComprobanteInvalido()` |
 | CA-17.7 | `MoraService::esPagoTardio()` + H2-02 | `PagosTest::testPagoTardioMarcaEnMora()` |
 | CA-17.8 | `PagoRepository::existePendiente()` + H2-01 | `PagosTest::testPagoPendienteDuplicado()` |
@@ -247,9 +244,6 @@ final class PagoRepository
 - `La factura ya está pagada`
 - `El monto debe ser igual al total de la factura`
 - `La fecha de pago no puede ser futura`
-- `El número de comprobante es obligatorio`
-- `El número de comprobante debe ser alfanumérico de 1 a 50 caracteres`
-- `Ya existe un comprobante con ese número para esta factura`
 - `El comprobante debe ser PDF, JPG o JPEG`
 - `El comprobante no puede superar los 5 MB`
 - `El comprobante es obligatorio para este medio de pago`
@@ -266,7 +260,7 @@ final class PagoRepository
 - [ ] CA-17.2: solo pendiente/vencida calculada; pagada rechaza con mensaje literal.
 - [ ] CA-17.3: `monto_abonado == monto_total` con normalización DI-05; sin parciales.
 - [ ] CA-17.4: `fecha_pago` válida y no futura.
-- [ ] CA-17.5: medio de pago exacto (sin tilde en BD) y número alfanumérico 1–50 único por factura.
+- [ ] CA-17.5: medio de pago exacto (sin tilde en BD) y número automático `CP-YYYYMMDD-NNNNNN`, correlativo por `fecha_pago`.
 - [ ] CA-17.6: obligatorio salvo efectivo; MIME por contenido y límite 5 MiB.
 - [ ] CA-17.7: `en_mora = 1` si `fecha_pago` posterior al vencimiento aplicable.
 - [ ] CA-17.8: alta `pendiente`, factura intacta, un solo pago pendiente por factura.
