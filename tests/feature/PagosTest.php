@@ -26,7 +26,6 @@ final class PagosTest extends CIUnitTestCase
             'fecha_pago' => (new DateTimeImmutable('today'))->format('Y-m-d'),
             'monto_abonado' => '1250.50',
             'medio_pago' => 'efectivo',
-            'numero_comprobante' => 'EFECTIVO001',
         ]);
 
         $respuesta->assertRedirectTo('/pagos');
@@ -40,6 +39,11 @@ final class PagosTest extends CIUnitTestCase
             ->getRowArray();
 
         $this->assertSame('pendiente', $pago['estado']);
+        $this->assertMatchesRegularExpression('/^CP-\d{8}-\d{6}$/', $pago['numero_comprobante']);
+        $this->assertStringStartsWith(
+            'CP-' . str_replace('-', '', $pago['fecha_pago']) . '-',
+            $pago['numero_comprobante'],
+        );
         $this->assertNull($pago['comprobante_digital']);
         $this->assertSame('pendiente', $factura['estado']);
         $this->assertStringContainsString(
@@ -47,12 +51,14 @@ final class PagosTest extends CIUnitTestCase
             (string) session()->getFlashdata('success'),
         );
         $this->assertSame(1, (int) $pago['en_mora']);
+        $listado = $this->get('/pagos');
+        $listado->assertStatus(200);
+        $listado->assertSee($pago['numero_comprobante']);
 
         $duplicado = $this->postPago($idFactura, [
             'fecha_pago' => (new DateTimeImmutable('today'))->format('Y-m-d'),
             'monto_abonado' => '1250.50',
             'medio_pago' => 'efectivo',
-            'numero_comprobante' => 'EFECTIVO002',
         ]);
         $duplicado->assertRedirectTo('/facturas/' . $idFactura . '/pagar');
         $this->assertSame(
@@ -94,7 +100,6 @@ final class PagosTest extends CIUnitTestCase
             'fecha_pago' => (new DateTimeImmutable('today'))->format('Y-m-d'),
             'monto_abonado' => '100.00',
             'medio_pago' => 'efectivo',
-            'numero_comprobante' => 'MONTODIST1',
         ]);
 
         $respuesta->assertRedirectTo('/facturas/' . $idPendiente . '/pagar');
@@ -102,6 +107,22 @@ final class PagosTest extends CIUnitTestCase
             'El monto debe ser igual al total de la factura',
             session()->getFlashdata('pago_errores')['monto_abonado'],
         );
+        $hoy = (new DateTimeImmutable('today'))->format('Y-m-d');
+        $this->assertSame(0, $this->db->table('secuencia_comprobante')
+            ->where('fecha', $hoy)
+            ->countAllResults());
+
+        $respuesta = $this->postPago($idPendiente, [
+            'fecha_pago' => $hoy,
+            'monto_abonado' => '1250.50',
+            'medio_pago' => 'efectivo',
+        ]);
+        $respuesta->assertRedirectTo('/pagos');
+        $pago = $this->db->table('transaccion')
+            ->where('id_factura', $idPendiente)
+            ->get()
+            ->getRowArray();
+        $this->assertSame('CP-' . str_replace('-', '', $hoy) . '-000001', $pago['numero_comprobante']);
     }
 
     public function testFutureDateDuplicatePaymentAndMandatoryReceiptAreRejected(): void
@@ -113,18 +134,24 @@ final class PagosTest extends CIUnitTestCase
             'fecha_pago' => (new DateTimeImmutable('tomorrow'))->format('Y-m-d'),
             'monto_abonado' => '1250.50',
             'medio_pago' => 'efectivo',
-            'numero_comprobante' => 'FUTURA001',
         ]);
+        $respuesta->assertRedirectTo('/facturas/' . $idFactura . '/pagar');
+        $this->withSession($_SESSION);
+        $vistaPago = $this->get('/facturas/' . $idFactura . '/pagar');
+        $vistaPago->assertStatus(200);
         $this->assertSame(
-            'La fecha de pago no puede ser futura',
-            session()->getFlashdata('pago_errores')['fecha_pago'],
+            1,
+            substr_count(
+                $vistaPago->response()->getBody(),
+                'La fecha de pago no puede ser futura',
+            ),
         );
+        $this->assertNull(session()->getFlashdata('error'));
 
         $respuesta = $this->postPago($idFactura, [
             'fecha_pago' => (new DateTimeImmutable('today'))->format('Y-m-d'),
             'monto_abonado' => '1250.50',
             'medio_pago' => 'transferencia',
-            'numero_comprobante' => 'TRANSFER1',
         ]);
         $respuesta->assertRedirectTo('/facturas/' . $idFactura . '/pagar');
         $this->assertSame(
@@ -142,7 +169,7 @@ final class PagosTest extends CIUnitTestCase
             'fecha_pago' => (new DateTimeImmutable('today'))->format('Y-m-d'),
             'monto_abonado' => '1250.50',
             'medio_pago' => 'transferencia',
-            'numero_comprobante' => 'DESCARGA001',
+            'numero_comprobante' => 'CP-' . (new DateTimeImmutable('today'))->format('Ymd') . '-000001',
             'comprobante_digital' => "%PDF-1.4\n%%EOF",
             'comprobante_nombre' => 'comprobante.pdf',
             'comprobante_mime' => 'application/pdf',
@@ -170,6 +197,39 @@ final class PagosTest extends CIUnitTestCase
         $admin = $this->crearUsuario('admin-descarga@example.test', 'admin');
         $this->iniciarSesion($admin, 'admin');
         $this->get('/pagos/' . $idPago . '/comprobante')->assertStatus(200);
+    }
+
+    public function testDailySequenceIncrementsAndResetsForPaymentDate(): void
+    {
+        [, $primeraFactura] = $this->crearContextoFactura('pendiente');
+        [, $segundaFactura] = $this->crearContextoFactura('pendiente');
+        [, $terceraFactura] = $this->crearContextoFactura('pendiente');
+        $admin = $this->crearUsuario('admin-secuencia-pagos@example.test', 'admin');
+        $this->iniciarSesion($admin, 'admin');
+
+        $hoy = (new DateTimeImmutable('today'))->format('Y-m-d');
+        $ayer = (new DateTimeImmutable('yesterday'))->format('Y-m-d');
+        foreach ([
+            [$primeraFactura, $hoy, '000001'],
+            [$segundaFactura, $hoy, '000002'],
+            [$terceraFactura, $ayer, '000001'],
+        ] as [$idFactura, $fecha, $correlativo]) {
+            $respuesta = $this->postPago((int) $idFactura, [
+                'fecha_pago' => $fecha,
+                'monto_abonado' => '1250.50',
+                'medio_pago' => 'efectivo',
+            ]);
+            $respuesta->assertRedirectTo('/pagos');
+
+            $pago = $this->db->table('transaccion')
+                ->where('id_factura', (int) $idFactura)
+                ->get()
+                ->getRowArray();
+            $this->assertSame(
+                'CP-' . str_replace('-', '', $fecha) . '-' . $correlativo,
+                $pago['numero_comprobante'],
+            );
+        }
     }
 
     private function crearContextoFactura(string $estado): array
@@ -266,6 +326,10 @@ final class PagosTest extends CIUnitTestCase
     {
         $formulario = $this->get('/facturas/' . $idFactura . '/pagar');
         $formulario->assertStatus(200);
+        $this->assertStringNotContainsString(
+            'name="numero_comprobante"',
+            $formulario->response()->getBody(),
+        );
         preg_match(
             '/name="csrf_test_name"\s+value="([^"]+)"/',
             $formulario->response()->getBody(),

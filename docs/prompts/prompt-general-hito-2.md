@@ -199,9 +199,6 @@ No tiene permisos para esta acción / Volver al dashboard
 La factura ya está pagada
 El monto debe ser igual al total de la factura
 La fecha de pago no puede ser futura
-El número de comprobante es obligatorio
-El número de comprobante debe ser alfanumérico de 1 a 50 caracteres
-Ya existe un comprobante con ese número para esta factura
 El comprobante debe ser PDF, JPG o JPEG
 El comprobante no puede superar los 5 MB
 El comprobante es obligatorio para este medio de pago

@@ -85,7 +85,6 @@ class TiposServicioController extends BaseController
                 'unidad_medida' => $unidadMedida,
                 'proveedor_predeterminado' => $proveedor,
             ]);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('admin.tipos.create'));
         }
@@ -120,7 +119,6 @@ class TiposServicioController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('tipo_servicio_errores', $resultado['errores']);
             session()->setFlashdata('tipo_servicio_anterior', $datos);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('admin.tipos.edit', $id));
         }

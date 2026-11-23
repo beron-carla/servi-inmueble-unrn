@@ -25,7 +25,7 @@ class DashboardController extends BaseController
         );
 
         return view('dashboard/index', [
-            'titulo' => 'Panel de control',
+            'titulo' => 'Panel de Servicios',
             'metricas' => $metricas,
         ]);
     }

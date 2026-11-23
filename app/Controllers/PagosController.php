@@ -66,8 +66,6 @@ class PagosController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('pago_errores', $resultado['errores']);
             session()->setFlashdata('pago_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
-
             return redirect()->to(route_to('pagos.create', $idFactura));
         }
 
@@ -138,7 +136,7 @@ class PagosController extends BaseController
     private function entradaFormulario(): array
     {
         $entrada = [];
-        foreach (['fecha_pago', 'monto_abonado', 'medio_pago', 'numero_comprobante'] as $campo) {
+        foreach (['fecha_pago', 'monto_abonado', 'medio_pago'] as $campo) {
             $valor = $this->request->getPost($campo);
             $entrada[$campo] = is_string($valor) || is_numeric($valor)
                 ? (string) $valor

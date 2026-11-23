@@ -54,6 +54,7 @@ final class PagosController extends BaseController
             'titulo' => 'Detalle del pago',
             'pago' => $resultado['pago'],
             'errores' => session()->getFlashdata('rechazo_errores') ?? [],
+            'filtros' => $this->request->getGet() ?? [],
         ]);
     }
 

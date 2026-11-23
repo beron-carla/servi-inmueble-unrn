@@ -3,11 +3,10 @@
 <?= $this->section('content') ?>
 <div class="card card-primary">
     <div class="card-header">
-        <h2 class="card-title">Mis pagos</h2>
+        <h2 class="card-title">Filtros de mis pagos</h2>
     </div>
     <form action="<?= route_to('pagos.index') ?>" method="get">
         <div class="card-body">
-            <?= $this->include('partials/alerts') ?>
             <div class="row">
                 <div class="col-md-4 form-group">
                     <label for="estado">Estado</label>
@@ -61,7 +60,7 @@
                             <td><?= esc(formato_fecha($pago['fecha_pago'])) ?></td>
                             <td><?= esc(formato_moneda((float) $pago['monto_abonado'])) ?></td>
                             <td><?= esc(ucfirst($pago['medio_pago'])) ?></td>
-                            <td><?= esc($pago['numero_comprobante']) ?></td>
+                            <td><?= esc(strtoupper((string) $pago['numero_comprobante'])) ?></td>
                             <td><?= esc(etiqueta_estado_pago($pago['estado'])) ?></td>
                             <td>
                                 <?php if ($pago['comprobante_digital'] !== null) : ?>

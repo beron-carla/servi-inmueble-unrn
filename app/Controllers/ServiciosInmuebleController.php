@@ -74,7 +74,6 @@ class ServiciosInmuebleController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('servicio_errores', $resultado['errores']);
             session()->setFlashdata('servicio_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('servicios.create', $idPropiedad));
         }
@@ -158,7 +157,6 @@ class ServiciosInmuebleController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('servicio_errores', $resultado['errores']);
             session()->setFlashdata('servicio_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('servicios.edit', $id));
         }

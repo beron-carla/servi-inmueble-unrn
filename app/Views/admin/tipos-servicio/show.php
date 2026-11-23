@@ -25,14 +25,14 @@
             <dt class="col-sm-3">Estado</dt>
             <dd class="col-sm-9"><?= (int) $tipo['activo'] === 1 ? 'Activo' : 'Inactivo' ?></dd>
         </dl>
-        <?php if (! empty($tipo['tiene_servicios_vinculados'])) : ?>
+        <?php if (! empty($tipo['tiene_servicios_vinculados']) && session()->getFlashdata('error') === null) : ?>
             <div class="alert alert-warning mb-0" role="status">
                 No se puede eliminar: tiene inmuebles asociados
             </div>
         <?php endif ?>
     </div>
     <div class="card-footer">
-        <a href="<?= route_to('admin.tipos.index') ?>" class="btn btn-secondary">Volver al catálogo</a>
+        <a href="<?= site_url(route_to('admin.tipos.index')) ?>" class="btn btn-secondary">Volver al catálogo</a>
         <a href="<?= route_to('admin.tipos.edit', $tipo['id_tipo_servicio']) ?>" class="btn btn-primary">Editar</a>
         <?php if ((int) $tipo['activo'] === 1) : ?>
             <form

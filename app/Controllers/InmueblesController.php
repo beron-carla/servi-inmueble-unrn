@@ -61,7 +61,6 @@ class InmueblesController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('inmueble_errores', $resultado['errores']);
             session()->setFlashdata('inmueble_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('inmuebles.create'));
         }
@@ -117,7 +116,6 @@ class InmueblesController extends BaseController
         if (! $resultado['exito']) {
             session()->setFlashdata('inmueble_errores', $resultado['errores']);
             session()->setFlashdata('inmueble_anterior', $resultado['datos']);
-            session()->setFlashdata('error', reset($resultado['errores']));
 
             return redirect()->to(route_to('inmuebles.edit', $id));
         }

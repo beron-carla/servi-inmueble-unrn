@@ -1,12 +1,15 @@
 <?= $this->extend('layout/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+$queryFiltros = http_build_query(array_filter(
+    $filtros,
+    static fn ($valor): bool => is_string($valor) && $valor !== '',
+));
+$urlVolver = site_url(route_to('admin.pagos.index') . ($queryFiltros === '' ? '' : '?' . $queryFiltros));
+?>
 <div class="card card-primary">
-    <div class="card-header">
-        <h2 class="card-title">Detalle del pago #<?= (int) $pago['id_transaccion'] ?></h2>
-    </div>
     <div class="card-body">
-        <?= $this->include('partials/alerts') ?>
         <dl class="row">
             <dt class="col-sm-3">Propietario</dt>
             <dd class="col-sm-9"><?= esc($pago['propietario']) ?></dd>
@@ -23,7 +26,7 @@
             <dt class="col-sm-3">Medio de pago</dt>
             <dd class="col-sm-9"><?= esc(ucfirst($pago['medio_pago'])) ?></dd>
             <dt class="col-sm-3">Número de comprobante</dt>
-            <dd class="col-sm-9"><?= esc($pago['numero_comprobante']) ?></dd>
+            <dd class="col-sm-9"><?= esc(strtoupper((string) $pago['numero_comprobante'])) ?></dd>
             <dt class="col-sm-3">Estado</dt>
             <dd class="col-sm-9"><?= esc(etiqueta_estado_pago($pago['estado'])) ?></dd>
         </dl>
@@ -45,8 +48,9 @@
         <?php endif ?>
     </div>
 
-    <?php if ($pago['estado'] === 'pendiente') : ?>
-        <div class="card-footer">
+    <div class="card-footer">
+        <a href="<?= esc($urlVolver, 'attr') ?>" class="btn btn-secondary">Volver a validar pagos</a>
+        <?php if ($pago['estado'] === 'pendiente') : ?>
             <form action="<?= route_to('admin.pagos.validar', $pago['id_transaccion']) ?>" method="post" class="d-inline">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-success">Validar pago</button>
@@ -63,7 +67,6 @@
                 </div>
                 <button type="submit" class="btn btn-danger">Rechazar pago</button>
             </form>
-        </div>
     <?php endif ?>
 </div>
 <?= $this->endSection() ?>
