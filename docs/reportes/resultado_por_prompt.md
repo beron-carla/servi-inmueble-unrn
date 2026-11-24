@@ -1,8 +1,8 @@
 # Resultado consolidado de implementación · ServiInmueble 2026
 
-**Actualizado:** 2026-11-20
-**Alcance consolidado:** HU-00 a HU-15
-**Fuentes funcionales:** `docs/historias_de_usuario/HU-XX_compacto.md` y `HU_Hito1_compacto.txt`
+**Actualizado:** 2026-11-24
+**Alcance consolidado:** HU-00 a HU-15 y cierres registrados de HU-16, HU-21 y HU-22; las implementaciones HU-17 a HU-20 constan en sus registros posteriores.
+**Fuentes funcionales:** `docs/historias_de_usuario/HU-XX_compacto.md`, `docs/historias_de_usuario/hito2/HU_Hito2_compacto.md` y `HU_Hito1_compacto.txt`
 **Fuentes técnicas:** `docs/decisiones.md`, `docs/rutas.md` y `docs/00_bootstrap.md`
 
 Este documento reemplaza el registro cronológico de conversaciones y salidas repetidas de herramientas por un resumen organizado de implementación, evidencia y pendientes. El estado se distingue entre **implementado/verificado**, **integración pendiente** y **fuera de alcance**; tener una ruta en el mapa o un resultado histórico no se toma por sí solo como prueba de que una acción está completa.
@@ -27,6 +27,9 @@ Este documento reemplaza el registro cronológico de conversaciones y salidas re
 | HU-13 | Implementada | Asociación, estados, permisos, duplicados, baja lógica y disponibilidad para facturación; `ServiciosInmuebleTest.php`. |
 | HU-14 | Implementada | Alta mensual/anual, snapshot, validaciones y acceso; `FacturasTest.php`. |
 | HU-15 | Implementada | Listado, filtros, totales recalculados, orden por vencimiento, control de propiedad y estado vacío; `FacturasTest.php` (12 pruebas, 146 aserciones). |
+| HU-16 | Implementada | Dashboard con métricas y gráficos por rol; `DashboardMetricasTest.php` (3 pruebas dirigidas sin fallos). |
+| HU-21 | Implementada | Informe interanual, filtros, control de acceso y resumen anual; `InformesTest.php` (4 pruebas dirigidas sin fallos). |
+| HU-22 | Implementada; validación parcial | Promedios por unidad, filtros y resumen anual; `InformesPromedioUnidadTest.php`. Una de 5 pruebas dirigidas falla en la expectativa de promedio; ver registro del 2026-11-24. |
 
 ### Integración cerrada
 
@@ -79,6 +82,12 @@ Las referencias a pruebas corresponden a `tests/`. Cada fila indica el conjunto 
 | HU-15 · CA-15.4 | Los tres totales se recalculan con los filtros aplicados; `testInvoiceFiltersApplyToRowsAndAllSummaryTotals`. | Verificado |
 | HU-15 · CA-15.5 | Listado ordenado por vencimiento aplicable descendente; `testOwnerInvoiceListIsScopedSortedAndShowsCalculatedStatusAndTotals`. | Verificado |
 | HU-15 · permisos y estado vacío | Propietario limitado a sus facturas, Admin con listado global y mensaje cuando no hay resultados; `testOwnerInvoiceListIsScopedSortedAndShowsCalculatedStatusAndTotals`, `testAdminSeesAllInvoiceOwnersAndEmptyFilterShowsEmptyState`. | Verificado |
+| HU-16 · CA-16.1 a CA-16.4 | Métricas administrativas y del propietario, series de 12 meses y estados calculados; `DashboardController`, `DashboardService`, `DashboardRepository`, `DashboardMetricasTest.php`; commit `aeea491`. | Implementado; 3 pruebas dirigidas pasan |
+| HU-16 · CA-16.5 a CA-16.8 | Alcance de datos por rol, tarjetas y filtros, estado vacío y formatos locales; `DashboardMetricasTest.php`. | Implementado; 3 pruebas dirigidas pasan |
+| HU-21 · CA-21.1 a CA-21.6 | Acceso por rol, filtros, comparación de 12 meses, períodos vacíos y resumen anual; `InformesController`, `InformeService`, `InformeRepository`, `InformesTest.php`; commit `2363c54`. | Implementado; 4 pruebas dirigidas pasan |
+| HU-21 · CA-21.7 a CA-21.9 | Estado sin datos, unidad Moneda fija y variación con base cero; `InformesTest.php`. | Implementado; 4 pruebas dirigidas pasan |
+| HU-22 · CA-22.1 a CA-22.6 | Promedio, filtros, control de acceso y separación de períodos mensuales/anuales; `InformeService`, `InformeRepository`, `InformesPromedioUnidadTest.php`; commit `15527cb`. | Implementado; suite parcialmente satisfactoria |
+| HU-22 · CA-22.7 y CA-22.8 | Estado sin datos y formatos de consumos/montos; `InformesPromedioUnidadTest.php`. | Implementado; suite parcialmente satisfactoria |
 
 ## 3. Rutas comprobadas y alcance de rutas
 
@@ -90,7 +99,13 @@ Las rutas de alta HU-14 estaban en `app/Config/Routes.php` y en `docs/rutas.md`;
 | POST | `/servicios-inmueble/(:num)/facturas` | `FacturasController::store` | Implementada; CSRF global y PRG |
 | GET | `/facturas` | `FacturasController::index` | Implementada; filtro `auth`, listado con filtros, sumarios y paginación |
 
-La ruta coincide con `docs/rutas.md` y no se agregó ninguna ruta de pago. Las rutas HU-13 y demás rutas previas conservan el mapa y filtros documentados; no se habilitó auto-routing.
+La ruta coincide con `docs/rutas.md`; no se habilitó auto-routing. Las rutas de dashboard e informes de HU-16, HU-21 y HU-22 también están implementadas y se verificaron en `app/Config/Routes.php`:
+
+| Método | URI | Controlador | Estado |
+|---|---|---|---|
+| GET | `/dashboard` | `DashboardController::index` | Implementada; auth; HU-16 |
+| GET | `/informes/consumo-interanual` | `InformesController::consumoInteranual` | Implementada; auth; HU-21 |
+| GET | `/informes/promedio-unidad` | `InformesController::promedioUnidad` | Implementada; auth; HU-22 |
 
 ## 4. Decisiones y notas aplicadas
 
@@ -139,7 +154,7 @@ Validación completa del **2026-11-20**:
 
 ## 6. Pendientes
 
-No quedan fallos conocidos en la suite completa ejecutada.
+La suite completa ejecutada el 2026-11-20 no presentó fallos. En la validación dirigida del 2026-11-24 queda pendiente resolver la falla de expectativa de promedio documentada para HU-22 en la sección 11.
 
 ---
 
@@ -497,3 +512,30 @@ La ruta fue confirmada con `C:\xampp\php\php.exe spark routes`.
 - CA-19.5 quedó expuesto para HU-16; el dashboard todavía depende de implementar o ampliar esa HU.
 - La integración visual de paginación completa no fue agregada en este cierre; el repositorio calcula páginas y el reporte muestra las filas.
 - No se modificó el SQL canónico ni el ENUM `factura.estado`.
+
+---
+
+## 11. Registro del 2026-11-24 · Cierre de implementación de HU-16, HU-21 y HU-22
+
+### Alcance implementado
+
+- **HU-16:** dashboard con métricas y gráficos de facturación y cobranza, segmentación por rol y propiedad, enlaces desde las tarjetas, estado vacío y formato local. Commit `aeea491` (`HU-16`).
+- **HU-21:** informe interanual con comparación mensual de 12 puntos, filtros y permisos por rol, tratamiento de meses sin factura, variación con base cero, Moneda fija y resumen de facturas anuales. Commit `2363c54` (`HU-21`).
+- **HU-22:** promedio por unidad de medida, filtros por período/inmueble/servicio/unidad, aislamiento por rol, resumen anual separado y formato de consumos y montos. Commit `15527cb` (`HU-22`).
+- Rutas implementadas: `GET /dashboard`, `GET /informes/consumo-interanual` y `GET /informes/promedio-unidad`, todas con filtro `auth`.
+
+### Matriz de criterios y evidencia
+
+| HU / CA | Evidencia | Estado |
+|---|---|---|
+| HU-16 · CA-16.1 a CA-16.8 | `DashboardController`, `DashboardService`, `DashboardRepository`, vista `dashboard/index.php` y `tests/feature/DashboardMetricasTest.php`. | Implementada; pruebas dirigidas pasan. |
+| HU-21 · CA-21.1 a CA-21.9 | `InformesController`, `InformeService`, `InformeRepository`, vista `informes/consumo-interanual.php` y `tests/feature/InformesTest.php`. | Implementada; pruebas dirigidas pasan. |
+| HU-22 · CA-22.1 a CA-22.8 | `InformesController`, `InformeService`, `InformeRepository`, vista `informes/promedio-unidad.php` y `tests/feature/InformesPromedioUnidadTest.php`. | Implementada; queda una falla en la suite dirigida. |
+
+### Validación ejecutada
+
+| Comando | Resultado |
+|---|---|
+| `php vendor\bin\phpunit tests\feature\DashboardMetricasTest.php tests\feature\InformesTest.php tests\feature\InformesPromedioUnidadTest.php` | 12 pruebas, 56 aserciones; 11 pasan y 1 falla. |
+
+Falla reproducida en `InformesPromedioUnidadTest::testRangoMensualAgregaConsumosYMontosYSeparaFacturasAnuales`: no se encontró `20,00` en la respuesta. Las suites de HU-16 y HU-21 pasan dentro de esta ejecución. Se registra como validación pendiente, no se oculta bajo el estado de implementación de HU-22.

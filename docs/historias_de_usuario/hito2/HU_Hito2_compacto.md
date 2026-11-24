@@ -2,7 +2,7 @@
 
 **Proyecto:** ServiInmueble 2026  
 **Fecha:** 2026-11-20  
-**Estado:** definición cerrada. Decisiones aprobadas. **Sin implementación.**  
+**Estado:** definición cerrada y decisiones aprobadas. Implementación de HU-16, HU-21 y HU-22 incorporada; ver estado de trazabilidad actualizado al 2026-11-24.
 **Fuente de verdad:** este documento + [`hito2/README.md`](README.md) + documentos individuales `hito2/HU-16_compacto.md` a `hito2/HU-22_compacto.md`.
 
 ---
@@ -321,14 +321,16 @@ Como Administrador o Propietario, quiero ver el consumo promedio por unidad de m
 
 ---
 
-## 4. Impacto previsto en el esquema (sin implementar)
+## 4. Impacto en el esquema
+
+Se conserva aquí el diseño de esquema aprobado; las migraciones efectivamente aplicadas se registran en `docs/reportes/resultado_por_prompt.md`.
 
 - **`transaccion`**: agregar `estado` ENUM('pendiente','validada','rechazada') DEFAULT 'pendiente', `id_admin_validador` (FK usuario, NULL), `fecha_validacion` (DATETIME NULL), `motivo_rechazo` (VARCHAR(255) NULL), `comprobante_nombre` (VARCHAR(255) NULL), `comprobante_mime` (VARCHAR(100) NULL), índice único (`id_factura`,`numero_comprobante`), índice (`estado`,`fecha_pago`).
 - **`notificacion` (nueva)**: `id_notificacion`, `id_usuario` (FK), `id_factura` (FK), `id_transaccion` (FK NULL), `tipo` ENUM('por_vencer','vencida','pago_validado','pago_rechazado'), `mensaje`, `leida`, `fecha_creacion`; idempotencia por evento (vencimiento: usuario+factura+tipo; pago: usuario+transacción+tipo) e índice (`id_usuario`,`leida`,`fecha_creacion`).
 - **Índices**: `factura(estado, fecha_primer_vencimiento, fecha_segundo_vencimiento)`, `factura(periodo_anio, periodo_mes, id_propiedad_servicio)`.
 - `factura.estado` no se modifica.
 
-## 5. Rutas previstas (a aprobar en `docs/rutas.md`)
+## 5. Rutas definidas
 
 | Método | Ruta | Filtro | HU |
 |---|---|---|---|
@@ -348,6 +350,8 @@ Como Administrador o Propietario, quiero ver el consumo promedio por unidad de m
 | GET | `/informes/consumo-interanual` | auth | HU-21 |
 | GET | `/informes/promedio-unidad` | auth | HU-22 |
 
+Las rutas de HU-16, HU-21 y HU-22 están implementadas; su evidencia figura en la matriz de estado.
+
 ## 6. Fuera de alcance del Hito 2
 
 - Pagos parciales o saldo a favor.
@@ -357,7 +361,17 @@ Como Administrador o Propietario, quiero ver el consumo promedio por unidad de m
 - Generación de PDF de facturas o comprobantes.
 - Edición o eliminación de pagos ya registrados.
 
-## 7. Notas de trazabilidad
+## 7. Estado de implementación y trazabilidad · 2026-11-24
+
+| HU | Criterios | Implementación y evidencia | Estado |
+|---|---|---|---|
+| HU-16 | CA-16.1 a CA-16.8 | Dashboard y métricas en `app/Controllers/DashboardController.php`, `app/Services/DashboardService.php`, `app/Repositories/DashboardRepository.php` y `app/Views/dashboard/index.php`; `tests/feature/DashboardMetricasTest.php`; commit `aeea491`. | Implementada; las 3 pruebas dirigidas pasan. |
+| HU-21 | CA-21.1 a CA-21.9 | Informe interanual en `app/Controllers/InformesController.php`, `app/Services/InformeService.php`, `app/Repositories/InformeRepository.php` y `app/Views/informes/consumo-interanual.php`; `tests/feature/InformesTest.php`; commit `2363c54`. | Implementada; las 4 pruebas dirigidas pasan. |
+| HU-22 | CA-22.1 a CA-22.8 | Promedios por unidad en `app/Controllers/InformesController.php`, `app/Services/InformeService.php`, `app/Repositories/InformeRepository.php` y `app/Views/informes/promedio-unidad.php`; `tests/feature/InformesPromedioUnidadTest.php`; commit `15527cb`. | Implementada; validación dirigida parcialmente satisfactoria: 4 de 5 pruebas pasan. |
+
+La ejecución conjunta de las tres suites el 2026-11-24 terminó con 11 de 12 pruebas y 56 aserciones; falló `InformesPromedioUnidadTest::testRangoMensualAgregaConsumosYMontosYSeparaFacturasAnuales`, que esperaba encontrar `20,00` en la respuesta. El detalle está registrado en `docs/reportes/resultado_por_prompt.md`; el cierre de implementación no equivale a una suite completamente verde.
+
+## 8. Notas de trazabilidad
 
 - **H2-01:** La validación de pagos introduce un estado intermedio en `transaccion`; la factura solo pasa a `pagada` al validar (D2-01, HU-17/HU-18).
 - **H2-02:** `en_mora` en `transaccion` registra pagos tardíos históricos; la mora de facturas pendientes se calcula por vencimiento aplicable (HU-19, CA-19.1/19.2).
@@ -365,7 +379,7 @@ Como Administrador o Propietario, quiero ver el consumo promedio por unidad de m
 - **H2-04:** El alcance por rol (Admin global, Propietario propio) es transversal a HU-16, HU-19, HU-20, HU-21 y HU-22 y debe validarse en servidor (D2-05).
 - **H2-05:** Chart.js se vendoriza localmente (D2-06); la elección no altera los CA de los gráficos.
 - **H2-06:** Los documentos individuales de cada HU están en `docs/historias_de_usuario/hito2/HU-16_compacto.md` a `HU-22_compacto.md`. El índice y decisiones están en `docs/historias_de_usuario/hito2/README.md`.
-- **H2-07:** Antes de implementar, agregar rutas a `docs/rutas.md`, decisiones a `docs/decisiones.md` y diseñar las migraciones de `transaccion` y `notificacion`.
+- **H2-07:** Preparación previa a la implementación cumplida: rutas en `docs/rutas.md`, decisiones en `docs/decisiones.md` y migraciones de Hito 2 registradas en el reporte de resultados.
 
 ---
 
