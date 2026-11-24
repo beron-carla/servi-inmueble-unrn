@@ -102,57 +102,71 @@ class DemoSeeder extends Seeder
             $propertyServiceId = (int) $propertyService['id_propiedad_servicio'];
         }
 
-        $currentMonth = new DateTimeImmutable('first day of this month');
+        $consumos = [
+            2025 => [82, 97, 110, 93, 125, 118, 136, 129, 114, 142, 127, 151],
+            2026 => [105, 89, 121, 138, 116, 149, 132, 158, 141, 127, 165, 146],
+        ];
+        $lecturaActual = 1000;
+        $mesActual = new DateTimeImmutable('first day of this month');
 
-        foreach ([-2, -1, 1] as $index => $monthOffset) {
-            $period = $currentMonth->modify(($monthOffset < 0 ? '' : '+') . $monthOffset . ' months');
-            $month = $period->format('m');
-            $year = $period->format('Y');
-            $existingInvoice = $this->db->table('factura')
-                ->where('id_propiedad_servicio', $propertyServiceId)
-                ->where('periodo', 'mes')
-                ->where('periodo_anio', $year)
-                ->where('periodo_mes', $month)
-                ->get()
-                ->getRowArray();
+        foreach ($consumos as $year => $consumosAnuales) {
+            foreach ($consumosAnuales as $index => $consumo) {
+                $month = $index + 1;
+                $period = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month));
+                $monthNumber = $period->format('m');
+                $yearMonth = $period->format('Y-m');
+                $lecturaAnterior = $lecturaActual;
+                $lecturaActual += $consumo;
+                $existingInvoice = $this->db->table('factura')
+                    ->where('id_propiedad_servicio', $propertyServiceId)
+                    ->where('periodo', 'mes')
+                    ->where('periodo_anio', $year)
+                    ->where('periodo_mes', $monthNumber)
+                    ->get()
+                    ->getRowArray();
 
-            if ($existingInvoice !== null) {
-                $invoiceId = (int) $existingInvoice['id_factura'];
-            } else {
-                $paid = $index === 0;
-                $this->db->table('factura')->insert([
-                    'id_propiedad_servicio' => $propertyServiceId,
-                    'periodo' => 'mes',
-                    'periodo_mes' => $month,
-                    'periodo_anio' => $year,
-                    'fecha_emision' => $period->format('Y-m-01'),
-                    'fecha_primer_vencimiento' => $period->setDate((int) $year, (int) $month, 10)->format('Y-m-d'),
-                    'fecha_segundo_vencimiento' => null,
-                    'monto_total' => '15000.00',
-                    'consumo_del_periodo' => 100,
-                    'lectura_anterior' => 1000,
-                    'lectura_actual' => 1100,
-                    'unidad_medida' => $electricity['unidad_medida'],
-                    'proveedor' => $electricity['proveedor_predeterminado'],
-                    'categoria_factura' => $electricity['categoria'],
-                    'estado' => $paid ? 'pagada' : 'pendiente',
-                ]);
-                $invoiceId = $this->db->insertID();
-            }
+                if ($existingInvoice !== null) {
+                    $invoiceId = (int) $existingInvoice['id_factura'];
+                } else {
+                    $paid = $period < $mesActual;
+                    $monto = $consumo * (120 + ($month % 5) * 4);
+                    $this->db->table('factura')->insert([
+                        'id_propiedad_servicio' => $propertyServiceId,
+                        'periodo' => 'mes',
+                        'periodo_mes' => $monthNumber,
+                        'periodo_anio' => $year,
+                        'fecha_emision' => $period->format('Y-m-01'),
+                        'fecha_primer_vencimiento' => $period->setDate($year, $month, 10)->format('Y-m-d'),
+                        'fecha_segundo_vencimiento' => null,
+                        'monto_total' => number_format($monto, 2, '.', ''),
+                        'consumo_del_periodo' => $consumo,
+                        'lectura_anterior' => $lecturaAnterior,
+                        'lectura_actual' => $lecturaActual,
+                        'unidad_medida' => $electricity['unidad_medida'],
+                        'proveedor' => $electricity['proveedor_predeterminado'],
+                        'categoria_factura' => $electricity['categoria'],
+                        'estado' => $paid ? 'pagada' : 'pendiente',
+                    ]);
+                    $invoiceId = $this->db->insertID();
+                }
 
-            if ($index === 0 && $this->db->table('transaccion')->where('id_factura', $invoiceId)->countAllResults() === 0) {
-                $this->db->table('transaccion')->insert([
-                    'id_factura' => $invoiceId,
-                    'id_propietario' => $owner['id_usuario'],
-                    'fecha_pago' => $currentMonth->modify('-1 month')->format('Y-m-d'),
-                    'monto_abonado' => '15000.00',
-                    'medio_pago' => 'transferencia',
-                    'numero_comprobante' => 'DEMO-FACTURA-PAGADA',
-                    'comprobante_digital' => null,
-                    'en_mora' => 0,
-                    'estado' => 'validada',
-                    'fecha_validacion' => $currentMonth->modify('-1 month')->format('Y-m-d') . ' 00:00:00',
-                ]);
+                if ($period < $mesActual
+                    && $this->db->table('transaccion')->where('id_factura', $invoiceId)->countAllResults() === 0
+                ) {
+                    $fechaPago = $period->setDate($year, $month, 8)->format('Y-m-d');
+                    $this->db->table('transaccion')->insert([
+                        'id_factura' => $invoiceId,
+                        'id_propietario' => $owner['id_usuario'],
+                        'fecha_pago' => $fechaPago,
+                        'monto_abonado' => $existingInvoice['monto_total'] ?? number_format($monto, 2, '.', ''),
+                        'medio_pago' => 'transferencia',
+                        'numero_comprobante' => 'DEMO-' . $yearMonth,
+                        'comprobante_digital' => null,
+                        'en_mora' => 0,
+                        'estado' => 'validada',
+                        'fecha_validacion' => $fechaPago . ' 12:00:00',
+                    ]);
+                }
             }
         }
     }
