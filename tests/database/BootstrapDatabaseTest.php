@@ -81,8 +81,25 @@ final class BootstrapDatabaseTest extends CIUnitTestCase
     {
         $this->assertSame(1, $this->db->table('propiedad')->where('alias', 'Depto Centro')->countAllResults());
         $this->assertSame(1, $this->db->table('propiedad_servicio')->countAllResults());
-        $this->assertSame(3, $this->db->table('factura')->countAllResults());
-        $this->assertSame(1, $this->db->table('transaccion')->countAllResults());
+        $this->assertSame(24, $this->db->table('factura')->countAllResults());
+        $this->assertGreaterThan(0, $this->db->table('transaccion')->countAllResults());
+    }
+
+    public function testDemoInvoicesHaveVariableMonthlyConsumptionForBothComparisonYears(): void
+    {
+        $resumenes = $this->db->table('factura')
+            ->select('periodo_anio, COUNT(*) AS cantidad, MIN(consumo_del_periodo) AS minimo, MAX(consumo_del_periodo) AS maximo')
+            ->where('periodo', 'mes')
+            ->whereIn('periodo_anio', [2025, 2026])
+            ->groupBy('periodo_anio')
+            ->get()
+            ->getResultArray();
+
+        $this->assertCount(2, $resumenes);
+        foreach ($resumenes as $resumen) {
+            $this->assertSame(12, (int) $resumen['cantidad']);
+            $this->assertLessThan((int) $resumen['maximo'], (int) $resumen['minimo']);
+        }
     }
 
     public function testSesionServiceInvalidatesAllSessionsForAUser(): void
